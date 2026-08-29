@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Clash of Kings — Reading Companion</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    background: #1a1208;
+    color: #e8dbb8;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #header {
+    background: #0d0a04;
+    border-bottom: 1px solid #5a3e1a;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+
+  #title {
+    font-size: 18px;
+    color: #c8a850;
+    letter-spacing: 2px;
+    font-variant: small-caps;
+    white-space: nowrap;
+  }
+
+  #homeLink {
+    font-size: 14px;
+    color: #8a7040;
+    text-decoration: none;
+    margin-right: 4px;
+    transition: color 0.15s;
+  }
+  #homeLink:hover { color: #c8a850; }
+
+  .nav-btn {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    border: 1px solid #5a3e1a;
+    background: #1a1208;
+    color: #c8a850;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s;
+    flex-shrink: 0;
+  }
+  .nav-btn:hover { background: #2a1e08; border-color: #8a6030; }
+  .nav-btn:disabled { opacity: 0.35; cursor: default; }
+
+  #chDisplay {
+    font-size: 13px;
+    color: #c8a850;
+    white-space: nowrap;
+    min-width: 180px;
+    font-family: Georgia, serif;
+  }
+  #chDisplay span { color: #8a7040; font-size: 12px; }
+
+  #jumpMenu {
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    border: 1px solid #5a3e1a;
+    background: #1a1208;
+    color: #c8a850;
+    cursor: pointer;
+    max-width: 200px;
+    font-family: Georgia, serif;
+  }
+
+  .filter-btn {
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid #5a3e1a;
+    background: #1a1208;
+    color: #8a7040;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    font-family: Georgia, serif;
+  }
+  .filter-btn.active { background: #2a1e08; color: #c8a850; border-color: #8a6030; }
+  .filter-btn:hover { background: #2a1e08; color: #c8a850; }
+
+  #map {
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    background: #1a2a3a;
+  }
+
+  .leaflet-control-zoom a {
+    background: #1a1208 !important;
+    color: #c8a850 !important;
+    border-color: #5a3e1a !important;
+    font-family: Georgia, serif;
+  }
+  .leaflet-control-zoom a:hover { background: #2a1e08 !important; }
+
+  .ribbon-label {
+    background: none !important;
+    border: none !important;
+  }
+
+  #panelOverlay {
+    position: fixed;
+    top: 60px; right: 0;
+    width: 340px;
+    max-height: calc(100vh - 70px);
+    background: #0d0a04;
+    border-left: 1px solid #5a3e1a;
+    border-bottom: 1px solid #5a3e1a;
+    display: none;
+    flex-direction: column;
+    z-index: 1000;
+    font-family: Georgia, serif;
+  }
+  #panelOverlay.open { display: flex; }
+  #panelHeader {
+    padding: 10px 14px;
+    background: #1a1208;
+    border-bottom: 1px solid #5a3e1a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: #c8a850;
+    letter-spacing: 1px;
+    font-variant: small-caps;
+    flex-shrink: 0;
+  }
+  #panelClose { cursor: pointer; font-size: 18px; color: #8a7040; line-height: 1; }
+  #panelClose:hover { color: #c8a850; }
+  #panelBody { overflow-y: auto; flex: 1; padding: 12px; }
+
+  .char-card { border: 1px solid #3a2a0a; border-radius: 6px; margin-bottom: 8px; overflow: hidden; background: #120e04; }
+  .char-card-header { display: flex; align-items: center; gap: 10px; padding: 9px 12px; cursor: pointer; transition: background 0.12s; }
+  .char-card-header:hover { background: #1a1208; }
+  .char-swatch { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .char-name { font-size: 13px; color: #c8a850; flex: 1; }
+  .char-role { font-size: 11px; color: #6a5030; }
+  .char-status { font-size: 11px; padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
+  .status-dead { background: #3a1010; color: #c05050; }
+  .status-missing { background: #2a2a10; color: #a09050; }
+  .status-alive { background: #0a2010; color: #50a050; }
+  .char-expand { font-size: 11px; color: #6a5030; margin-left: 4px; }
+  .char-detail { padding: 10px 12px; border-top: 1px solid #2a1a0a; background: #0a0804; font-size: 12px; color: #8a7a50; line-height: 1.7; display: none; }
+  .char-detail.open { display: block; }
+  .char-detail strong { color: #c8a850; font-weight: normal; }
+  .reveal-tier { margin-bottom: 6px; }
+  .reveal-tier + .reveal-tier { border-top: 1px dashed #2a1a0a; padding-top: 6px; margin-top: 2px; }
+  .fate-note { color: #c05050 !important; margin-top: 6px; }
+  .missing-note { color: #a09050 !important; margin-top: 6px; }
+
+  #statusBar {
+    background: #0d0a04;
+    border-top: 1px solid #3a2a0a;
+    padding: 5px 16px;
+    font-size: 11px;
+    color: #5a4a20;
+    font-family: Georgia, serif;
+    font-style: italic;
+    flex-shrink: 0;
+  }
+
+  .leaflet-tooltip.ribbon-tip {
+    background: #0d0a04;
+    border: 1px solid #5a3e1a;
+    color: #c8a850;
+    font-family: Georgia, serif;
+    font-size: 12px;
+    line-height: 1.6;
+    padding: 8px 12px;
+    border-radius: 6px;
+    max-width: 220px;
+    width: 220px;
+    white-space: normal;
+    word-wrap: break-word;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  }
+  .leaflet-tooltip.ribbon-tip::before { display: none; }
+
+  .tip-name { font-size: 13px; color: #c8a850; font-variant: small-caps; letter-spacing: 1px; }
+  .tip-dead { color: #c05050; font-size: 11px; margin-top: 2px; }
+  .tip-missing { color: #a09050; font-size: 11px; margin-top: 2px; }
+  .tip-place { color: #8a7040; font-size: 11px; margin-top: 2px; }
+  .tip-note { color: #a09060; font-size: 11px; margin-top: 2px; }
+
+  .empty-note { font-size: 13px; color: #5a4a20; font-style: italic; padding: 8px 0; font-family: Georgia, serif; }
+
+  /* ── Mobile ── */
+  @media (max-width: 700px) {
+    #header {
+      padding: 8px 10px;
+      gap: 8px;
+    }
+    #title {
+      font-size: 14px;
+      letter-spacing: 1px;
+    }
+    .nav-btn {
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
+    }
+    #chDisplay {
+      font-size: 12px;
+      min-width: 0;
+    }
+    #jumpMenu {
+      max-width: 140px;
+      font-size: 12px;
+      padding: 8px 6px;
+    }
+    .filter-btn {
+      font-size: 12px;
+      padding: 9px 12px;
+    }
+    /* Full-screen panel overlay on small screens */
+    #panelOverlay {
+      top: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      height: 100vh;
+      max-height: 100vh;
+      border-left: none;
+    }
+    /* Wider, more finger-friendly tooltips */
+    .leaflet-tooltip.ribbon-tip {
+      max-width: 220px;
+      font-size: 13px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <a id="homeLink" href="index.html" title="Back to series selection">‹</a>
+  <div id="title">⚔ A Clash of Kings</div>
+  <button class="nav-btn" id="prevBtn" onclick="stepCh(-1)" title="Previous chapter" disabled>←</button>
+  <button class="nav-btn" id="nextBtn" onclick="stepCh(1)" title="Next chapter">→</button>
+  <div id="chDisplay">Ch. 0 — <span>Prologue</span></div>
+  <select id="jumpMenu" onchange="jumpTo(this.value)">
+    <option value="">Jump to chapter...</option>
+  </select>
+  <button class="filter-btn active" id="btnDeceased" onclick="toggleDeceased()">☠ Deceased</button>
+  <button class="filter-btn" id="btnSide" onclick="openPanel('side')">Primary Characters</button>
+  <button class="filter-btn" id="btnGlossary" onclick="openPanel('glossary')">Glossary</button>
+  <div id="devTools" style="margin-left:auto;display:none;gap:6px;">
+    <button class="filter-btn" id="btnFreeLook" onclick="toggleFreeLook()" title="Free Look — map stays where you left it when advancing chapters">🔭 Free Look</button>
+    <button class="filter-btn" id="btnCalibrate" onclick="toggleCalibrateMode()" title="Click anywhere on map to get px() coordinates">📍 Calibrate</button>
+    <button class="filter-btn" id="btnTrace" onclick="openTraceModal()" title="Trace road paths for automatic character positioning">✏️ Trace Road</button>
+  </div>
+</div>
+
+<div id="map"></div>
+
+<div id="panelOverlay">
+  <div id="panelHeader">
+    <span id="panelTitle">Glossary</span>
+    <span id="panelClose" onclick="closePanel()">×</span>
+  </div>
+  <div id="panelBody"></div>
+</div>
+
+<div id="statusBar">A Clash of Kings · 0 POV characters active · 0 deaths/disappearances recorded through Chapter 0</div>
+
+<script>
+// ─── DEV MODE ──────────────────────────────────────────────────────────────
+// The Calibrate / Trace Road / Free Look buttons are author-only tools.
+// They stay hidden on the live site unless the page is loaded with ?dev=true
+// in the URL, e.g. ACOK_Reading_Companion.html?dev=true
+const DEV_MODE = new URLSearchParams(window.location.search).get('dev') === 'true';
+if (DEV_MODE) {
+  document.getElementById('devTools').style.display = 'flex';
+}
+
+// ─── DATA ────────────────────────────────────────────────────────────────────
+// A Clash of Kings chapter list.
+// Chapter numbering: Prologue = 0, Ch 1 = Arya I, etc.
+// This matches AWOIAF numbering: awoiaf.westeros.org/index.php/A_Clash_of_Kings-Chapter_N
+
+const allChapters=[
+  {n:0, name:"Prologue (Cressen)"},
+  {n:1, name:"Arya I"},{n:2, name:"Sansa I"},{n:3, name:"Tyrion I"},{n:4, name:"Bran I"},
+  {n:5, name:"Arya II"},{n:6, name:"Jon I"},{n:7, name:"Catelyn I"},{n:8, name:"Tyrion II"},
+  {n:9, name:"Arya III"},{n:10,name:"Davos I"},{n:11,name:"Theon I"},{n:12,name:"Daenerys I"},
+  {n:13,name:"Jon II"},{n:14,name:"Arya IV"},{n:15,name:"Tyrion III"},{n:16,name:"Bran II"},
+  {n:17,name:"Tyrion IV"},{n:18,name:"Sansa II"},{n:19,name:"Arya V"},{n:20,name:"Tyrion V"},
+  {n:21,name:"Bran III"},{n:22,name:"Catelyn II"},{n:23,name:"Jon III"},{n:24,name:"Theon II"},
+  {n:25,name:"Tyrion VI"},{n:26,name:"Arya VI"},{n:27,name:"Daenerys II"},{n:28,name:"Bran IV"},
+  {n:29,name:"Tyrion VII"},{n:30,name:"Arya VII"},{n:31,name:"Catelyn III"},{n:32,name:"Sansa III"},
+  {n:33,name:"Catelyn IV"},{n:34,name:"Jon IV"},{n:35,name:"Bran V"},{n:36,name:"Tyrion VIII"},
+  {n:37,name:"Theon III"},{n:38,name:"Arya VIII"},{n:39,name:"Catelyn V"},{n:40,name:"Daenerys III"},
+  {n:41,name:"Tyrion IX"},{n:42,name:"Davos II"},{n:43,name:"Jon V"},{n:44,name:"Tyrion X"},
+  {n:45,name:"Catelyn VI"},{n:46,name:"Bran VI"},{n:47,name:"Arya IX"},{n:48,name:"Daenerys IV"},
+  {n:49,name:"Tyrion XI"},{n:50,name:"Theon IV"},{n:51,name:"Jon VI"},{n:52,name:"Sansa IV"},
+  {n:53,name:"Jon VII"},{n:54,name:"Tyrion XII"},{n:55,name:"Catelyn VII"},{n:56,name:"Theon V"},
+  {n:57,name:"Sansa V"},{n:58,name:"Davos III"},{n:59,name:"Tyrion XIII"},{n:60,name:"Sansa VI"},
+  {n:61,name:"Tyrion XIV"},{n:62,name:"Sansa VII"},{n:63,name:"Daenerys V"},{n:64,name:"Arya X"},
+  {n:65,name:"Sansa VIII"},{n:66,name:"Theon VI"},{n:67,name:"Tyrion XV"},{n:68,name:"Jon VIII"},
+  {n:69,name:"Bran VII"}
+];
+
+// ─── COORDINATES ─────────────────────────────────────────────────────────────
+// Same map as AGOT: OfficialGOTMap.jpg (7400×4932)
+const IMG_W = 7400, IMG_H = 4932;
+function px(x, y){ return [IMG_H - y, x]; }
+
+// ─── Calibrated anchor coordinates (OfficialGOTMap.jpg) ─────────────────────
+// Carried forward from AGOT + new locations for ACOK:
+// Pyke:            px(605, 1770)    — Iron Islands, seat of House Greyjoy
+// Dragonstone:     px(1685, 2354)
+// Fist of First Men: px(1194, 573)
+// Craster's Keep:  px(1304, 666)
+// Castle Black:    px(1368, 746)
+// Winterfell:      px(1154, 1220)
+// Riverrun:        px(1055, 2180)
+// King's Landing:  px(1394, 2516)
+// Harrenhal:       px(1294, 2252)
+// Storm's End:     px(1609, 2760)
+// Qarth:           px(5074, 3684)
+// Oxcross:         px(795, 2290)   — approximate, west of Golden Tooth
+// Bitterbridge:    px(1070, 2650)  — approximate, Roseroad
+// Acorn Hall:      px(1100, 2270)  — approximate, Riverlands
+
+const allChars = [
+  // ─── POV CHARACTERS ───
+
+  // ── TYRION — Acting Hand of the King in King's Landing ──
+  {id:"tyrion", name:"Tyrion Lannister", house:"Lannister", role:"Acting Hand of the King",
+   ink:"#8B0000", textInk:"#f0c040", isPov:true, firstChapter:3,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   positions:[
+     {from:0,  to:2,  pos:px(1394,2516), place:"King's Landing",  note:"Arriving to take up his role as Acting Hand of the King, sent by Lord Tywin"},
+     {from:3,  to:69, pos:px(1394,2516), place:"King's Landing",  note:"Serving as Acting Hand — navigating Cersei, Joffrey, and the war"}
+   ],
+   tiers:[
+     {revealChapter:3, text:"Arrived in King's Landing as Acting Hand of the King, appointed by his father Lord Tywin. He immediately asserts control over the small council."},
+     {revealChapter:8, text:"Methodically consolidating power. He has sent Janos Slynt to the Wall and appointed Bronn's man Jacelyn Bywater as commander of the City Watch."}
+   ]},
+
+  // ── ARYA — On the Kingsroad heading north with Yoren ──
+  {id:"arya", name:"Arya Stark", house:"Stark", role:"Disguised as 'Arry' — heading north",
+   ink:"#5a6a6a", textInk:"#e8e8e8", isPov:true, firstChapter:1,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   positions:[
+     {from:0,  to:0,  road:"kingsroad", pct:0.82, place:"Kingsroad north — leaving King's Landing", note:"Disguised as 'Arry', heading north with Yoren's Night's Watch recruits"},
+     {from:1,  to:8,  road:"kingsroad", pct:0.78, place:"Kingsroad north — Riverlands",  note:"Travelling north with Yoren's recruits, disguised as a boy called Arry"},
+     {from:9,  to:13, road:"kingsroad", pct:"riverlands", place:"Kingsroad — deep in the Riverlands", note:"Continuing north — the war has made the road dangerous"}
+   ],
+   tiers:[
+     {revealChapter:1, text:"Disguised as a boy called 'Arry' among Yoren's Night's Watch recruits, heading north along the Kingsroad. Yoren has promised to drop her at Winterfell."},
+     {revealChapter:5, text:"Struggling to keep her identity hidden. The recruits include dangerous men — three chained prisoners in a wagon whom even Yoren fears."}
+   ]},
+
+  // ── SANSA — Hostage in King's Landing ──
+  {id:"sansa", name:"Sansa Stark", house:"Stark", role:"Hostage in King's Landing",
+   ink:"#5a6a6a", textInk:"#e8e8e8", isPov:true, firstChapter:2,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   positions:[
+     {from:0,  to:69, pos:px(1394,2516), place:"King's Landing — hostage", note:"Held hostage at court — enduring Joffrey's cruelty"}
+   ],
+   tiers:[
+     {revealChapter:2, text:"A hostage in King's Landing. Joffrey forces her to attend court and punishes her for Robb's victories in the field. Ser Dontos Hollard, a drunken knight she saved from execution, has begun secretly meeting with her."}
+   ]},
+
+  // ── BRAN — The Stark in Winterfell ──
+  {id:"bran", name:"Bran Stark", house:"Stark", role:"Acting Lord of Winterfell",
+   ink:"#5a6a6a", textInk:"#e8e8e8", isPov:true, firstChapter:4,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   positions:[
+     {from:0,  to:69, pos:px(1154,1220), place:"Winterfell",  note:"Acting as Lord of Winterfell in Robb's absence"}
+   ],
+   tiers:[
+     {revealChapter:4, text:"Holding Winterfell as its young lord, supported by Maester Luwin and Ser Rodrik. His wolf-dreams are growing more vivid and he struggles with the burdens of rule."}
+   ]},
+
+  // ── JON — Beyond the Wall with the great ranging ──
+  {id:"jon", name:"Jon Snow", house:"Stark", role:"Night's Watch — ranging beyond the Wall",
+   ink:"#4a5a5a", textInk:"#cccccc", isPov:true, firstChapter:6,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   positions:[
+     {from:0,  to:5,  pos:px(1304,666),  place:"Craster's Keep",            note:"With the great ranging — stopped at Craster's Keep beyond the Wall"},
+     {from:6,  to:12, pos:px(1304,666),  place:"Craster's Keep",            note:"Lord Commander Mormont's ranging has stopped at Craster's Keep — a wildling who marries his daughters and gives his sons to the cold"},
+     {from:13, to:22, pos:px(1194,573),  place:"Fist of the First Men",     note:"The ranging has arrived at the Fist of the First Men — an ancient ringfort on a hill"},
+     {from:23, to:33, pos:px(1194,573),  place:"Fist of the First Men",     note:"Camped at the Fist — Jon has been sent with Qhorin Halfhand's scouting party into the Skirling Pass"}
+   ],
+   tiers:[
+     {revealChapter:6, text:"Ranging beyond the Wall with Lord Commander Mormont. They have stopped at Craster's Keep, a wildling holdfast. Jon is disturbed by what he sees there."},
+     {revealChapter:13, text:"The ranging has reached the Fist of the First Men. Jon's direwolf Ghost has brought him a dragonglass cache — obsidian arrowheads and knives buried in a Night's Watch cloak."}
+   ]},
+
+  // ── CATELYN — With Robb's army ──
+  {id:"cat", name:"Catelyn Stark", house:"Stark", role:"Advisor to the King in the North",
+   ink:"#5a6a6a", textInk:"#e8e8e8", isPov:true, firstChapter:7,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   positions:[
+     {from:0,  to:6,  pos:px(1055,2180), place:"Riverrun",                  note:"At Riverrun with Robb's army — her father Lord Hoster is gravely ill"},
+     {from:7,  to:21, pos:px(1055,2180), place:"Riverrun",                  note:"Acting as Robb's advisor at Riverrun — tending her dying father"},
+     {from:22, to:30, pos:px(1070,2650), place:"The Reach — treating with Renly", note:"Sent south to negotiate an alliance with Renly Baratheon at Bitterbridge"}
+   ],
+   tiers:[
+     {revealChapter:7, text:"At Riverrun, where Robb holds court as King in the North. Her father Hoster Tully is dying. Catelyn grieves for Ned and fears for her missing daughters."},
+     {revealChapter:22, text:"Sent by Robb to treat with Renly Baratheon in the south, seeking an alliance against the Lannisters. She is accompanied by Brienne of Tarth, a warrior woman sworn to Renly."}
+   ]},
+
+  // ── DAENERYS — In the Red Waste, heading toward Qarth ──
+  {id:"dany", name:"Daenerys", house:"Targaryen", role:"Mother of Dragons",
+   ink:"#1a1a2a", textInk:"#cc2020", isPov:true, firstChapter:12,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   positions:[
+     {from:0,  to:11, pos:px(4540,3130), place:"The Red Waste — east of Lhazar", note:"Leading her small khalasar east through the Red Waste — many are dying of thirst and heat"},
+     {from:12, to:26, pos:px(4540,3130), place:"The Red Waste",             note:"Struggling through the desert wasteland east of Lhazar with her three dragons and dwindling followers"},
+     {from:27, to:39, pos:px(5074,3684), place:"Qarth",                     note:"Arrived at the great trading city of Qarth — seeking ships and allies"},
+     {from:40, to:47, pos:px(5074,3684), place:"Qarth",                     note:"Navigating Qarth's politics — courted by Xaro Xhoan Daxos and the warlocks of the House of the Undying"},
+     {from:48, to:62, pos:px(5074,3684), place:"Qarth",                     note:"Seeking passage to Westeros from Qarth — refused by the Pureborn, manipulated by merchants and warlocks"},
+     {from:63, to:69, pos:px(5074,3684), place:"Qarth — preparing to depart", note:"Plans to leave Qarth — agents from Illyrio have arrived offering passage home"}
+   ],
+   tiers:[
+     {revealChapter:12, text:"Leading the remnants of Drogo's khalasar through the Red Waste, a merciless desert east of Lhazar. Her three infant dragons are all that sustain her people's hope. Many are dying."},
+     {revealChapter:27, text:"Has arrived at Qarth, a great trading city. She is a curiosity — the Mother of Dragons — but finding true allies is proving difficult. Everyone wants her dragons."}
+   ]},
+
+  // ── THEON — New POV: returning to the Iron Islands ──
+  {id:"theon", name:"Theon Greyjoy", house:"Greyjoy", role:"Heir to the Iron Islands",
+   ink:"#708060", textInk:"#e8e8e8", isPov:true, firstChapter:11,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   positions:[
+     {from:0,  to:10, pos:px(1055,2180), place:"Riverrun — with Robb's army", note:"With Robb's host at Riverrun — soon to depart on an envoy mission"},
+     {from:11, to:23, pos:px(605,1770),  place:"Pyke — Iron Islands",       note:"Returned to Pyke to negotiate with his father Balon on Robb's behalf"},
+     {from:24, to:36, pos:px(605,1770),  place:"Pyke — Iron Islands",       note:"His father has rejected Robb's alliance and plans to attack the North instead. Theon faces a choice between his birth family and the Starks."}
+   ],
+   tiers:[
+     {revealChapter:11, text:"Sent by Robb Stark to the Iron Islands to propose an alliance with his father Balon Greyjoy. He arrives at Pyke hoping for a triumphant homecoming, but finds only cold suspicion."},
+     {revealChapter:24, text:"His father Balon has rejected Robb's offer and instead plans to invade the North while its armies are in the south. Theon has chosen to stay with his birth family rather than warn Robb."}
+   ]},
+
+  // ── DAVOS — New POV: at Dragonstone with Stannis ──
+  {id:"davos", name:"Davos Seaworth", house:"Seaworth", role:"Smuggler-knight — serves Stannis",
+   ink:"#607080", textInk:"#d8d8d8", isPov:true, firstChapter:10,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   positions:[
+     {from:0,  to:9,  pos:px(1685,2354), place:"Dragonstone",               note:"At Dragonstone with Stannis Baratheon, who has declared himself the rightful king"},
+     {from:10, to:41, pos:px(1685,2354), place:"Dragonstone",               note:"Serving Stannis at Dragonstone — deeply uneasy about the red priestess Melisandre's growing influence"}
+   ],
+   tiers:[
+     {revealChapter:10, text:"A former smuggler knighted by Stannis for running a cargo of onions through the siege of Storm's End during Robert's Rebellion. Stannis also took several of his fingertips as punishment for his years of smuggling. Davos is deeply loyal but troubled by Melisandre's influence."}
+   ]},
+
+  // ─── CARRY-FORWARD RULE ──────────────────────────────────────────────────
+  // Every book in a multi-book series MUST carry forward all character,
+  // glossary, and map knowledge from every preceding book. This means:
+  //
+  //   • All living side characters from earlier books are included here with
+  //     firstChapter:0 so they appear from the very start of this book.
+  //
+  //   • All deceased / missing characters from earlier books appear in the
+  //     Deceased panel with deathChapter:0 (resolved before this book opens).
+  //     Their deathNote records which book the event occurred in.
+  //
+  //   • New characters introduced in this book use their actual firstChapter.
+  //
+  //   • Map coordinates are carried forward unchanged from the previous book.
+  //
+  //   • When building Book III (A Storm of Swords), include ALL characters
+  //     from both Book I and Book II, adding Book III events on top.
+  //     Each successive book is a superset of all previous knowledge.
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // ─── SIDE CHARACTERS ───
+
+  {id:"cersei", name:"Cersei Lannister", house:"Lannister", role:"Queen Regent",
+   ink:"#b0b020", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"Queen Regent, ruling through her son Joffrey. Cersei's grip on power is threatened by Tyrion's arrival as Acting Hand."},
+     {revealChapter:3, text:"Clashing with Tyrion over control of the realm. She keeps her own agents and informants on the small council."}
+   ]},
+
+  {id:"joffrey", name:"Joffrey Baratheon", house:"Baratheon", role:"King on the Iron Throne",
+   ink:"#a03030", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"King on the Iron Throne, ruling with increasing cruelty. His mother Cersei and grandfather Tywin hold the real power."},
+     {revealChapter:2, text:"Punishes Sansa for her brother Robb's victories. His cowardice and viciousness are well known at court."}
+   ]},
+
+  {id:"robb", name:"Robb Stark", house:"Stark", role:"King in the North",
+   ink:"#4060a0", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"King in the North, commanding the Northern and Riverlands armies from Riverrun. Undefeated in battle against the Lannisters."},
+     {revealChapter:7, text:"Preparing new campaigns in the Westerlands. He has sent Theon Greyjoy to the Iron Islands and his mother to treat with Renly Baratheon."}
+   ]},
+
+  {id:"stannis", name:"Stannis Baratheon", house:"Baratheon", role:"Self-declared King — Lord of Dragonstone",
+   ink:"#506090", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"Robert's elder brother, holding Dragonstone. He has declared himself the rightful king and published Cersei's secret — that Joffrey and the royal children are bastards born of incest. He is advised by the red priestess Melisandre."}
+   ]},
+
+  {id:"melisandre", name:"Melisandre", house:"None", role:"Red priestess of R'hllor",
+   ink:"#c02020", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"A red priestess from Asshai who has attached herself to Stannis Baratheon. She worships R'hllor, the Lord of Light, and believes Stannis is a prophesied hero. Maester Cressen attempted to poison her and died — she was unharmed."}
+   ]},
+
+  {id:"renly", name:"Renly Baratheon", house:"Baratheon", role:"Self-declared King",
+   ink:"#30a050", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"Robert's youngest brother, also claiming the throne despite having no legal right ahead of Stannis. He commands a vast host thanks to his alliance with House Tyrell through his marriage to Margaery Tyrell."}
+   ]},
+
+  {id:"jaime", name:"Jaime Lannister", house:"Lannister", role:"Kingsguard — prisoner of war",
+   ink:"#a09030", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"The Kingslayer, held prisoner at Riverrun since Robb Stark captured him at the Whispering Wood. A valuable hostage."}
+   ]},
+
+  {id:"varys", name:"Varys", house:"None", role:"Master of Whisperers",
+   ink:"#6a6a8a", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"The Spider. Still serving on the small council in King's Landing, his true allegiances remain as inscrutable as ever."}
+   ]},
+
+  {id:"littlefinger", name:"Petyr Baelish", house:"None", role:"Master of Coin",
+   ink:"#508050", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"Littlefinger. Betrayed Ned Stark and remains on the small council. The Lannisters trust him — perhaps unwisely."}
+   ]},
+
+  {id:"mormont", name:"Jeor Mormont", house:"Mormont", role:"Lord Commander of the Night's Watch",
+   ink:"#405050", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"Leading the great ranging beyond the Wall. The Old Bear is determined to learn the truth of the threat gathering in the north."}
+   ]},
+
+  {id:"sam", name:"Samwell Tarly", house:"Tarly", role:"Night's Watch steward",
+   ink:"#507050", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"Jon's closest friend in the Night's Watch. Terrified of what lies beyond the Wall but determined not to abandon his brothers."}
+   ]},
+
+  {id:"jorah", name:"Ser Jorah Mormont", house:"Mormont", role:"Knight in exile — serves Daenerys",
+   ink:"#705040", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"An exiled knight devoted to Daenerys. Serving as her chief advisor and protector as she leads her followers through the Red Waste."}
+   ]},
+
+  {id:"bronn", name:"Bronn", house:"None", role:"Sellsword — serves Tyrion",
+   ink:"#806040", isPov:false, firstChapter:3,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:3, text:"The sellsword who won Tyrion's freedom at the Eyrie. He has followed Tyrion to King's Landing and serves as his personal enforcer and captain of guards."}
+   ]},
+
+  {id:"balon", name:"Balon Greyjoy", house:"Greyjoy", role:"Lord of the Iron Islands",
+   ink:"#505a50", isPov:false, firstChapter:11,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:11, text:"Lord of the Iron Islands and father of Theon. A proud, bitter man who lost a rebellion and two sons to King Robert. He has no intention of bowing to Robb Stark — he means to crown himself and take what he wants."}
+   ]},
+
+  {id:"luwin", name:"Maester Luwin", house:"None", role:"Maester of Winterfell",
+   ink:"#607060", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"Still advising Bran at Winterfell. A pragmatic and caring voice of reason, sceptical of dreams and omens."}
+   ]},
+
+  {id:"rodrik", name:"Ser Rodrik Cassel", house:"Stark", role:"Castellan of Winterfell",
+   ink:"#607080", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"Acting castellan of Winterfell, supporting Bran in Robb's absence. A steady, loyal warrior."}
+   ]},
+
+  {id:"rickon", name:"Rickon Stark", house:"Stark", role:"Youngest Stark son",
+   ink:"#5a6a6a", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"Ned's youngest child, now four years old. Angry and confused by the departure of everyone he loves. His direwolf Shaggydog grows wilder by the day."}
+   ]},
+
+
+  // ── Characters from Book 1 (AGOT) carried forward — alive at start of ACOK ──
+
+  {id:"sandor", name:"Sandor Clegane", house:"Clegane", role:"Joffrey's sworn shield — the Hound",
+   ink:"#5a5050", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"Known as the Hound. Joffrey's personal bodyguard and one of the most feared fighters in the realm. His face is hideously scarred from a childhood encounter with fire. He executed Mycah the butcher's boy on Joffrey's orders during A Game of Thrones."}
+   ]},
+
+  {id:"barristan", name:"Ser Barristan Selmy", house:"Selmy", role:"Dismissed Lord Commander of the Kingsguard",
+   ink:"#a0a0c0", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"Barristan the Bold — legendary knight and former Lord Commander of the Kingsguard. After Robert's death he was stripped of his post by Joffrey and the Lannisters. He departed King's Landing in disgrace; his current whereabouts are unknown."}
+   ]},
+
+  {id:"lysa", name:"Lysa Arryn", house:"Tully/Arryn", role:"Lady of the Eyrie",
+   ink:"#806080", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"Catelyn's younger sister and widow of Jon Arryn. She rules the Vale from the impregnable Eyrie, isolated and fearful. Her sickly young son Robert is her only concern. It was her secret letter warning of Lannister treachery that set the events of A Game of Thrones in motion."}
+   ]},
+
+  {id:"illyrio", name:"Illyrio Mopatis", house:"None", role:"Magister of Pentos",
+   ink:"#806050", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"A wealthy and powerful merchant prince of Pentos who sheltered Viserys and Daenerys in his manse and arranged Daenerys's marriage to Khal Drogo. His true motives remain obscure. He has powerful contacts throughout Essos."}
+   ]},
+
+  {id:"walder", name:"Lord Walder Frey", house:"Frey", role:"Lord of the Crossing",
+   ink:"#605040", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"The ancient and cantankerous Lord of the Twins, the only crossing of the Green Fork for hundreds of miles. He let Robb's army cross in exchange for Robb's promise to marry one of his daughters. A lord who plays all sides for advantage."}
+   ]},
+
+  {id:"ilyn", name:"Ser Ilyn Payne", house:"None", role:"King's Justice — executioner",
+   ink:"#3a3a3a", isPov:false, firstChapter:0,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:0, text:"The King's headsman — a mute, his tongue torn out by the Mad King. He used Ned Stark's own sword Ice to carry out his execution on the steps of the Great Sept of Baelor."}
+   ]},
+
+  {id:"jonArryn", name:"Jon Arryn", house:"Arryn", role:"Former Hand of the King",
+   ink:"#506080", isPov:false, firstChapter:0,
+   deathChapter:0, deathStatus:"dead",
+   deathNote:"Dead before A Game of Thrones begins. Poisoned — his investigation into the royal succession cost him his life.",
+   tiers:[
+     {revealChapter:0, text:"Dead. The previous Hand of the King, whose sudden death prompted Robert to travel north and ask Ned Stark to replace him. Ned discovered that Jon Arryn had been investigating the parentage of Joffrey and the royal children — and was poisoned for what he found."}
+   ]},
+
+  // Syrio Forel — fate unconfirmed; carried as missing
+  {id:"syrio", name:"Syrio Forel", house:"None", role:"Braavosi sword master",
+   ink:"#508060", isPov:false, firstChapter:0,
+   deathChapter:0, deathStatus:"missing",
+   deathNote:"Last seen holding off Lannister guards with a broken wooden sword so Arya could escape. His fate was never confirmed in A Game of Thrones.",
+   tiers:[
+     {revealChapter:0, text:"Missing. Former First Sword of Braavos, hired by Ned to train Arya in the Water Dance. He held off Lannister guards with only a broken training sword to buy Arya time to flee. Whether he survived is unknown."}
+   ]},
+
+  // ── Characters dead/missing from Book 1 (carried forward) ──
+  {id:"ned", name:"Ned Stark", house:"Stark", role:"Former Lord of Winterfell",
+   ink:"#5a6a6a", isPov:false, firstChapter:0,
+   deathChapter:0, deathStatus:"dead",
+   deathNote:"Executed in King's Landing on Joffrey's orders at the end of A Game of Thrones.",
+   tiers:[
+     {revealChapter:0, text:"Dead. Executed at the Great Sept of Baelor on King Joffrey's orders. His death shattered the peace and ignited the War of the Five Kings."}
+   ]},
+
+  {id:"drogo", name:"Khal Drogo", house:"Dothraki", role:"Khal",
+   ink:"#a05020", isPov:false, firstChapter:0,
+   deathChapter:0, deathStatus:"dead",
+   deathNote:"Died after a festering wound and a failed blood magic ritual at the end of A Game of Thrones.",
+   tiers:[
+     {revealChapter:0, text:"Dead. His wound festered and blood magic left him a mindless shell. Daenerys ended his suffering and burned his body on a funeral pyre from which her dragons were born."}
+   ]},
+
+  {id:"viserys", name:"Viserys Targaryen", house:"Targaryen", role:"Exiled prince",
+   ink:"#8050a0", isPov:false, firstChapter:0,
+   deathChapter:0, deathStatus:"dead",
+   deathNote:"Killed by Khal Drogo with molten gold during A Game of Thrones.",
+   tiers:[
+     {revealChapter:0, text:"Dead. Killed by Khal Drogo for threatening Daenerys — a crown of molten gold."}
+   ]},
+
+  {id:"robert", name:"King Robert Baratheon", house:"Baratheon", role:"Former King",
+   ink:"#a07030", isPov:false, firstChapter:0,
+   deathChapter:0, deathStatus:"dead",
+   deathNote:"Killed by a boar while hunting during A Game of Thrones.",
+   tiers:[
+     {revealChapter:0, text:"Dead. Fatally gored by a boar while hunting. His death left the realm without a clear successor and sparked the War of the Five Kings."}
+   ]},
+
+  {id:"benjen", name:"Benjen Stark", house:"Stark", role:"First Ranger of the Night's Watch",
+   ink:"#4a6a5a", isPov:false, firstChapter:0,
+   deathChapter:0, deathStatus:"missing",
+   deathNote:"Vanished beyond the Wall during A Game of Thrones. No body has been found.",
+   tiers:[
+     {revealChapter:0, text:"Missing. Vanished on a ranging beyond the Wall. His horse returned riderless. The great ranging hopes to find answers."}
+   ]}
+];
+
+// ─── MAP SETUP ───────────────────────────────────────────────────────────────
+
+const bounds = [[0, 0], [IMG_H, IMG_W]];
+
+const map = L.map('map', {
+  crs: L.CRS.Simple,
+  minZoom: -2,
+  maxZoom: 4,
+  zoomSnap: 0.25,
+  zoomDelta: 0.5,
+  attributionControl: false,
+  maxBounds: bounds,
+  maxBoundsViscosity: 1.0
+});
+
+L.imageOverlay('OfficialGOTMap.jpg', bounds).addTo(map);
+map.fitBounds(bounds);
+map.setMaxBounds(bounds);
+
+// ─── ROAD NETWORK ────────────────────────────────────────────────────────────
+// Same roads as AGOT — copied directly. New roads will be added as ACOK progresses.
+
+const roads = {
+  kingsroad: {
+    name: "The Kingsroad",
+    waypoints: [
+  [4181, 1363],[4152, 1372],[4124, 1352],[4099, 1361],[4064, 1348],[4040, 1367],[4030, 1359],
+  [3995, 1350],[3976, 1335],[3974, 1313],[3916, 1288],[3900, 1268],[3863, 1234],[3850, 1230],
+  [3817, 1185],[3798, 1187],[3785, 1170],[3774, 1166],[3760, 1169],[3746, 1163],[3727, 1143],
+  [3711, 1134],[3692, 1121],[3682, 1119],[3672, 1123],[3659, 1136],[3652, 1139],[3644, 1136],
+  [3630, 1149],[3615, 1143],[3607, 1146],[3589, 1139],[3551, 1147],[3525, 1146],[3507, 1150],
+  [3492, 1143],[3477, 1150],[3459, 1142],[3444, 1149],[3415, 1171],[3385, 1180],[3368, 1175],
+  [3355, 1182],[3326, 1171],[3310, 1167],[3274, 1159],[3236, 1155],[3204, 1152],[3170, 1151],
+  [3131, 1153],[3114, 1154],[3091, 1157],[3064, 1158],[3053, 1167],[2992, 1177],[2960, 1182],
+  [2931, 1202],[2912, 1200],[2900, 1208],[2894, 1216],[2844, 1259],[2825, 1271],[2811, 1277],
+  [2791, 1289],[2774, 1301],[2759, 1298],[2750, 1314],[2732, 1337],[2717, 1342],[2669, 1340],
+  [2647, 1356],[2630, 1348],[2613, 1346],[2596, 1363],[2580, 1366],[2545, 1354],[2538, 1367],
+  [2523, 1365],[2507, 1377],[2489, 1388],[2468, 1388],[2448, 1382],[2434, 1388],[2404, 1395],
+  [2388, 1410],[2376, 1419],[2370, 1431],[2354, 1446],[2347, 1463],[2335, 1471],[2330, 1470],
+  [2316, 1486],[2307, 1496],[2305, 1523],[2302, 1528],[2290, 1518],[2284, 1522],[2246, 1539],
+  [2236, 1549],[2235, 1563],[2225, 1581],[2219, 1594],[2199, 1590],[2193, 1597],[2180, 1604]
+],
+    stops: {
+      "castleblack":  0.000,
+      "wolfswood":    0.106,
+      "winterfell":   0.239,
+      "moatcailin":   0.425,
+      "twins":        0.567,
+      "inn":          0.676,
+      "rubyford":     0.690,
+      "riverlands":   0.748,
+      "kingslanding": 0.854
+    }
+  },
+  highroad: {
+    name: "The High Road",
+    waypoints: [
+  [2759, 1298],[2764, 1311],[2773, 1324],[2783, 1329],[2788, 1346],[2787, 1356],[2793, 1374],
+  [2791, 1392],[2796, 1395],[2801, 1400],[2804, 1405],[2808, 1413],[2818, 1405],[2825, 1411],
+  [2833, 1397],[2840, 1401],[2848, 1430],[2856, 1434],[2850, 1444],[2853, 1457],[2868, 1478],
+  [2867, 1492],[2872, 1500],[2879, 1497],[2887, 1501],[2893, 1495]
+],
+    stops: { "inn": 0.00, "eyrie": 1.00 }
+  },
+  dothraki: {
+    name: "Dothraki Road East",
+    waypoints: [
+  [2447, 2120],[2490, 2319],[2563, 2397],[2605, 2437],[2671, 2500],[2447, 2874],[2461, 3198],
+  [2387, 3613],[2385, 3637],[2395, 3661],[2391, 3685],[2411, 3736],[2408, 3758],[2401, 3763],
+  [2402, 3781],[2423, 3812],[2422, 3848],[2430, 3864],[2420, 3891],[2412, 3910],[2403, 3910],
+  [2399, 3932],[2390, 3936],[2385, 3960],[2387, 3977],[2380, 3998],[2386, 4016],[2377, 4040],
+  [2372, 4059],[2378, 4085],[2375, 4093],[2390, 4096],[2404, 4122],[2402, 4151],[2397, 4178],
+  [2411, 4230],[2408, 4252],[2418, 4294],[2444, 4311],[2454, 4363],[2464, 4373],[2487, 4448],
+  [2487, 4487],[2514, 4562],[2537, 4591],[2539, 4617],[2565, 4658],[2574, 4691],[2609, 4718]
+],
+    stops: { "pentos": 0.00, "vaesdothrak": 1.00 }
+  }
+};
+
+// ─── ROAD INTERPOLATION ─────────────────────────────────────────────────────
+function getRoadPos(roadId, pct) {
+  const road = roads[roadId];
+  if (!road || !road.waypoints || road.waypoints.length < 2) return null;
+  if (typeof pct === 'string') {
+    const named = road.stops[pct.toLowerCase()];
+    if (named === undefined) { console.warn('Unknown stop:', pct); return null; }
+    pct = named;
+  }
+  pct = Math.max(0, Math.min(1, pct));
+  const pts = road.waypoints;
+  const dists = [0];
+  for (let i = 1; i < pts.length; i++) {
+    const dlat = pts[i][0] - pts[i-1][0];
+    const dlng = pts[i][1] - pts[i-1][1];
+    dists.push(dists[i-1] + Math.sqrt(dlat*dlat + dlng*dlng));
+  }
+  const total = dists[dists.length - 1];
+  const target = pct * total;
+  for (let i = 1; i < pts.length; i++) {
+    if (dists[i] >= target) {
+      const segLen = dists[i] - dists[i-1];
+      const t = segLen > 0 ? (target - dists[i-1]) / segLen : 0;
+      return [
+        pts[i-1][0] + t * (pts[i][0] - pts[i-1][0]),
+        pts[i-1][1] + t * (pts[i][1] - pts[i-1][1])
+      ];
+    }
+  }
+  return pts[pts.length - 1];
+}
+
+// ─── COORDINATE PICKER & ROAD TRACER ─────────────────────────────────────────
+let toolMode = 'off';
+let traceRoadId = null;
+let traceWaypoints = [];
+let tracePolyline = null;
+let traceMarkers  = [];
+
+const coordBox = document.createElement('div');
+coordBox.style.cssText = `
+  position:fixed; bottom:40px; left:50%; transform:translateX(-50%);
+  background:#0d0a04; border:1px solid #5a3e1a; color:#c8a850;
+  padding:8px 16px; border-radius:6px; font-family:Georgia,serif;
+  font-size:13px; z-index:2000; display:none; pointer-events:none;
+  letter-spacing:0.5px;
+`;
+document.body.appendChild(coordBox);
+
+const modeBanner = document.createElement('div');
+modeBanner.style.cssText = `
+  position:fixed; top:60px; left:50%; transform:translateX(-50%);
+  background:#2a1a00; border:1px solid #8a6030; color:#c8a850;
+  padding:6px 16px; border-radius:6px; font-family:Georgia,serif;
+  font-size:12px; z-index:2000; pointer-events:none; letter-spacing:0.5px;
+  display:none;
+`;
+document.body.appendChild(modeBanner);
+
+const tracePanel = document.createElement('div');
+tracePanel.style.cssText = `
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+  background:#0d0a04; border:1px solid #5a3e1a; border-bottom:none;
+  color:#c8a850; padding:10px 16px; border-radius:8px 8px 0 0;
+  font-family:Georgia,serif; font-size:12px; z-index:2000;
+  display:none; flex-direction:column; gap:8px; min-width:420px;
+  box-shadow:0 -2px 12px rgba(0,0,0,0.5);
+`;
+tracePanel.innerHTML = `
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+    <span id="tracePanelTitle" style="color:#c8a850;font-variant:small-caps;letter-spacing:1px;font-size:13px;">Road Tracing Mode</span>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span id="traceCount" style="color:#8a7040;font-size:11px;">0 points</span>
+      <button id="traceUndoBtn" onclick="traceUndo()" style="padding:3px 10px;background:#1a1208;border:1px solid #5a3e1a;color:#c8a850;border-radius:4px;cursor:pointer;font-family:Georgia,serif;font-size:11px;">↩ Undo</button>
+      <button id="traceFinishBtn" onclick="traceFinish()" style="padding:3px 10px;background:#1a2a0a;border:1px solid #4a7a1a;color:#90c840;border-radius:4px;cursor:pointer;font-family:Georgia,serif;font-size:11px;">✓ Done</button>
+      <button onclick="traceCancel()" style="padding:3px 10px;background:#2a0a0a;border:1px solid #7a1a1a;color:#c84040;border-radius:4px;cursor:pointer;font-family:Georgia,serif;font-size:11px;">✕ Cancel</button>
+    </div>
+  </div>
+  <div id="traceOutput" style="display:none;background:#080604;border:1px solid #3a2a0a;border-radius:4px;padding:8px;font-size:11px;color:#8a7040;line-height:1.6;max-height:120px;overflow-y:auto;word-break:break-all;"></div>
+  <div style="color:#6a5030;font-size:11px;">Click along the road on the map to record waypoints. Click ✓ Done when finished.</div>
+`;
+document.body.appendChild(tracePanel);
+
+const traceModal = document.createElement('div');
+traceModal.style.cssText = `
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  background:#0d0a04; border:1px solid #5a3e1a; color:#c8a850;
+  padding:20px 24px; border-radius:8px; font-family:Georgia,serif;
+  z-index:3000; display:none; flex-direction:column; gap:12px;
+  min-width:300px; box-shadow:0 4px 24px rgba(0,0,0,0.7);
+`;
+traceModal.innerHTML = `
+  <div style="font-size:14px;font-variant:small-caps;letter-spacing:1px;border-bottom:1px solid #3a2a0a;padding-bottom:8px;">Select Road to Trace</div>
+  <div style="color:#8a7040;font-size:12px;line-height:1.6;">Choose a road, then click along it on the map.</div>
+  <div style="display:flex;flex-direction:column;gap:6px;" id="roadSelectBtns"></div>
+  <button onclick="traceModal.style.display='none'" style="margin-top:4px;padding:5px 12px;background:#1a1208;border:1px solid #5a3e1a;color:#8a7040;border-radius:4px;cursor:pointer;font-family:Georgia,serif;font-size:12px;align-self:flex-end;">Cancel</button>
+`;
+document.body.appendChild(traceModal);
+
+const roadSelectContainer = traceModal.querySelector('#roadSelectBtns');
+Object.entries(roads).forEach(([id, road]) => {
+  const btn = document.createElement('button');
+  const hasWaypoints = road.waypoints && road.waypoints.length > 1;
+  btn.style.cssText = `padding:7px 14px;background:#1a1208;border:1px solid ${hasWaypoints ? '#4a7a1a' : '#5a3e1a'};color:${hasWaypoints ? '#90c840' : '#c8a850'};border-radius:4px;cursor:pointer;font-family:Georgia,serif;font-size:12px;text-align:left;`;
+  btn.textContent = road.name + (hasWaypoints ? ' ✓ (re-trace to update)' : ' — not yet traced');
+  btn.onclick = () => { traceModal.style.display = 'none'; startTrace(id); };
+  roadSelectContainer.appendChild(btn);
+});
+
+function startTrace(roadId) {
+  traceRoadId = roadId; traceWaypoints = []; traceMarkers = [];
+  if (tracePolyline) { map.removeLayer(tracePolyline); tracePolyline = null; }
+  toolMode = 'trace';
+  modeBanner.textContent = `✏️ Tracing: ${roads[roadId].name} — click along the road.`;
+  modeBanner.style.display = 'block';
+  tracePanel.style.display = 'flex';
+  tracePanel.querySelector('#tracePanelTitle').textContent = `Tracing: ${roads[roadId].name}`;
+  tracePanel.querySelector('#traceCount').textContent = '0 points';
+  tracePanel.querySelector('#traceOutput').style.display = 'none';
+  map.getContainer().style.cursor = 'crosshair';
+}
+function traceUndo() {
+  if (traceWaypoints.length === 0) return;
+  traceWaypoints.pop();
+  const lastMarker = traceMarkers.pop();
+  if (lastMarker) map.removeLayer(lastMarker);
+  updateTracePolyline();
+  tracePanel.querySelector('#traceCount').textContent = traceWaypoints.length + ' points';
+}
+function updateTracePolyline() {
+  if (tracePolyline) map.removeLayer(tracePolyline);
+  if (traceWaypoints.length > 1) {
+    tracePolyline = L.polyline(traceWaypoints, { color: '#f0c040', weight: 2.5, opacity: 0.85, dashArray: '6,3' }).addTo(map);
+  }
+}
+function traceFinish() {
+  if (traceWaypoints.length < 2) { alert('Please click at least 2 points.'); return; }
+  roads[traceRoadId].waypoints = traceWaypoints.slice();
+  const waypointStr = traceWaypoints.map(([lat,lng]) => `  [${Math.round(lat)}, ${Math.round(lng)}]`).join(',\n');
+  const output = `[\n${waypointStr}\n]`;
+  const outEl = tracePanel.querySelector('#traceOutput');
+  outEl.textContent = output; outEl.style.display = 'block';
+  navigator.clipboard.writeText(output).catch(()=>{});
+  modeBanner.textContent = `✓ ${roads[traceRoadId].name} traced (${traceWaypoints.length} points) — copied!`;
+  traceMarkers.forEach(m => map.removeLayer(m)); traceMarkers = [];
+  if (tracePolyline) { map.removeLayer(tracePolyline); tracePolyline = null; }
+  const finishedLine = L.polyline(roads[traceRoadId].waypoints, { color: '#f0c040', weight: 2, opacity: 0.5 }).addTo(map);
+  window._roadLines = window._roadLines || []; window._roadLines.push(finishedLine);
+  toolMode = 'off'; map.getContainer().style.cursor = '';
+  tracePanel.querySelector('#traceCount').textContent = traceWaypoints.length + ' points ✓';
+  renderMarkers(curCh);
+}
+function traceCancel() {
+  toolMode = 'off'; traceRoadId = null; traceWaypoints = [];
+  traceMarkers.forEach(m => map.removeLayer(m)); traceMarkers = [];
+  if (tracePolyline) { map.removeLayer(tracePolyline); tracePolyline = null; }
+  modeBanner.style.display = 'none'; tracePanel.style.display = 'none';
+  map.getContainer().style.cursor = '';
+}
+
+map.on('click', function(e) {
+  const lat = Math.round(e.latlng.lat);
+  const lng = Math.round(e.latlng.lng);
+  const pixelX = lng;
+  const pixelY = IMG_H - lat;
+  if (toolMode === 'calibrate') {
+    coordBox.textContent = `px(${pixelX}, ${pixelY})  —  copied to clipboard`;
+    coordBox.style.display = 'block';
+    navigator.clipboard.writeText(`px(${pixelX}, ${pixelY})`).catch(()=>{});
+    setTimeout(() => { coordBox.style.display = 'none'; }, 4000);
+  } else if (toolMode === 'trace') {
+    const pt = [e.latlng.lat, e.latlng.lng];
+    traceWaypoints.push(pt);
+    const dot = L.circleMarker(pt, { radius: 4, color: '#f0c040', fillColor: '#f0c040', fillOpacity: 1, weight: 1.5, interactive: false }).addTo(map);
+    traceMarkers.push(dot);
+    updateTracePolyline();
+    tracePanel.querySelector('#traceCount').textContent = traceWaypoints.length + ' points';
+  } else {
+    // Tapping empty map (not a marker, not in a tool mode) closes any open tooltip
+    closeAllTooltips();
+  }
+});
+
+function closeAllTooltips() {
+  Object.values(markers).forEach(m => m.closeTooltip());
+}
+
+function toggleFreeLook() {
+  freeLook = !freeLook;
+  const btn = document.getElementById('btnFreeLook');
+  btn.classList.toggle('active', freeLook);
+}
+function toggleCalibrateMode() {
+  if (toolMode === 'calibrate') {
+    toolMode = 'off'; modeBanner.style.display = 'none'; map.getContainer().style.cursor = '';
+    document.getElementById('btnCalibrate').classList.remove('active');
+  } else {
+    traceCancel(); toolMode = 'calibrate';
+    modeBanner.textContent = '📍 Calibration mode — click anywhere on the map to get coordinates';
+    modeBanner.style.display = 'block'; map.getContainer().style.cursor = 'crosshair';
+    document.getElementById('btnCalibrate').classList.add('active');
+  }
+}
+function openTraceModal() {
+  roadSelectContainer.innerHTML = '';
+  Object.entries(roads).forEach(([id, road]) => {
+    const btn = document.createElement('button');
+    const hasWaypoints = road.waypoints && road.waypoints.length > 1;
+    btn.style.cssText = `padding:7px 14px;background:#1a1208;border:1px solid ${hasWaypoints ? '#4a7a1a' : '#5a3e1a'};color:${hasWaypoints ? '#90c840' : '#c8a850'};border-radius:4px;cursor:pointer;font-family:Georgia,serif;font-size:12px;text-align:left;`;
+    btn.textContent = road.name + (hasWaypoints ? ' ✓ (re-trace to update)' : ' — not yet traced');
+    btn.onclick = () => { traceModal.style.display = 'none'; startTrace(id); };
+    roadSelectContainer.appendChild(btn);
+  });
+  traceModal.style.display = 'flex';
+}
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let curCh = 0;
+let showDeceased = true;
+let openPanelId = null;
+let freeLook = false;
+const markers = {};
+
+// ─── CHAPTER NAV ─────────────────────────────────────────────────────────────
+const menu = document.getElementById('jumpMenu');
+allChapters.forEach(c => {
+  const o = document.createElement('option');
+  o.value = c.n;
+  o.textContent = `Ch. ${c.n} — ${c.name}`;
+  menu.appendChild(o);
+});
+function getChObj(n){ return allChapters.find(c=>c.n===n) || {n, name:"Chapter "+n}; }
+function stepCh(dir){ setChapter(curCh + dir); }
+function jumpTo(val){ if(val) setChapter(parseInt(val)); }
+
+// ─── CHARACTER LOGIC ─────────────────────────────────────────────────────────
+function resolvePos(entry) {
+  if (!entry || !entry.road) return entry;
+  const resolved = getRoadPos(entry.road, entry.pct);
+  if (!resolved) { console.warn(`Road "${entry.road}" has no waypoints yet.`); return null; }
+  return { from: entry.from, to: entry.to, pos: resolved, place: entry.place, note: entry.note };
+}
+function getPos(c, ch){
+  if(ch < c.firstChapter) return null;
+  if(!c.positions || c.positions.length === 0) return null;
+  for(let p of c.positions) if(ch >= p.from && ch <= p.to) return resolvePos(p);
+  let lastKnown = null;
+  for(let p of c.positions){ if(p.from <= ch) lastKnown = p; }
+  if(lastKnown) return resolvePos(lastKnown);
+  return resolvePos(c.positions[0]);
+}
+function isDeadAt(c, ch){ return c.deathChapter !== null && ch > c.deathChapter && c.deathStatus === 'dead'; }
+function isMissingAt(c, ch){ return c.deathChapter !== null && ch > c.deathChapter && c.deathStatus === 'missing'; }
+function buildTierText(c, ch){ return c.tiers.filter(t => t.revealChapter < ch).map(t => t.text).join(' '); }
+
+// ─── RIBBON MARKERS ──────────────────────────────────────────────────────────
+function makeRibbonHTML(name, ink, isDead, isMissing, textInk){
+  const displayInk = (isDead || isMissing) ? '#666' : ink;
+  const textColor = (isDead || isMissing) ? '#aaa' : (textInk || '#f5ecd0');
+  const opacity = (isDead || isMissing) ? 0.55 : 1;
+  const strike = (isDead || isMissing) ? 'text-decoration:line-through;' : '';
+  const charW = 7.5;
+  const w = name.length * charW + 20;
+  const h = 20;
+  const totalW = w + 20;
+  const cx = totalW / 2;
+  return `<svg width="${totalW}" height="${h+6}" xmlns="http://www.w3.org/2000/svg" style="opacity:${opacity}">
+    <polygon points="${10},${h*0.25} 0,${h*0.5} ${10},${h*0.75}" fill="${displayInk}" opacity="0.8"/>
+    <polygon points="${totalW-10},${h*0.25} ${totalW},${h*0.5} ${totalW-10},${h*0.75}" fill="${displayInk}" opacity="0.8"/>
+    <path d="M10,2 Q${cx},0 ${totalW-10},2 L${totalW-10},${h-2} Q${cx},${h} 10,${h-2} Z" fill="${displayInk}" opacity="0.92"/>
+    <path d="M14,5 Q${cx},3 ${totalW-14},5" stroke="#fff" stroke-width="0.8" fill="none" opacity="0.25"/>
+    <text x="${cx}" y="${h*0.65}" text-anchor="middle" font-family="Georgia,serif" font-size="9" font-style="italic" fill="${textColor}" style="${strike}" letter-spacing="0.3">${name}</text>
+    <circle cx="${cx}" cy="${h+3}" r="2" fill="${displayInk}" opacity="0.7"/>
+  </svg>`;
+}
+
+function renderMarkers(ch){
+  Object.values(markers).forEach(m => map.removeLayer(m));
+  Object.keys(markers).forEach(k => delete markers[k]);
+  if(window._leaderLines){ window._leaderLines.forEach(l => map.removeLayer(l)); }
+  window._leaderLines = [];
+  const povChars = allChars.filter(c => c.isPov);
+  const groups = {};
+  povChars.forEach(c => {
+    const pos = getPos(c, ch);
+    if(!pos) return;
+    const dead = isDeadAt(c, ch);
+    const missing = isMissingAt(c, ch);
+    if((dead || missing) && !showDeceased) return;
+    const key = pos.pos[0] + ',' + pos.pos[1];
+    if(!groups[key]) groups[key] = {anchorPos: pos.pos, chars: []};
+    groups[key].chars.push({c, pos, dead, missing});
+  });
+  Object.values(groups).forEach(group => {
+    const {anchorPos, chars} = group;
+    const count = chars.length;
+    const fanOffsets = getFanOffsets(count, anchorPos);
+    chars.forEach(({c, pos, dead, missing}, i) => {
+      const ribbonPos = fanOffsets[i];
+      const needsLeader = count > 1;
+      const html = makeRibbonHTML(c.name, c.ink, dead, missing, c.textInk);
+      const iconW = c.name.length * 7.5 + 40;
+      const icon = L.divIcon({ html, className: 'ribbon-label', iconAnchor: [iconW / 2, 22] });
+      const marker = L.marker(ribbonPos, {icon, interactive:true}).addTo(map);
+      if(needsLeader){
+        const lineColor = (dead || missing) ? '#666' : c.ink;
+        const line = L.polyline([anchorPos, ribbonPos], { color: lineColor, weight: 1.5, opacity: 0.85, dashArray: '4, 3' }).addTo(map);
+        window._leaderLines.push(line);
+        const dot = L.circleMarker(anchorPos, { radius: 3, color: '#c8a850', fillColor: '#c8a850', fillOpacity: 1, weight: 1.5, interactive: false }).addTo(map);
+        window._leaderLines.push(dot);
+      }
+      let tipHtml = `<div class="tip-name">${c.name}</div>`;
+      if(dead) tipHtml += `<div class="tip-dead">&#9760; Deceased — ${c.deathNote}</div>`;
+      else if(missing) tipHtml += `<div class="tip-missing">&#63; Missing — ${c.deathNote}</div>`;
+      else {
+        tipHtml += `<div class="tip-place">${pos.place}</div>`;
+        if(ch > pos.from) tipHtml += `<div class="tip-note">${pos.note}</div>`;
+      }
+      marker.bindTooltip(tipHtml, { className: 'ribbon-tip', direction: 'top', offset: [0, -20], sticky: false });
+
+      // Tooltips normally open on hover, but phones/tablets have no hover
+      // state — so tapping a marker toggles its tooltip open/closed too.
+      marker.on('click', function(e) {
+        if (this.isTooltipOpen()) {
+          this.closeTooltip();
+        } else {
+          closeAllTooltips();
+          this.openTooltip();
+        }
+        L.DomEvent.stopPropagation(e);
+      });
+
+      markers[c.id] = marker;
+    });
+  });
+}
+
+function getFanOffsets(count, anchorPos){
+  if(count === 1) return [anchorPos];
+  const [lat, lng] = anchorPos;
+  const zoom = map.getZoom();
+  const scale = Math.pow(2, zoom);
+  const clamp = (val, mn, mx) => Math.min(mx, Math.max(mn, val));
+  const screenOffsetX = clamp(160, 60, 120);
+  const screenStepY   = clamp(26, 18, 28);
+  const mapOffsetLng = -(screenOffsetX / scale);
+  const mapStepLat   =  (screenStepY   / scale);
+  const totalHeight = (count - 1) * mapStepLat;
+  const startLat = lat + totalHeight / 2;
+  const offsets = [];
+  for(let i = 0; i < count; i++){
+    offsets.push([startLat - i * mapStepLat, lng + mapOffsetLng]);
+  }
+  return offsets;
+}
+
+// ─── PANELS ──────────────────────────────────────────────────────────────────
+function buildCard(c, ch){
+  const dead = isDeadAt(c, ch);
+  const missing = isMissingAt(c, ch);
+  const statusClass = dead ? 'status-dead' : missing ? 'status-missing' : 'status-alive';
+  const statusLabel = dead ? 'Deceased' : missing ? 'Missing' : 'Active';
+  const tierText = buildTierText(c, ch);
+  const div = document.createElement('div');
+  div.className = 'char-card';
+  div.innerHTML = `
+    <div class="char-card-header" onclick="toggleDetail(this)">
+      <div class="char-swatch" style="background:${c.ink}"></div>
+      <div style="flex:1">
+        <div class="char-name">${c.name}</div>
+        <div class="char-role">${c.house ? c.house + ' · ' : ''}${c.role}</div>
+      </div>
+      <span class="char-status ${statusClass}">${statusLabel}</span>
+      <span class="char-expand">&#9660;</span>
+    </div>
+    <div class="char-detail">
+      <div class="reveal-tier">${tierText || 'No information recorded yet.'}</div>
+      ${dead ? `<div class="reveal-tier fate-note"><strong>Fate:</strong> ${c.deathNote}</div>` : ''}
+      ${missing ? `<div class="reveal-tier missing-note"><strong>Last known:</strong> ${c.deathNote}</div>` : ''}
+    </div>`;
+  return div;
+}
+function toggleDetail(header){
+  const detail = header.nextElementSibling;
+  const arrow = header.querySelector('.char-expand');
+  const open = detail.classList.contains('open');
+  detail.classList.toggle('open');
+  detail.style.display = open ? 'none' : 'block';
+  if(arrow) arrow.textContent = open ? '▼' : '▲';
+}
+function openPanel(id){
+  const overlay = document.getElementById('panelOverlay');
+  const body = document.getElementById('panelBody');
+  const titleEl = document.getElementById('panelTitle');
+  openPanelId = id;
+  overlay.classList.add('open');
+  ['side','glossary','deceased'].forEach(p => {
+    const btn = document.getElementById('btn' + p[0].toUpperCase() + p.slice(1));
+    if(btn) btn.classList.toggle('active', p === id);
+  });
+  body.innerHTML = '';
+  if(id === 'side'){
+    titleEl.textContent = 'Primary Characters';
+    const vis = allChars.filter(c => c.isPov && c.firstChapter <= curCh);
+    if(!vis.length){
+      body.innerHTML = '<p class="empty-note">No POV characters introduced yet.</p>';
+    } else {
+      vis.forEach(c => body.appendChild(buildCard(c, curCh)));
+    }
+  } else if(id === 'glossary'){
+    titleEl.textContent = 'Character Glossary';
+    const all = [...allChars].filter(c => {
+      const introAt = (c.isPov && c.sideChapter) ? c.sideChapter : c.firstChapter;
+      return introAt < curCh;
+    }).sort((a,b) => a.name.localeCompare(b.name));
+    if(!all.length){
+      body.innerHTML = '<p class="empty-note">No characters introduced yet.</p>';
+    } else {
+      all.forEach(c => {
+        const useAsSide = c.isPov && c.sideChapter && curCh < c.firstChapter;
+        if(useAsSide){
+          const sideChar = Object.assign({}, c, {isPov:false, tiers:c.sideTiers});
+          body.appendChild(buildCard(sideChar, curCh));
+        } else {
+          body.appendChild(buildCard(c, curCh));
+        }
+      });
+    }
+  } else if(id === 'deceased'){
+    titleEl.textContent = 'Deceased & Missing';
+    const rel = allChars.filter(c => c.firstChapter <= curCh && c.deathChapter !== null && curCh >= c.deathChapter);
+    if(!rel.length){
+      body.innerHTML = '<p class="empty-note">No deaths or disappearances recorded yet.</p>';
+    } else {
+      rel.forEach(c => body.appendChild(buildCard(c, curCh)));
+    }
+  }
+}
+function closePanel(){
+  document.getElementById('panelOverlay').classList.remove('open');
+  ['side','glossary','deceased'].forEach(p => {
+    const btn = document.getElementById('btn' + p[0].toUpperCase() + p.slice(1));
+    if(btn) btn.classList.remove('active');
+  });
+  document.getElementById('btnDeceased').classList.toggle('active', showDeceased);
+  openPanelId = null;
+}
+function toggleDeceased(){
+  showDeceased = !showDeceased;
+  document.getElementById('btnDeceased').classList.toggle('active', showDeceased);
+  renderMarkers(curCh);
+}
+
+// ─── CHAPTER POV MAP ─────────────────────────────────────────────────────────
+const chapterPOV = {
+  0:  null,       // Prologue — Cressen (not tracked)
+  1:  "arya",     // Arya I
+  2:  "sansa",    // Sansa I
+  3:  "tyrion",   // Tyrion I
+  4:  "bran",     // Bran I
+  5:  "arya",     // Arya II
+  6:  "jon",      // Jon I
+  7:  "cat",      // Catelyn I
+  8:  "tyrion",   // Tyrion II
+  9:  "arya",     // Arya III
+  10: "davos",    // Davos I
+  11: "theon",    // Theon I
+  12: "dany",     // Daenerys I
+  13: "jon",      // Jon II
+  14: "arya",     // Arya IV
+  15: "tyrion",   // Tyrion III
+  16: "bran",     // Bran II
+  17: "tyrion",   // Tyrion IV
+  18: "sansa",    // Sansa II
+  19: "arya",     // Arya V
+  20: "tyrion",   // Tyrion V
+  21: "bran",     // Bran III
+  22: "cat",      // Catelyn II
+  23: "jon",      // Jon III
+  24: "theon",    // Theon II
+  25: "tyrion",   // Tyrion VI
+  26: "arya",     // Arya VI
+  27: "dany",     // Daenerys II
+  28: "bran",     // Bran IV
+  29: "tyrion",   // Tyrion VII
+  30: "arya",     // Arya VII
+  31: "cat",      // Catelyn III
+  32: "sansa",    // Sansa III
+  33: "cat",      // Catelyn IV
+  34: "jon",      // Jon IV
+  35: "bran",     // Bran V
+  36: "tyrion",   // Tyrion VIII
+  37: "theon",    // Theon III
+  38: "arya",     // Arya VIII
+  39: "cat",      // Catelyn V
+  40: "dany",     // Daenerys III
+  41: "tyrion",   // Tyrion IX
+  42: "davos",    // Davos II
+  43: "jon",      // Jon V
+  44: "tyrion",   // Tyrion X
+  45: "cat",      // Catelyn VI
+  46: "bran",     // Bran VI
+  47: "arya",     // Arya IX
+  48: "dany",     // Daenerys IV
+  49: "tyrion",   // Tyrion XI
+  50: "theon",    // Theon IV
+  51: "jon",      // Jon VI
+  52: "sansa",    // Sansa IV
+  53: "jon",      // Jon VII
+  54: "tyrion",   // Tyrion XII
+  55: "cat",      // Catelyn VII
+  56: "theon",    // Theon V
+  57: "sansa",    // Sansa V
+  58: "davos",    // Davos III
+  59: "tyrion",   // Tyrion XIII
+  60: "sansa",    // Sansa VI
+  61: "tyrion",   // Tyrion XIV
+  62: "sansa",    // Sansa VII
+  63: "dany",     // Daenerys V
+  64: "arya",     // Arya X
+  65: "sansa",    // Sansa VIII
+  66: "theon",    // Theon VI
+  67: "tyrion",   // Tyrion XV
+  68: "jon",      // Jon VIII
+  69: "bran",     // Bran VII
+};
+
+// ─── CHAPTER UPDATE ──────────────────────────────────────────────────────────
+const MAX_CH = 69;
+
+function setChapter(n){
+  curCh = Math.max(0, Math.min(MAX_CH, n));
+  const ch = getChObj(curCh);
+  document.getElementById('chDisplay').innerHTML = `Ch. ${curCh} — <span>${ch.name}</span>`;
+  document.getElementById('prevBtn').disabled = curCh <= 0;
+  document.getElementById('nextBtn').disabled = curCh >= MAX_CH;
+  document.getElementById('jumpMenu').value = '';
+  renderMarkers(curCh);
+  const povId = chapterPOV[curCh];
+  if(povId && !freeLook){
+    const povChar = allChars.find(c => c.id === povId);
+    if(povChar){
+      const pos = getPos(povChar, curCh);
+      if(pos){
+        map.flyTo(pos.pos, 1.0, { animate: true, duration: 2.0, easeLinearity: 0.2 });
+      }
+    }
+  }
+  if(openPanelId) openPanel(openPanelId);
+  const deadCount = allChars.filter(c => c.firstChapter <= curCh && c.deathChapter !== null && curCh >= c.deathChapter).length;
+  const activeCount = allChars.filter(c => c.isPov && getPos(c, curCh)).length;
+  document.getElementById('statusBar').textContent =
+    `A Clash of Kings  ·  ${activeCount} POV character${activeCount !== 1 ? 's' : ''} active  ·  ${deadCount} death${deadCount !== 1 ? 's' : ''}/disappearance${deadCount !== 1 ? 's' : ''} recorded through Chapter ${curCh}`;
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+map.on('zoomend', function(){ renderMarkers(curCh); });
+setChapter(0);
+</script>
+
+</body></html>

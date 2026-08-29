@@ -1,0 +1,1857 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Westeros Reading Companion</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    background: #1a1208;
+    color: #e8dbb8;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #header {
+    background: #0d0a04;
+    border-bottom: 1px solid #5a3e1a;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+
+  #title {
+    font-size: 18px;
+    color: #c8a850;
+    letter-spacing: 2px;
+    font-variant: small-caps;
+    white-space: nowrap;
+  }
+
+  .nav-btn {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    border: 1px solid #5a3e1a;
+    background: #1a1208;
+    color: #c8a850;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s;
+    flex-shrink: 0;
+  }
+  .nav-btn:hover { background: #2a1e08; border-color: #8a6030; }
+  .nav-btn:disabled { opacity: 0.35; cursor: default; }
+
+  #chDisplay {
+    font-size: 13px;
+    color: #c8a850;
+    white-space: nowrap;
+    min-width: 180px;
+    font-family: Georgia, serif;
+  }
+  #chDisplay span { color: #8a7040; font-size: 12px; }
+
+  #jumpMenu {
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    border: 1px solid #5a3e1a;
+    background: #1a1208;
+    color: #c8a850;
+    cursor: pointer;
+    max-width: 200px;
+    font-family: Georgia, serif;
+  }
+
+  .filter-btn {
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid #5a3e1a;
+    background: #1a1208;
+    color: #8a7040;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    font-family: Georgia, serif;
+  }
+  .filter-btn.active { background: #2a1e08; color: #c8a850; border-color: #8a6030; }
+  .filter-btn:hover { background: #2a1e08; color: #c8a850; }
+
+  #map {
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    background: #1a2a3a;
+  }
+
+  .leaflet-control-zoom a {
+    background: #1a1208 !important;
+    color: #c8a850 !important;
+    border-color: #5a3e1a !important;
+    font-family: Georgia, serif;
+  }
+  .leaflet-control-zoom a:hover { background: #2a1e08 !important; }
+
+  /* Custom ribbon marker styles */
+  .ribbon-label {
+    background: none !important;
+    border: none !important;
+  }
+
+  /* Panel overlay */
+  #panelOverlay {
+    position: fixed;
+    top: 60px; right: 0;
+    width: 340px;
+    max-height: calc(100vh - 70px);
+    background: #0d0a04;
+    border-left: 1px solid #5a3e1a;
+    border-bottom: 1px solid #5a3e1a;
+    display: none;
+    flex-direction: column;
+    z-index: 1000;
+    font-family: Georgia, serif;
+  }
+  #panelOverlay.open { display: flex; }
+  #panelHeader {
+    padding: 10px 14px;
+    background: #1a1208;
+    border-bottom: 1px solid #5a3e1a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: #c8a850;
+    letter-spacing: 1px;
+    font-variant: small-caps;
+    flex-shrink: 0;
+  }
+  #panelClose {
+    cursor: pointer;
+    font-size: 18px;
+    color: #8a7040;
+    line-height: 1;
+  }
+  #panelClose:hover { color: #c8a850; }
+  #panelBody {
+    overflow-y: auto;
+    flex: 1;
+    padding: 12px;
+  }
+
+  .char-card {
+    border: 1px solid #3a2a0a;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    background: #120e04;
+  }
+  .char-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .char-card-header:hover { background: #1a1208; }
+  .char-swatch { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .char-name { font-size: 13px; color: #c8a850; flex: 1; }
+  .char-role { font-size: 11px; color: #6a5030; }
+  .char-status {
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    white-space: nowrap;
+  }
+  .status-dead { background: #3a1010; color: #c05050; }
+  .status-missing { background: #2a2a10; color: #a09050; }
+  .status-alive { background: #0a2010; color: #50a050; }
+  .char-expand { font-size: 11px; color: #6a5030; margin-left: 4px; }
+  .char-detail {
+    padding: 10px 12px;
+    border-top: 1px solid #2a1a0a;
+    background: #0a0804;
+    font-size: 12px;
+    color: #8a7a50;
+    line-height: 1.7;
+    display: none;
+  }
+  .char-detail.open { display: block; }
+  .char-detail strong { color: #c8a850; font-weight: normal; }
+  .reveal-tier { margin-bottom: 6px; }
+  .reveal-tier + .reveal-tier {
+    border-top: 1px dashed #2a1a0a;
+    padding-top: 6px;
+    margin-top: 2px;
+  }
+  .fate-note { color: #c05050 !important; margin-top: 6px; }
+  .missing-note { color: #a09050 !important; margin-top: 6px; }
+
+  #statusBar {
+    background: #0d0a04;
+    border-top: 1px solid #3a2a0a;
+    padding: 5px 16px;
+    font-size: 11px;
+    color: #5a4a20;
+    font-family: Georgia, serif;
+    font-style: italic;
+    flex-shrink: 0;
+  }
+
+  /* Tooltip */
+  .leaflet-tooltip.ribbon-tip {
+    background: #0d0a04;
+    border: 1px solid #5a3e1a;
+    color: #c8a850;
+    font-family: Georgia, serif;
+    font-size: 12px;
+    line-height: 1.6;
+    padding: 8px 12px;
+    border-radius: 6px;
+    max-width: 220px;
+    width: 220px;
+    white-space: normal;
+    word-wrap: break-word;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  }
+  .leaflet-tooltip.ribbon-tip::before { display: none; }
+
+  .tip-name { font-size: 13px; color: #c8a850; font-variant: small-caps; letter-spacing: 1px; }
+  .tip-dead { color: #c05050; font-size: 11px; margin-top: 2px; }
+  .tip-missing { color: #a09050; font-size: 11px; margin-top: 2px; }
+  .tip-place { color: #8a7040; font-size: 11px; margin-top: 2px; }
+  .tip-note { color: #a09060; font-size: 11px; margin-top: 2px; }
+
+  .empty-note {
+    font-size: 13px;
+    color: #5a4a20;
+    font-style: italic;
+    padding: 8px 0;
+    font-family: Georgia, serif;
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 700px) {
+    #header {
+      padding: 8px 10px;
+      gap: 8px;
+    }
+    #title {
+      font-size: 14px;
+      letter-spacing: 1px;
+    }
+    .nav-btn {
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
+    }
+    #chDisplay {
+      font-size: 12px;
+      min-width: 0;
+    }
+    #jumpMenu {
+      max-width: 140px;
+      font-size: 12px;
+      padding: 8px 6px;
+    }
+    .filter-btn {
+      font-size: 12px;
+      padding: 9px 12px;
+    }
+    /* Full-screen panel overlay on small screens */
+    #panelOverlay {
+      top: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      height: 100vh;
+      max-height: 100vh;
+      border-left: none;
+    }
+    /* Wider, more finger-friendly tooltips */
+    .leaflet-tooltip.ribbon-tip {
+      max-width: 220px;
+      font-size: 13px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="title">⚔ Westeros Reading Companion</div>
+  <button class="nav-btn" id="prevBtn" onclick="stepCh(-1)" title="Previous chapter" disabled="">←</button>
+  <button class="nav-btn" id="nextBtn" onclick="stepCh(1)" title="Next chapter">→</button>
+  <div id="chDisplay">Ch. 0 — <span>Prologue</span></div>
+  <select id="jumpMenu" onchange="jumpTo(this.value)">
+    <option value="">Jump to chapter...</option>
+  <option value="0">Ch. 0 — Prologue</option><option value="1">Ch. 1 — Bran I</option><option value="2">Ch. 2 — Catelyn I</option><option value="3">Ch. 3 — Daenerys I</option><option value="4">Ch. 4 — Eddard I</option><option value="5">Ch. 5 — Jon I</option><option value="6">Ch. 6 — Catelyn II</option><option value="7">Ch. 7 — Arya I</option><option value="8">Ch. 8 — Bran II</option><option value="9">Ch. 9 — Tyrion I</option><option value="10">Ch. 10 — Jon II</option><option value="11">Ch. 11 — Daenerys II</option><option value="12">Ch. 12 — Eddard II</option><option value="13">Ch. 13 — Tyrion II</option><option value="14">Ch. 14 — Catelyn III</option><option value="15">Ch. 15 — Sansa I</option><option value="16">Ch. 16 — Eddard III</option><option value="17">Ch. 17 — Bran III</option><option value="18">Ch. 18 — Catelyn IV</option><option value="19">Ch. 19 — Jon III</option><option value="20">Ch. 20 — Eddard IV</option><option value="21">Ch. 21 — Tyrion III</option><option value="22">Ch. 22 — Arya II</option><option value="23">Ch. 23 — Daenerys III</option><option value="24">Ch. 24 — Bran IV</option><option value="25">Ch. 25 — Eddard V</option><option value="26">Ch. 26 — Jon IV</option><option value="27">Ch. 27 — Eddard VI</option><option value="28">Ch. 28 — Catelyn V</option><option value="29">Ch. 29 — Sansa II</option><option value="30">Ch. 30 — Eddard VII</option><option value="31">Ch. 31 — Tyrion IV</option><option value="32">Ch. 32 — Arya III</option><option value="33">Ch. 33 — Eddard VIII</option><option value="34">Ch. 34 — Catelyn VI</option><option value="35">Ch. 35 — Eddard IX</option><option value="36">Ch. 36 — Daenerys IV</option><option value="37">Ch. 37 — Bran V</option><option value="38">Ch. 38 — Tyrion V</option><option value="39">Ch. 39 — Eddard X</option><option value="40">Ch. 40 — Catelyn VII</option><option value="41">Ch. 41 — Jon V</option><option value="42">Ch. 42 — Tyrion VI</option><option value="43">Ch. 43 — Eddard XI</option><option value="44">Ch. 44 — Sansa III</option><option value="45">Ch. 45 — Eddard XII</option><option value="46">Ch. 46 — Daenerys V</option><option value="47">Ch. 47 — Eddard XIII</option><option value="48">Ch. 48 — Jon VI</option><option value="49">Ch. 49 — Eddard XIV</option><option value="50">Ch. 50 — Arya IV</option><option value="51">Ch. 51 — Sansa IV</option><option value="52">Ch. 52 — Jon VII</option><option value="53">Ch. 53 — Bran VI</option><option value="54">Ch. 54 — Daenerys VI</option><option value="55">Ch. 55 — Catelyn VIII</option><option value="56">Ch. 56 — Tyrion VII</option><option value="57">Ch. 57 — Sansa V</option><option value="58">Ch. 58 — Eddard XV</option><option value="59">Ch. 59 — Catelyn IX</option><option value="60">Ch. 60 — Jon VIII</option><option value="61">Ch. 61 — Daenerys VII</option><option value="62">Ch. 62 — Tyrion VIII</option><option value="63">Ch. 63 — Catelyn X</option><option value="64">Ch. 64 — Daenerys VIII</option><option value="65">Ch. 65 — Arya V</option><option value="66">Ch. 66 — Bran VII</option><option value="67">Ch. 67 — Sansa VI</option><option value="68">Ch. 68 — Daenerys IX</option><option value="69">Ch. 69 — Tyrion IX</option><option value="70">Ch. 70 — Jon IX</option><option value="71">Ch. 71 — Catelyn XI</option><option value="72">Ch. 72 — Daenerys X</option></select>
+  <button class="filter-btn active" id="btnDeceased" onclick="toggleDeceased()">☠ Deceased</button>
+  <button class="filter-btn" id="btnSide" onclick="openPanel(&#39;side&#39;)">Primary Characters</button>
+  <button class="filter-btn" id="btnGlossary" onclick="openPanel(&#39;glossary&#39;)">Glossary</button>
+  <div id="devTools" style="margin-left:auto;display:none;gap:6px;">
+    <button class="filter-btn" id="btnFreeLook" onclick="toggleFreeLook()" title="Free Look — map stays where you left it when advancing chapters">🔭 Free Look</button>
+    <button class="filter-btn" id="btnCalibrate" onclick="toggleCalibrateMode()" title="Click anywhere on map to get px() coordinates">📍 Calibrate</button>
+    <button class="filter-btn" id="btnTrace" onclick="openTraceModal()" title="Trace road paths for automatic character positioning">✏️ Trace Road</button>
+  </div>
+</div>
+
+<div id="map"></div>
+
+<div id="panelOverlay">
+  <div id="panelHeader">
+    <span id="panelTitle">Glossary</span>
+    <span id="panelClose" onclick="closePanel()">×</span>
+  </div>
+  <div id="panelBody"></div>
+</div>
+
+<div id="statusBar">A Game of Thrones  ·  0 POV characters active  ·  0 deaths/disappearances recorded through Chapter 0</div>
+
+<script>
+// ─── DEV MODE ──────────────────────────────────────────────────────────────
+// The Calibrate / Trace Road / Free Look buttons are author-only tools.
+// They stay hidden on the live site unless the page is loaded with ?dev=true
+// in the URL, e.g. AGOT_Reading_Companion.html?dev=true
+const DEV_MODE = new URLSearchParams(window.location.search).get('dev') === 'true';
+if (DEV_MODE) {
+  document.getElementById('devTools').style.display = 'flex';
+}
+
+// ─── DATA ────────────────────────────────────────────────────────────────────
+
+const allChapters=[
+  {n:0, name:"Prologue"},
+  {n:1, name:"Bran I"},{n:2, name:"Catelyn I"},{n:3, name:"Daenerys I"},{n:4, name:"Eddard I"},
+  {n:5, name:"Jon I"},{n:6, name:"Catelyn II"},{n:7, name:"Arya I"},{n:8, name:"Bran II"},
+  {n:9, name:"Tyrion I"},{n:10,name:"Jon II"},{n:11,name:"Daenerys II"},{n:12,name:"Eddard II"},
+  {n:13,name:"Tyrion II"},{n:14,name:"Catelyn III"},{n:15,name:"Sansa I"},{n:16,name:"Eddard III"},
+  {n:17,name:"Bran III"},{n:18,name:"Catelyn IV"},{n:19,name:"Jon III"},{n:20,name:"Eddard IV"},
+  {n:21,name:"Tyrion III"},{n:22,name:"Arya II"},{n:23,name:"Daenerys III"},{n:24,name:"Bran IV"},
+  {n:25,name:"Eddard V"},{n:26,name:"Jon IV"},{n:27,name:"Eddard VI"},{n:28,name:"Catelyn V"},
+  {n:29,name:"Sansa II"},{n:30,name:"Eddard VII"},{n:31,name:"Tyrion IV"},{n:32,name:"Arya III"},
+  {n:33,name:"Eddard VIII"},{n:34,name:"Catelyn VI"},{n:35,name:"Eddard IX"},{n:36,name:"Daenerys IV"},
+  {n:37,name:"Bran V"},{n:38,name:"Tyrion V"},{n:39,name:"Eddard X"},{n:40,name:"Catelyn VII"},
+  {n:41,name:"Jon V"},{n:42,name:"Tyrion VI"},{n:43,name:"Eddard XI"},{n:44,name:"Sansa III"},
+  {n:45,name:"Eddard XII"},{n:46,name:"Daenerys V"},{n:47,name:"Eddard XIII"},{n:48,name:"Jon VI"},
+  {n:49,name:"Eddard XIV"},{n:50,name:"Arya IV"},{n:51,name:"Sansa IV"},{n:52,name:"Jon VII"},
+  {n:53,name:"Bran VI"},{n:54,name:"Daenerys VI"},{n:55,name:"Catelyn VIII"},{n:56,name:"Tyrion VII"},
+  {n:57,name:"Sansa V"},{n:58,name:"Eddard XV"},{n:59,name:"Catelyn IX"},{n:60,name:"Jon VIII"},
+  {n:61,name:"Daenerys VII"},{n:62,name:"Tyrion VIII"},{n:63,name:"Catelyn X"},{n:64,name:"Daenerys VIII"},
+  {n:65,name:"Arya V"},{n:66,name:"Bran VII"},{n:67,name:"Sansa VI"},{n:68,name:"Daenerys IX"},
+  {n:69,name:"Tyrion IX"},{n:70,name:"Jon IX"},{n:71,name:"Catelyn XI"},{n:72,name:"Daenerys X"}
+];
+
+// Coordinates recalibrated for OfficialGOTMap.jpg (7400×4932):
+// Winterfell:     px(1154, 1220)
+// Castle Black:   px(1368, 746)
+// King's Landing: px(1394, 2516)
+// Pentos:         px(2113, 2488)
+// Vaes Dothrak:   px(4719, 2315)
+// The Eyrie:      px(1486, 2033)
+// Riverrun:       px(1055, 2180)
+// The Twins:      px(1117, 1923)
+// Harrenhal:      px(1294, 2252)
+// Moat Cailin:    px(1159, 1593)
+const IMG_W = 7400, IMG_H = 4932;
+function px(x, y){ return [IMG_H - y, x]; }
+
+const allChars = [
+  // ─── POV CHARACTERS ───
+  {id:"ned", name:"Ned Stark", house:"Stark", role:"Lord of Winterfell / Hand of the King",
+   ink:"#5a6a6a", textInk:"#e8e8e8", isPov:true, firstChapter:4,
+   sideChapter:1, sideTiers:[
+     {revealChapter:1, text:"Lord of Winterfell and Warden of the North. Eddard Stark is a man of deep honour who has just been asked by his old friend King Robert to become Hand of the King."},
+     {revealChapter:2, text:"Has accepted the King's offer and will ride south to King's Landing with his daughters Sansa and Arya."}
+   ],
+   deathChapter:65, deathStatus:"dead",
+   deathNote:"Executed at the Great Sept of Baelor on King Joffrey's orders.",
+   positions:[
+     {from:4,  to:11, pos:px(1154,1220),  place:"Winterfell",                       note:"Lord of Winterfell — receives King Robert and his court"},
+     {from:12, to:14, road:"kingsroad", pct:0.36,  place:"Kingsroad south — with Sansa and Arya", note:"Riding south with his daughters in the royal party"},
+     {from:15, to:15, road:"kingsroad", pct:"rubyford", place:"Ruby Ford — Kingsroad south",      note:"Camped near the Trident — the Joffrey and Nymeria incident"},
+     {from:16, to:19, road:"kingsroad", pct:0.82, place:"Kingsroad south — final stretch",  note:"Continuing south to King's Landing with Sansa and Arya"},
+     {from:20, to:34, pos:px(1394,2516), place:"King's Landing",                  note:"Serving as Hand of the King — investigating Jon Arryn's death"},
+     {from:35, to:57, pos:px(1394,2516), place:"King's Landing",                  note:"Hand of the King — now sitting on dangerous knowledge about the succession"},
+     {from:58, to:64, pos:px(1394,2516), place:"King's Landing — imprisoned",     note:"Arrested and held in the black cells of the Red Keep"},
+     {from:65, to:73, pos:px(1394,2516), place:"King's Landing",                  note:"Executed at the Great Sept of Baelor"}
+   ],
+   tiers:[
+     {revealChapter:4,  text:"Warden of the North and Lord of Winterfell. An old friend of King Robert, known for his strict honour. Father to Robb, Sansa, Arya, Bran, and Rickon, and guardian of Jon Snow."},
+     {revealChapter:16, text:"Now serving as Hand of the King in King's Landing. He is investigating Jon Arryn's death and growing uneasy about what he is finding."},
+     {revealChapter:35, text:"Has discovered that Joffrey and the royal children may not be Robert's true heirs — a secret that puts his life in grave danger."},
+     {revealChapter:51, text:"Arrested and imprisoned after attempting to expose Cersei's secret and being betrayed by Littlefinger."},
+     {revealChapter:63, text:"Confessed to treason in exchange for a promise of mercy. Joffrey broke that promise and had him executed publicly. His death fractures the realm."}
+   ]},
+
+  {id:"cat", name:"Catelyn Stark", house:"Stark", role:"Lady of Winterfell",
+   ink:"#5a6a6a", textInk:"#e8e8e8", isPov:true, firstChapter:2,
+   sideChapter:1, sideTiers:[
+     {revealChapter:1, text:"Wife of Eddard Stark and Lady of Winterfell. Born a Tully of Riverrun. Mother of Robb, Sansa, Arya, Bran, and Rickon."}
+   ],
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   positions:[
+     {from:2,  to:13,  pos:px(1154,1220),  place:"Winterfell",                note:"Lady of Winterfell — tending to her family as the royal party visits"},
+     {from:14, to:14,  pos:px(1154,1220),  place:"Winterfell",                note:"Preparing to sail south to King's Landing with Ser Rodrik"},
+     {from:15, to:17,  pos:px(1750,2280),  place:"At sea — sailing south",    note:"Travelling by ship to King's Landing with Ser Rodrik"},
+     {from:18, to:19,  pos:px(1394,2516), place:"King's Landing",            note:"Arrived secretly in King's Landing with Ser Rodrik"},
+     {from:20, to:20,  pos:px(1394,2516), place:"King's Landing",            note:"Met Ned in secret — shared the assassin's dagger and Lysa's warning"},
+     {from:21, to:27,  road:"kingsroad", pct:"riverlands", place:"Kingsroad north — riding back to Winterfell", note:"Riding north after secretly warning Ned — passing through the Riverlands"},
+     {from:28, to:30,  road:"kingsroad", pct:"inn", place:"Inn at the Crossroads",      note:"Arrests Tyrion Lannister — departs with him as prisoner"},
+     {from:31, to:33,  road:"highroad",  pct:0.589, place:"High Road — Mountains of the Moon", note:"Escorting Tyrion as prisoner through the mountain clans"},
+     {from:34, to:37,  pos:px(1486,2033),  place:"The Eyrie",                  note:"Keeping Tyrion prisoner — awaiting Lysa's justice"},
+     {from:38, to:40,  pos:px(1486,2033),  place:"The Eyrie",                  note:"Departing the Eyrie — Bronn won Tyrion's freedom by trial by combat"},
+     {from:41, to:54,  pos:px(1650,1850),  place:"Travelling — Vale to White Harbor", note:"Crossed the Vale to Gulltown with Ser Brynden; sailed north along the Narrow Sea to White Harbor; riding west to meet Robb's army"},
+     {from:55, to:58,  road:"kingsroad", pct:"moatcailin", place:"Moat Cailin",      note:"Joined Robb's army at Moat Cailin — a key voice in his war councils as they plan to march south"},
+     {from:59, to:62,  pos:px(1117,1923),  place:"The Twins",                        note:"Catelyn negotiates passage across the Green Fork for Robb's army"},
+     {from:63, to:70,  pos:px(1055,2180),  place:"Riverrun",                         note:"Robb lifts the siege — Catelyn reunited with Edmure and her father"},
+     {from:71, to:73,  pos:px(1055,2180),  place:"Riverrun — King in the North",     note:"Northern lords proclaim Robb Stark King in the North"}
+   ],
+   tiers:[
+     {revealChapter:2,  text:"Wife of Eddard Stark and Lady of Winterfell. Born a Tully of Riverrun. Devoted mother of five."},
+     {revealChapter:6,  text:"Received a secret warning from her sister Lysa that the Lannisters may be behind Jon Arryn's death. She has decided to travel south to warn Ned."},
+     {revealChapter:14, text:"An assassin came for the comatose Bran in the night, armed with a Valyrian steel dagger. Catelyn fought him off. She has set sail for King's Landing with Ser Rodrik, taking the dagger as evidence."},
+     {revealChapter:28, text:"Has captured Tyrion Lannister at the Inn at the Crossroads and departed with him as prisoner — destination unknown to most."},
+     {revealChapter:34, text:"Has brought Tyrion to the Eyrie, her sister Lysa's seat. Lysa is changed — unstable and gripped by fear — and has thrown Tyrion in a sky cell to await her justice."},
+     {revealChapter:40, text:"Preparing to leave the Eyrie — Lysa refused to commit the Vale's forces to war and Ser Brynden has resigned in disgust. Plans to sail north from Gulltown to find Robb's army."},
+     {revealChapter:55, text:"Has rejoined Robb's host at Moat Cailin after sailing north from Gulltown with Ser Brynden. She brings news of the Vale and is a key voice in his war councils."},
+     {revealChapter:59, text:"Negotiated passage across the Green Fork with the Freys on Robb's behalf — at a steep personal price. The war in the Riverlands is intensifying."}
+   ]},
+
+  {id:"dany", name:"Daenerys", house:"Targaryen", role:"Exiled princess",
+   ink:"#1a1a2a", textInk:"#cc2020", isPov:true, firstChapter:3,
+   sideChapter:1, sideTiers:[
+     {revealChapter:1, text:"Daenerys Targaryen, last surviving daughter of the Mad King Aerys. Living in exile in Essos with her brother Viserys, who dreams of reclaiming the Iron Throne."}
+   ],
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   positions:[
+     {from:3,  to:11, pos:px(2113,2488),  place:"Pentos",                   note:"Living in exile in Pentos with Viserys — recently wed to Khal Drogo"},
+     {from:12, to:22, road:"dothraki",  pct:0.10, place:"Riding east — Norvos and Qohor", note:"Traveling east through the Free Cities and the Forest of Qohor toward the Dothraki Sea"},
+     {from:23, to:35, road:"dothraki",  pct:0.45, place:"Dothraki Sea — western edge",   note:"Just emerged from the Forest of Qohor — Daenerys sees the vast grasslands for the first time and stands up to Viserys"},
+     {from:36, to:53, pos:px(4719,2315),  place:"Vaes Dothrak",             note:"Arrived at the sacred city of the Dothraki — staying until Drogo swears to sail west"},
+     {from:54, to:60, pos:px(4640,2620), place:"Southern Dothraki Sea — riding toward Lhazar", note:"Khalasar striking south toward the Lhazarene lands to take slaves for the planned invasion of Westeros"},
+     {from:61, to:63, pos:px(4520,3084), place:"Lhazar",                   note:"In the Lamb Men's lands — Drogo wounded at the sack of a Lhazarene town; Mirri Maz Duur brought in to heal him"},
+     {from:64, to:71, pos:px(4520,3084), place:"Lhazar — camped, Drogo comatose", note:"Khalasar disintegrating as Drogo lies mindless; Daenerys prepares his funeral pyre"},
+     {from:72, to:72, pos:px(4540,3130), place:"Lhazar — Drogo's funeral pyre",      note:"Drogo's funeral pyre lit in the Lhazareen hills — Daenerys walks into the flames and the dragons are born"}
+   ],
+   tiers:[
+     {revealChapter:3,  text:"Last surviving daughter of the Mad King Aerys Targaryen. Living in exile in Pentos, sold in marriage to Khal Drogo by her brother Viserys."},
+     {revealChapter:11, text:"Finding her confidence as a khaleesi. She is learning Dothraki and earning the respect of Drogo's riders."},
+     {revealChapter:36, text:"Her brother Viserys is dead. She is growing into her identity as the Unburnt, protective of three dragon eggs gifted at her wedding."},
+     {revealChapter:54, text:"Drogo's wound has worsened dangerously on the march south. His khalasar is beginning to fracture around him as he shows weakness."},
+     {revealChapter:64, text:"In desperation she turned to the blood magic of Mirri Maz Duur to save Drogo — but the cost was devastating. He lives, but as a mindless shell. She has ended his suffering."},
+     {revealChapter:72, text:"Drogo is gone. She walked into his funeral pyre with her dragon eggs and emerged unburned, with three living dragons — the first in over a century."}
+   ]},
+
+  {id:"jon", name:"Jon Snow", house:"Stark", role:"Bastard of Winterfell / Night's Watch",
+   ink:"#4a5a5a", textInk:"#cccccc", isPov:true, firstChapter:5,
+   sideChapter:1, sideTiers:[
+     {revealChapter:1, text:"Ned Stark's bastard son, raised at Winterfell alongside his trueborn siblings. He is treated well but never quite belongs. He wants to join the Night's Watch."},
+     {revealChapter:2, text:"Has decided to take the black and join the Night's Watch. Will ride north with his uncle Benjen."}
+   ],
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   positions:[
+     {from:5,  to:10, pos:px(1154,1220), place:"Winterfell",            note:"Preparing to join the Night's Watch"},
+     {from:11, to:18, road:"kingsroad", pct:"wolfswood", place:"Kingsroad north — Wolfswood", note:"Riding north with Tyrion Lannister and Benjen Stark toward the Wall"},
+     {from:19, to:51, pos:px(1368,746), place:"Castle Black",                  note:"Training and serving with the Night's Watch"},
+     {from:52, to:59, pos:px(1372,740), place:"Castle Black — preparing the ranging",    note:"Jon prepares to depart with Lord Commander Mormont's great ranging beyond the Wall"},
+     {from:60, to:69, pos:px(1340,620), place:"Whitetree — beyond the Wall",  note:"Passing through abandoned wildling villages"},
+     {from:70, to:73, pos:px(1304,666), place:"Craster's Keep",              note:"Deep beyond the Wall — wildlings uniting under Mance Rayder"}
+   ],
+   tiers:[
+     {revealChapter:5,  text:"Ned Stark's bastard son. Choosing to take the black and join the Night's Watch rather than remain at Winterfell without a true place in the family."},
+     {revealChapter:19, text:"Arrived at Castle Black. Struggling to adjust — his fellow recruits are thieves and criminals, hardened men he once looked down on."},
+     {revealChapter:26, text:"Befriended a timid but sharp-minded new recruit named Samwell Tarly, putting a stop to the bullying he was suffering. Jon is finding his footing among the Watch."},
+     {revealChapter:39, text:"Assigned as steward to Lord Commander Mormont — a role he resented but is beginning to understand may be grooming him for leadership."},
+     {revealChapter:52, text:"Encountered a reanimated wight at Castle Black — a dead ranger returned from beyond the Wall. He is beginning to understand the true nature of the threat from the north."},
+     {revealChapter:60, text:"Marching beyond the Wall with Lord Commander Mormont's great ranging. The threat of the Others and Mance Rayder's gathering wildling army grows more real with every mile."}
+   ]},
+
+  {id:"tyrion", name:"Tyrion Lannister", house:"Lannister", role:"Lord Tywin's son",
+   ink:"#8B0000", textInk:"#f0c040", isPov:true, firstChapter:9,
+   sideChapter:4, sideTiers:[
+     {revealChapter:4, text:"Youngest son of Lord Tywin Lannister and brother of Cersei and Jaime. A dwarf, sharp-witted and well-read, visiting Winterfell with King Robert's party."},
+     {revealChapter:5, text:"Spoke with Jon Snow at the Winterfell feast. Advised him to embrace being a bastard rather than be ashamed of it. He has broken away from the royal party and plans to ride north with Jon and Benjen Stark to see the Wall."}
+   ],
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   positions:[
+     {from:9,  to:10, pos:px(1154,1220), place:"Winterfell",               note:"Visiting with King Robert's party — speaks with Jon Snow"},
+     {from:11, to:18, road:"kingsroad", pct:"wolfswood", place:"Kingsroad north — Wolfswood", note:"Riding north with Jon Snow and Benjen Stark toward the Wall"},
+     {from:19, to:20, pos:px(1368,746), place:"Castle Black",             note:"Visiting the Wall as an honored guest of the officers"},
+     {from:21, to:27, road:"kingsroad", pct:0.028, place:"Kingsroad south — riding from the Wall",  note:"Riding south from Castle Black toward King's Landing"},
+     {from:28, to:30, road:"kingsroad", pct:"inn", place:"Inn at the Crossroads",          note:"Arrested by Catelyn Stark — travelling with her party as prisoner"},
+     {from:31, to:33, road:"highroad",  pct:0.589, place:"High Road — Mountains of the Moon", note:"Prisoner alongside Catelyn — mountain clan attacks in the passes; surviving men battered but moving"},
+     {from:34, to:34, pos:px(1468,2071), place:"Gates of the Moon",        note:"Catelyn ascends the Giant's Lance alone at night; Tyrion kept in a tower cell at the Gates of the Moon until morning"},
+     {from:35, to:40, pos:px(1486,2033), place:"The Eyrie",                note:"Imprisoned in a sky cell — demands trial by combat; Bronn wins his freedom and Lysa releases him"},
+     {from:41, to:42, road:"highroad",  pct:0.589, place:"High Road — Mountains of the Moon", note:"Back on the high road with Bronn — escaped the Eyrie, now recruiting Vale mountain clans with promises of steel and the Vale itself"},
+     {from:43, to:55, pos:px(1350,2100),  place:"Foothills west of the Vale — with Hill Tribes",  note:"Leading Vale mountain clans westward — descending from the Mountains of the Moon toward Lord Tywin's host"},
+     {from:56, to:61, pos:px(1220,2060),  place:"Lannister camp — Riverlands",     note:"Arrived at Lord Tywin's host near the Green Fork; placed in command of the Hill Tribes for the coming battle"},
+     {from:62, to:68, pos:px(1220,2060),  place:"Battle of the Green Fork",        note:"Fighting with Tywin's vanguard against Roose Bolton's northern host"},
+     {from:69, to:73, pos:px(1294,2252),  place:"Harrenhal",                       note:"Tywin's army camps at Harrenhal after learning of Jaime's defeat"}
+   ],
+   tiers:[
+     {revealChapter:9,  text:"Youngest son of Lord Tywin Lannister. A dwarf, witty and sharp-minded. Travelling north with King Robert's party."},
+     {revealChapter:13, text:"Riding north with Jon Snow and Benjen Stark toward the Wall. Sharp, curious company on the road."},
+     {revealChapter:21, text:"Has visited the Wall and seen its sorry state firsthand — too few men, crumbling infrastructure, and little support from the south. He left the maester at Castle Black plans for a saddle that could let Bran ride again. Now heading south."},
+     {revealChapter:31, text:"Taken prisoner by Catelyn Stark at the Inn at the Crossroads and brought to the Eyrie to face Lysa Tully's justice."},
+     {revealChapter:38, text:"Demanded a trial by combat at the Eyrie. The sellsword Bronn fought as his champion and won his freedom."},
+     {revealChapter:41, text:"Won his freedom at the Eyrie through trial by combat — his champion Bronn defeated Lysa's knight Ser Vardis. Now on the high road with Bronn, recruiting fierce Vale mountain clans with promises of steel and glory."},
+     {revealChapter:56, text:"Led his Hill Tribes out of the mountains to join Lord Tywin's host in the Riverlands. His father has placed him and his clansmen in the vanguard for the battle ahead."},
+     {revealChapter:62, text:"Fought at the Battle of the Green Fork. His father has named him Acting Hand of the King."}
+   ]},
+
+  {id:"bran", name:"Bran Stark", house:"Stark", role:"Son of Eddard Stark",
+   ink:"#5a6a6a", textInk:"#e8e8e8", isPov:true, firstChapter:1,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   positions:[
+     {from:1,  to:7,  pos:px(1154,1220), place:"Winterfell",       note:"At Winterfell with the royal party — keen to see King's Landing"},
+     {from:8,  to:11, pos:px(1154,1220), place:"Winterfell",       note:"Comatose after his fall — Catelyn keeps vigil at his bedside"},
+     {from:12, to:36, pos:px(1154,1220), place:"Winterfell",       note:"Recovering at Winterfell — Robb holds the castle in Ned's absence"},
+     {from:37, to:52, pos:px(1154,1220), place:"Winterfell",       note:"Riding again — Robb prepares to march south with the bannermen"},
+     {from:53, to:73, pos:px(1154,1220), place:"Winterfell",       note:"The Stark in Winterfell — Robb has marched south, Bran holds the castle"}
+   ],
+   tiers:[
+     {revealChapter:1,  text:"Ned's second son, a keen climber and adventurer."},
+     {revealChapter:8,  text:"Pushed from a tower window by Jaime Lannister after witnessing something he should not have. Survived but is crippled and has been unconscious."},
+     {revealChapter:17, text:"Has awoken from his coma. Cannot remember what he saw. Learning to live without the use of his legs, with his direwolf Summer always near."},
+     {revealChapter:37, text:"Ruling Winterfell in his father's absence alongside Maester Luwin. Experiencing vivid wolf-dreams that feel like more than sleep."}
+   ]},
+
+  {id:"sansa", name:"Sansa Stark", house:"Stark", role:"Daughter of Eddard Stark",
+   ink:"#5a6a6a", textInk:"#e8e8e8", isPov:true, firstChapter:15,
+   sideChapter:4, sideTiers:[
+     {revealChapter:4,  text:"Ned's eldest daughter, eleven years old. Gentle, courteous, and beautiful. She arrived at Winterfell with King Robert's party and has been betrothed to Prince Joffrey."},
+     {revealChapter:6,  text:"Will travel south to King's Landing with her father to be raised at court, with her betrothal to Prince Joffrey secured."}
+   ],
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   positions:[
+     {from:15, to:15, road:"kingsroad", pct:"rubyford", place:"Ruby Ford — Kingsroad south",      note:"Travelling south with Ned and Arya — the Joffrey and Nymeria incident"},
+     {from:16, to:19, road:"kingsroad", pct:0.82, place:"Kingsroad south — final stretch",  note:"Continuing south toward King's Landing with her father"},
+     {from:20, to:28, pos:px(1394,2516), place:"King's Landing",                  note:"Betrothed to Prince Joffrey — life at court begins"},
+     {from:29, to:44, pos:px(1394,2516), place:"King's Landing",                  note:"Trapped at court as Joffrey's cruelty becomes undeniable"},
+     {from:45, to:73, pos:px(1394,2516), place:"King's Landing — hostage",        note:"Held hostage at court after her father's arrest"}
+   ],
+   tiers:[
+     {revealChapter:15, text:"Ned's eldest daughter. Gentle and well-mannered. Betrothed to Prince Joffrey, which she considers a romantic dream come true."},
+     {revealChapter:29, text:"Beginning to see cracks in her fairy-tale. Joffrey's cruelty is becoming harder to ignore."},
+     {revealChapter:45, text:"Trapped in King's Landing after her father's arrest. A hostage of the Lannisters, kept alive by her value as a future queen."},
+     {revealChapter:67, text:"Forced to watch her father's public execution. Every illusion she held about Joffrey and court life has been shattered."}
+   ]},
+
+  {id:"arya", name:"Arya Stark", house:"Stark", role:"Daughter of Eddard Stark",
+   ink:"#5a6a6a", textInk:"#e8e8e8", isPov:true, firstChapter:7,
+   sideChapter:1, sideTiers:[
+     {revealChapter:1, text:"Ned's younger daughter. Unlike her sister Sansa, she is headstrong, tomboyish, and more interested in swords than needlework. Named her direwolf Nymeria."},
+     {revealChapter:6,  text:"Will travel south to King's Landing with her father and Sansa."}
+   ],
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   positions:[
+     {from:7,  to:11, pos:px(1154,1220),  place:"Winterfell",                       note:"Saying goodbye before leaving south with Ned"},
+     {from:12, to:14, road:"kingsroad", pct:0.36,  place:"Kingsroad south — with Ned and Sansa", note:"Travelling south in King Robert's royal party"},
+     {from:15, to:15, road:"kingsroad", pct:"rubyford", place:"Ruby Ford — Kingsroad south",      note:"Play-fighting with Mycah near the Trident — the Joffrey incident"},
+     {from:16, to:19, road:"kingsroad", pct:0.82, place:"Kingsroad south — final stretch",  note:"Continuing south with Ned after the direwolf incident"},
+     {from:20, to:49, pos:px(1394,2516), place:"King's Landing",                  note:"Training with Syrio Forel — navigating the Red Keep"},
+     {from:50, to:64, pos:px(1394,2516), place:"King's Landing — in hiding",      note:"Surviving in the city after Ned's arrest — taken under Yoren's wing"},
+     {from:65, to:65, pos:px(1394,2516), place:"King's Landing — the Sept",       note:"Witnesses Ned's execution — Yoren of the Night's Watch takes her away"},
+     {from:66, to:68, road:"kingsroad", pct:0.82, place:"Kingsroad north — leaving King's Landing", note:"Disguised as 'Arry', just north of King's Landing with Yoren's party"},
+     {from:69, to:73, road:"kingsroad", pct:"twins", place:"Kingsroad north — Riverlands",  note:"Heading north through the Riverlands with Night's Watch recruits"}
+   ],
+   tiers:[
+     {revealChapter:7,  text:"Ned's younger daughter. Headstrong and fierce, she has no interest in the ladylike life expected of her."},
+     {revealChapter:22, text:"Training with Syrio Forel in the Braavosi Water Dance style. Growing more capable and independent."},
+     {revealChapter:32, text:"Overheard two men plotting in the tunnels beneath the Red Keep — one of them spoke of killing her father. She warned Ned. He didn't believe her."},
+     {revealChapter:50, text:"Fled the Red Keep when Lannister soldiers came to arrest her. Syrio Forel held them off with a broken practice sword so she could escape. She is now surviving alone on the streets of King's Landing."},
+     {revealChapter:66, text:"Escaped King's Landing with Yoren's party of Night's Watch recruits, disguised as a boy called 'Arry'. She witnessed her father's execution before leaving."}
+   ]},
+
+  // ─── CARRY-FORWARD RULE ──────────────────────────────────────────────────
+  // This is Book I (A Game of Thrones) — the originating book.
+  // ALL characters, locations, and knowledge established here must be carried
+  // forward into every subsequent book in the series.
+  //
+  // When building Book II (A Clash of Kings) and beyond:
+  //   • All living side characters below carry forward with firstChapter:0.
+  //   • All deceased/missing characters carry forward to the Deceased panel.
+  //   • Each successive book is a cumulative superset of all prior knowledge.
+  //   • Map coordinates remain consistent across all books (same image file).
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // ─── SIDE CHARACTERS ───
+  {id:"robert", name:"King Robert Baratheon", house:"Baratheon", role:"King of the Seven Kingdoms",
+   ink:"#a07030", isPov:false, firstChapter:1,
+   deathChapter:34, deathStatus:"dead",
+   deathNote:"Fatally gored by a boar while hunting. He dies shortly after, leaving the realm to Joffrey.",
+   tiers:[
+     {revealChapter:1,  text:"The reigning king of the Seven Kingdoms. An old friend and companion of Ned Stark. Travels to Winterfell to ask Ned to serve as his Hand."},
+     {revealChapter:4,  text:"A great warrior in his youth, now grown fat and restless as king. His marriage to Cersei Lannister is cold and political."},
+     {revealChapter:34, text:"Fatally wounded by a boar during a hunt. It is later suggested his wine was tampered with, dulling his senses. He dies leaving a fractured realm."}
+   ]},
+
+  {id:"cersei", name:"Cersei Lannister", house:"Lannister", role:"Queen of the Seven Kingdoms",
+   ink:"#b0b020", isPov:false, firstChapter:4,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:4,  text:"Queen of the Seven Kingdoms, wife of Robert. Daughter of Lord Tywin Lannister. Sharp, proud, and fiercely protective of her children."},
+     {revealChapter:20, text:"Increasingly at odds with Ned Stark, whose investigation into the succession threatens her family's grip on power."},
+     {revealChapter:35, text:"Ned has discovered her secret — that her children are not Robert's. She moves swiftly to neutralise him."},
+     {revealChapter:51, text:"With Robert dead and Joffrey on the throne, she is the dominant power in King's Landing."}
+   ]},
+
+  {id:"jaime", name:"Jaime Lannister", house:"Lannister", role:"Kingsguard — the Kingslayer",
+   ink:"#a09030", isPov:false, firstChapter:1,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:1,  text:"Twin brother of Queen Cersei. One of the finest swordsmen in the realm. Known as the Kingslayer for slaying King Aerys during Robert's Rebellion."},
+     {revealChapter:8,  text:"Pushed Bran from a tower window after Bran witnessed his secret relationship with Cersei."},
+     {revealChapter:56, text:"Captured by Robb Stark at the Battle of the Whispering Wood. Now a prisoner at Riverrun — a valuable hostage."}
+   ]},
+
+  {id:"joffrey", name:"Joffrey Baratheon", house:"Baratheon", role:"Crown Prince, later King",
+   ink:"#a03030", isPov:false, firstChapter:4,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:4,  text:"Crown Prince and heir to the Iron Throne. Betrothed to Sansa Stark."},
+     {revealChapter:22, text:"Has shown his cruelty openly — he is petty, vindictive, and dangerous."},
+     {revealChapter:44, text:"Now king following Robert's death. Surrounded by Lannister advisors, he has proven as cruel in power as he was as a prince."},
+     {revealChapter:63, text:"Broke the promise of mercy made to Ned Stark and ordered his public execution at the Great Sept of Baelor."}
+   ]},
+
+
+
+
+  {id:"robb", name:"Robb Stark", house:"Stark", role:"Heir to Winterfell",
+   ink:"#4060a0", isPov:false, firstChapter:1,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:1,  text:"Ned's eldest son and heir to Winterfell. Fourteen years old, dutiful and capable."},
+     {revealChapter:37, text:"Has called the Northern bannermen and is marching south to rescue his father."},
+     {revealChapter:55, text:"Won a stunning victory at the Battle of the Whispering Wood, capturing Jaime Lannister."},
+     {revealChapter:71, text:"Proclaimed King in the North by his bannermen."}
+   ]},
+
+  {id:"viserys", name:"Viserys Targaryen", house:"Targaryen", role:"Exiled prince",
+   ink:"#8050a0", isPov:false, firstChapter:3,
+   deathChapter:36, deathStatus:"dead",
+   deathNote:"Killed by Khal Drogo, who poured molten gold over his head — the crown he had long demanded.",
+   tiers:[
+     {revealChapter:3,  text:"Daenerys's older brother. Obsessed with reclaiming the Iron Throne. Sold his sister to Khal Drogo in exchange for an army."},
+     {revealChapter:11, text:"Increasingly unstable and threatening toward Daenerys."},
+     {revealChapter:36, text:"Killed by Khal Drogo after threatening Daenerys with a drawn sword. Drogo fulfilled the letter of Vaes Dothrak's law — no blood may be shed in the sacred city — by killing him with molten gold instead. Daenerys watched without tears."}
+   ]},
+
+  {id:"drogo", name:"Khal Drogo", house:"Dothraki", role:"Khal",
+   ink:"#a05020", isPov:false, firstChapter:3,
+   deathChapter:64, deathStatus:"dead",
+   deathNote:"Died after a chest wound turned fatal. A blood magic ritual kept him alive but mindless; Daenerys ended his suffering.",
+   tiers:[
+     {revealChapter:3,  text:"One of the most feared khals on the Dothraki Sea, undefeated in battle. Daenerys has been sold to him as a bride."},
+     {revealChapter:11, text:"Has come to genuinely care for Daenerys after she asserted herself in their relationship."},
+     {revealChapter:36, text:"Swore to give Daenerys the Iron Throne after Viserys threatened her."},
+     {revealChapter:47, text:"Gravely wounded in a duel. The wound has become infected."},
+     {revealChapter:54, text:"His wound worsens as the khalasar rides south. The khalasar is beginning to fracture around him as his weakness shows."},
+     {revealChapter:64, text:"Fell from his horse — the final sign of his decline. Daenerys turned in desperation to Mirri Maz Duur's blood magic. The ritual saved his body but left him mindless. Daenerys ended his suffering."}
+   ]},
+
+  {id:"syrio", name:"Syrio Forel", house:"None", role:"Braavosi sword master",
+   ink:"#508060", isPov:false, firstChapter:22,
+   deathChapter:50, deathStatus:"missing",
+   deathNote:"Last seen fighting Lannister guards with a broken wooden sword to allow Arya to escape. His fate is unconfirmed.",
+   tiers:[
+     {revealChapter:22, text:"Former First Sword of Braavos, hired by Ned to train Arya in the Water Dance style. Witty, patient, and deeply skilled."},
+     {revealChapter:50, text:"Held off Lannister guards with only a broken training sword so Arya could escape. Whether he survived is unknown."}
+   ]},
+
+  {id:"jonArryn", name:"Jon Arryn", house:"Arryn", role:"Former Hand of the King",
+   ink:"#506080", isPov:false, firstChapter:1,
+   deathChapter:1, deathStatus:"dead",
+   deathNote:"Dead before the story begins. The cause of his death is unknown.",
+   tiers:[
+     {revealChapter:1,  text:"The previous Hand of the King, recently deceased. His death prompted Robert to travel to Winterfell and ask Ned to replace him. The cause of his death is unknown."},
+     {revealChapter:12, text:"Ned has been told he died of a sudden illness. Ned is not sure he believes it. Jon Arryn was apparently investigating something sensitive before he died."},
+     {revealChapter:25, text:"Jon Arryn was investigating the question of royal succession — examining the children of King Robert. Whatever he found may have gotten him killed."},
+     {revealChapter:46, text:"Ned has pieced together what Jon Arryn discovered: that the royal children are not Robert's. This is what cost Jon Arryn his life — though who ordered it remains unclear to Ned."}
+   ]},
+
+  {id:"varys", name:"Varys", house:"None", role:"Master of Whisperers",
+   ink:"#6a6a8a", isPov:false, firstChapter:20,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:20, text:"Known as the Spider. The king's master of whisperers, a eunuch of mysterious origins. He seems to know everything that happens in the Seven Kingdoms through his network of little birds. He was present when Catelyn secretly met Littlefinger in King's Landing — he had already known she was in the city before she told anyone."},
+     {revealChapter:25, text:"Has begun privately warning Ned about the dangers around him, while remaining outwardly neutral at court. His true allegiances are genuinely impossible to read — he speaks of serving the realm, but his actions serve purposes no one else can follow."},
+     {revealChapter:46, text:"Visited Ned in his cell and advised him to confess to treason, suggesting it was the only way to protect his daughters. He claims to serve the realm."}
+   ]},
+
+  {id:"barristan", name:"Ser Barristan Selmy", house:"Selmy", role:"Lord Commander of the Kingsguard",
+   ink:"#a0a0c0", isPov:false, firstChapter:4,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:4,  text:"The Lord Commander of Robert's Kingsguard. A legendary knight, said to be the finest in the realm. Known as Barristan the Bold."},
+     {revealChapter:35, text:"Present at all major events in King's Landing. A man of deep personal honour who struggles with the ugliness of court politics."},
+     {revealChapter:58, text:"Stripped of his position by Joffrey and the Lannisters after Robert's death. He yielded without a fight, to his own shame."}
+   ]},
+
+  {id:"sandor", name:"Sandor Clegane", house:"Clegane", role:"Joffrey's sworn shield — the Hound",
+   ink:"#5a5050", isPov:false, firstChapter:4,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:4,  text:"Known as the Hound. Joffrey's personal bodyguard and one of the most feared fighters in the realm. His face is hideously scarred from a childhood encounter with fire."},
+     {revealChapter:15, text:"Rode down and killed Mycah the butcher's boy on Joffrey's orders after the incident at the Trident. Arya has not forgotten."},
+     {revealChapter:30, text:"A violent man who nonetheless shows occasional flashes of bitter honesty. He despises the hollow chivalry of knights and has always refused knighthood — he holds the institution in contempt."}
+   ]},
+
+  {id:"theon", name:"Theon Greyjoy", house:"Greyjoy", role:"Ward of Eddard Stark",
+   ink:"#708060", isPov:false, firstChapter:1,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:1,  text:"Ward of Eddard Stark, taken as a hostage after the Greyjoy Rebellion to ensure his father Balon's good behaviour. He has grown up at Winterfell."},
+     {revealChapter:37, text:"Advises Robb to call the banners when Ned is arrested. He is eager to prove himself useful, though his loyalty is complicated by his Greyjoy blood."},
+     {revealChapter:53, text:"Rides south with Robb's army. He is keen for glory and a chance to make his own name beyond the shadow of the Starks."}
+   ]},
+
+  {id:"sam", name:"Samwell Tarly", house:"Tarly", role:"Night's Watch recruit",
+   ink:"#507050", isPov:false, firstChapter:26,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:26, text:"A gentle, overweight boy sent to the Night's Watch by his father. He is terrified of combat but possesses a sharp mind. Jon Snow befriended him and put a stop to his bullying."},
+     {revealChapter:43, text:"Has been assigned to the stewards alongside Jon. He and Jon take their vows together beyond the Wall at a haunted forest godswood."}
+   ]},
+
+  {id:"mormont", name:"Jeor Mormont", house:"Mormont", role:"Lord Commander of the Night's Watch",
+   ink:"#405050", isPov:false, firstChapter:19,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:19, text:"The Lord Commander of the Night's Watch, known as the Old Bear. A gruff but capable leader who takes the growing threat beyond the Wall seriously."},
+     {revealChapter:39, text:"Has assigned Jon Snow as his personal steward — not as a demotion but as a way of grooming Jon for command. He gave Jon his ancestral Valyrian steel sword, Longclaw."},
+     {revealChapter:60, text:"Leading the great ranging beyond the Wall personally. He intends to find answers about Benjen Stark's disappearance and the threat of the Others."}
+   ]},
+
+  {id:"bronn", name:"Bronn", house:"None", role:"Sellsword",
+   ink:"#806040", isPov:false, firstChapter:31,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:31, text:"A skilled and ruthless sellsword who attached himself to Catelyn's party on the road to the Eyrie."},
+     {revealChapter:38, text:"Volunteered to be Tyrion's champion in his trial by combat at the Eyrie. He defeated and killed Ser Vardis Egen, winning Tyrion's freedom. He now rides with Tyrion."}
+   ]},
+
+  {id:"rodrik", name:"Ser Rodrik Cassel", house:"Stark", role:"Master-at-arms of Winterfell",
+   ink:"#607080", isPov:false, firstChapter:6,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:6,  text:"The master-at-arms of Winterfell and a loyal retainer of House Stark. A seasoned warrior with magnificent side-whiskers."},
+     {revealChapter:14, text:"Accompanied Catelyn on her secret voyage to King's Landing by ship."},
+     {revealChapter:55, text:"Sent back to Winterfell by Catelyn to act as castellan and assist Maester Luwin in defending the castle while Robb marches south."}
+   ]},
+
+  {id:"luwin", name:"Maester Luwin", house:"None", role:"Maester of Winterfell",
+   ink:"#607060", isPov:false, firstChapter:6,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:6,  text:"The maester of Winterfell, advisor to the Stark family. A learned and practical man who serves as a voice of reason amid the chaos unfolding around House Stark."},
+     {revealChapter:17, text:"Helping Robb govern Winterfell in Ned's absence. Urging caution where Theon urges boldness."},
+     {revealChapter:53, text:"Remains at Winterfell with Bran and Rickon as Robb marches to war. Now the main adult voice of counsel for the young lord holding the castle."}
+   ]},
+
+  {id:"lysa", name:"Lysa Arryn", house:"Tully/Arryn", role:"Lady of the Eyrie",
+   ink:"#806080", isPov:false, firstChapter:6,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:6,  text:"Catelyn's younger sister. Widow of Jon Arryn. She fled to the Eyrie with her sickly young son Robert after her husband's death, refusing all contact with the crown."},
+     {revealChapter:14, text:"Sent Catelyn a secret letter warning that the Lannisters murdered her husband. The letter set the book's plot in motion."},
+     {revealChapter:34, text:"Received Catelyn and Tyrion at the Eyrie. Erratic and overprotective of her son, she is eager to see Tyrion thrown from the Moon Door. She rules the Vale in fearful isolation."}
+   ]},
+
+  {id:"benjen", name:"Benjen Stark", house:"Stark", role:"First Ranger of the Night's Watch",
+   ink:"#4a6a5a", isPov:false, firstChapter:1,
+   deathChapter:43, deathStatus:"missing",
+   deathNote:"Vanished beyond the Wall on a ranging. His horse returned riderless. No body has been found.",
+   tiers:[
+     {revealChapter:1,  text:"Ned's younger brother and First Ranger of the Night's Watch. He attended the execution at the start of the book and spoke with Jon about joining the Watch."},
+     {revealChapter:5,  text:"Rode north with Jon and Tyrion toward the Wall. He is the most experienced ranger at Castle Black."},
+     {revealChapter:26, text:"Has ridden out on a ranging beyond the Wall and not returned. Jon is deeply worried about his uncle."},
+     {revealChapter:43, text:"Still missing. His horse returned to Castle Black without him. The Lord Commander is concerned enough to lead a great ranging personally to find answers."}
+   ]},
+
+  {id:"jorah", name:"Ser Jorah Mormont", house:"Mormont", role:"Knight in exile — serves Daenerys",
+   ink:"#705040", isPov:false, firstChapter:3,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:3,  text:"An exiled knight from Bear Island in the North, serving Viserys Targaryen in Essos. He fled Westeros to escape execution after selling men into slavery — a crime that dishonoured his family and his liege lord, Ned Stark."},
+     {revealChapter:11, text:"Has transferred his service to Daenerys, whom he recognises as the true power in the relationship with Drogo. He is teaching her to understand her new world."},
+     {revealChapter:23, text:"A loyal protector of Daenerys, increasingly devoted to her personally. He saved her life from a poisoning attempt. He is clearly more than a simple sellsword."}
+   ]},
+
+  {id:"illyrio", name:"Illyrio Mopatis", house:"None", role:"Magister of Pentos",
+   ink:"#806050", isPov:false, firstChapter:3,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:3,  text:"A wealthy and powerful merchant prince of Pentos who has been sheltering Viserys and Daenerys in his manse. He arranged Daenerys's marriage to Khal Drogo in exchange for promises of Dothraki military support."},
+     {revealChapter:11, text:"His motives are obscure but clearly extend beyond simple friendship with the Targaryens. He has powerful contacts throughout Essos and beyond."}
+   ]},
+
+  {id:"walder", name:"Lord Walder Frey", house:"Frey", role:"Lord of the Crossing",
+   ink:"#605040", isPov:false, firstChapter:59,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:59, text:"The ancient and cantankerous lord of the Twins, the only crossing of the Green Fork for hundreds of miles. He controls passage across the river and plays all sides for advantage."},
+     {revealChapter:63, text:"Agreed to let Robb's army cross in exchange for Robb marrying one of his daughters and Arya marrying one of his sons. He contributed four thousand soldiers to Robb's cause — arriving, as always, after the outcome was no longer in doubt."}
+   ]},
+
+  {id:"rickon", name:"Rickon Stark", house:"Stark", role:"Youngest son of Eddard Stark",
+   ink:"#5a6a6a", isPov:false, firstChapter:1,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:1,  text:"Ned's youngest child, only three years old. Named his direwolf Shaggydog."},
+     {revealChapter:53, text:"Left behind at Winterfell with Bran when Robb marches south. He refused to say goodbye to Robb, insisting that no one ever comes back."}
+   ]},
+
+  {id:"ilyn", name:"Ser Ilyn Payne", house:"None", role:"King's Justice — executioner",
+   ink:"#3a3a3a", isPov:false, firstChapter:15,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:15, text:"The king's headsman. A mute — the Mad King had his tongue torn out for an alleged boast. He carries Ice, the Stark ancestral sword, at Sansa's introduction by Joffrey."},
+     {revealChapter:63, text:"Used Ned's own sword Ice to execute him on the steps of the Great Sept of Baelor. A grim instrument of royal justice with no apparent feelings about his work."}
+   ]},
+
+  {id:"littlefinger", name:"Petyr Baelish", house:"None", role:"Master of Coin",
+   ink:"#508050", isPov:false, firstChapter:4,
+   deathChapter:null, deathStatus:"alive", deathNote:null,
+   tiers:[
+     {revealChapter:4,  text:"Known as Littlefinger. Master of Coin on the Small Council. An old acquaintance of Catelyn Stark. Witty and seemingly helpful to Ned."},
+     {revealChapter:20, text:"Has offered to help Ned navigate the dangerous politics of King's Landing. He seems useful, but something about him is hard to read."},
+     {revealChapter:46, text:"Warned Ned not to trust him — then betrayed him. He turned the City Watch against Ned at the critical moment, delivering him to the Lannisters."}
+   ]}
+];
+
+// ─── MAP SETUP ───────────────────────────────────────────────────────────────
+
+const bounds = [[0, 0], [IMG_H, IMG_W]];
+
+const map = L.map('map', {
+  crs: L.CRS.Simple,
+  minZoom: -2,
+  maxZoom: 4,
+  zoomSnap: 0.25,
+  zoomDelta: 0.5,
+  attributionControl: false,
+  maxBounds: bounds,
+  maxBoundsViscosity: 1.0
+});
+
+L.imageOverlay('OfficialGOTMap.jpg', bounds).addTo(map);
+map.fitBounds(bounds);
+map.setMaxBounds(bounds);
+
+// ─── ROAD NETWORK ────────────────────────────────────────────────────────────
+// Roads are defined as arrays of [lat, lng] waypoints (Leaflet coordinate space).
+// px(x,y) → [IMG_H - y, x] so a road waypoint is just px(x,y) directly.
+// Characters on a road use: { road:"kingsroad", pct:0.0–1.0 }
+// pct=0 is the FIRST waypoint in the array, pct=1 is the LAST.
+// Named stops let you say pct:"winterfell" instead of a number.
+//
+// To add or update a road, use Road Tracing Mode (button in header).
+// The tracer outputs a ready-to-paste waypoints array.
+
+const roads = {
+  kingsroad: {
+    name: "The Kingsroad",
+    // Waypoints traced along the Kingsroad from Castle Black (north) to King's Landing (south).
+    // Replace this placeholder with your traced waypoints from Road Tracing Mode.
+    waypoints: [
+  [4181, 1363],
+  [4152, 1372],
+  [4124, 1352],
+  [4099, 1361],
+  [4064, 1348],
+  [4040, 1367],
+  [4030, 1359],
+  [3995, 1350],
+  [3976, 1335],
+  [3974, 1313],
+  [3916, 1288],
+  [3900, 1268],
+  [3863, 1234],
+  [3850, 1230],
+  [3817, 1185],
+  [3798, 1187],
+  [3785, 1170],
+  [3774, 1166],
+  [3760, 1169],
+  [3746, 1163],
+  [3727, 1143],
+  [3711, 1134],
+  [3692, 1121],
+  [3682, 1119],
+  [3672, 1123],
+  [3659, 1136],
+  [3652, 1139],
+  [3644, 1136],
+  [3630, 1149],
+  [3615, 1143],
+  [3607, 1146],
+  [3589, 1139],
+  [3551, 1147],
+  [3525, 1146],
+  [3507, 1150],
+  [3492, 1143],
+  [3477, 1150],
+  [3459, 1142],
+  [3444, 1149],
+  [3415, 1171],
+  [3385, 1180],
+  [3368, 1175],
+  [3355, 1182],
+  [3326, 1171],
+  [3310, 1167],
+  [3274, 1159],
+  [3236, 1155],
+  [3204, 1152],
+  [3170, 1151],
+  [3131, 1153],
+  [3114, 1154],
+  [3091, 1157],
+  [3064, 1158],
+  [3053, 1167],
+  [2992, 1177],
+  [2960, 1182],
+  [2931, 1202],
+  [2912, 1200],
+  [2900, 1208],
+  [2894, 1216],
+  [2844, 1259],
+  [2825, 1271],
+  [2811, 1277],
+  [2791, 1289],
+  [2774, 1301],
+  [2759, 1298],
+  [2750, 1314],
+  [2732, 1337],
+  [2717, 1342],
+  [2669, 1340],
+  [2647, 1356],
+  [2630, 1348],
+  [2613, 1346],
+  [2596, 1363],
+  [2580, 1366],
+  [2545, 1354],
+  [2538, 1367],
+  [2523, 1365],
+  [2507, 1377],
+  [2489, 1388],
+  [2468, 1388],
+  [2448, 1382],
+  [2434, 1388],
+  [2404, 1395],
+  [2388, 1410],
+  [2376, 1419],
+  [2370, 1431],
+  [2354, 1446],
+  [2347, 1463],
+  [2335, 1471],
+  [2330, 1470],
+  [2316, 1486],
+  [2307, 1496],
+  [2305, 1523],
+  [2302, 1528],
+  [2290, 1518],
+  [2284, 1522],
+  [2246, 1539],
+  [2236, 1549],
+  [2235, 1563],
+  [2225, 1581],
+  [2219, 1594],
+  [2199, 1590],
+  [2193, 1597],
+  [2180, 1604]
+],
+    // Named stops: key → pct along the road (0=Castle Black end, 1=King's Landing end)
+    stops: {
+      "castleblack":  0.000,
+      "wolfswood":    0.106,
+      "winterfell":   0.239,
+      "moatcailin":   0.425,
+      "twins":        0.567,
+      "inn":          0.676,
+      "rubyford":     0.690,
+      "riverlands":   0.748,
+      "kingslanding": 0.854
+    }
+  },
+  highroad: {
+    name: "The High Road",
+    // Waypoints from Inn at the Crossroads (west) to the Eyrie (east).
+    waypoints: [
+  [2759, 1298],
+  [2764, 1311],
+  [2773, 1324],
+  [2783, 1329],
+  [2788, 1346],
+  [2787, 1356],
+  [2793, 1374],
+  [2791, 1392],
+  [2796, 1395],
+  [2801, 1400],
+  [2804, 1405],
+  [2808, 1413],
+  [2818, 1405],
+  [2825, 1411],
+  [2833, 1397],
+  [2840, 1401],
+  [2848, 1430],
+  [2856, 1434],
+  [2850, 1444],
+  [2853, 1457],
+  [2868, 1478],
+  [2867, 1492],
+  [2872, 1500],
+  [2879, 1497],
+  [2887, 1501],
+  [2893, 1495]
+],
+    stops: {
+      "inn":   0.00,
+      "eyrie": 1.00
+    }
+  },
+  dothraki: {
+    name: "Dothraki Road East",
+    // Waypoints from Pentos (west) to Vaes Dothrak (east).
+    waypoints: [
+  [2447, 2120],
+  [2490, 2319],
+  [2563, 2397],
+  [2605, 2437],
+  [2671, 2500],
+  [2447, 2874],
+  [2461, 3198],
+  [2387, 3613],
+  [2385, 3637],
+  [2395, 3661],
+  [2391, 3685],
+  [2411, 3736],
+  [2408, 3758],
+  [2401, 3763],
+  [2402, 3781],
+  [2423, 3812],
+  [2422, 3848],
+  [2430, 3864],
+  [2420, 3891],
+  [2412, 3910],
+  [2403, 3910],
+  [2399, 3932],
+  [2390, 3936],
+  [2385, 3960],
+  [2387, 3977],
+  [2380, 3998],
+  [2386, 4016],
+  [2377, 4040],
+  [2372, 4059],
+  [2378, 4085],
+  [2375, 4093],
+  [2390, 4096],
+  [2404, 4122],
+  [2402, 4151],
+  [2397, 4178],
+  [2411, 4230],
+  [2408, 4252],
+  [2418, 4294],
+  [2444, 4311],
+  [2454, 4363],
+  [2464, 4373],
+  [2487, 4448],
+  [2487, 4487],
+  [2514, 4562],
+  [2537, 4591],
+  [2539, 4617],
+  [2565, 4658],
+  [2574, 4691],
+  [2609, 4718]
+],
+    stops: {
+      "pentos":      0.00,
+      "vaesdothrak": 1.00
+    }
+  }
+};
+
+// Interpolate a position along a road's waypoints at a given percentage (0–1).
+// Returns a Leaflet [lat, lng] coordinate, or null if the road has no waypoints yet.
+function getRoadPos(roadId, pct) {
+  const road = roads[roadId];
+  if (!road || !road.waypoints || road.waypoints.length < 2) return null;
+
+  // Resolve named stop to a number
+  if (typeof pct === 'string') {
+    const named = road.stops[pct.toLowerCase()];
+    if (named === undefined) { console.warn('Unknown stop:', pct); return null; }
+    pct = named;
+  }
+
+  pct = Math.max(0, Math.min(1, pct));
+
+  const pts = road.waypoints;
+
+  // Build cumulative distance array
+  const dists = [0];
+  for (let i = 1; i < pts.length; i++) {
+    const dlat = pts[i][0] - pts[i-1][0];
+    const dlng = pts[i][1] - pts[i-1][1];
+    dists.push(dists[i-1] + Math.sqrt(dlat*dlat + dlng*dlng));
+  }
+  const total = dists[dists.length - 1];
+  const target = pct * total;
+
+  // Find the segment containing our target distance
+  for (let i = 1; i < pts.length; i++) {
+    if (dists[i] >= target) {
+      const segLen = dists[i] - dists[i-1];
+      const t = segLen > 0 ? (target - dists[i-1]) / segLen : 0;
+      return [
+        pts[i-1][0] + t * (pts[i][0] - pts[i-1][0]),
+        pts[i-1][1] + t * (pts[i][1] - pts[i-1][1])
+      ];
+    }
+  }
+  return pts[pts.length - 1];
+}
+
+// ─── COORDINATE PICKER & ROAD TRACER ─────────────────────────────────────────
+// MODE: 'off' | 'calibrate' | 'trace'
+let toolMode = 'off';
+let traceRoadId = null;
+let traceWaypoints = [];  // accumulated [lat,lng] points for current trace session
+let tracePolyline = null; // live preview polyline on the map
+let traceMarkers  = [];   // small dot markers at each clicked point
+
+// ── Coord display box (shared by both modes) ──
+const coordBox = document.createElement('div');
+coordBox.style.cssText = `
+  position:fixed; bottom:40px; left:50%; transform:translateX(-50%);
+  background:#0d0a04; border:1px solid #5a3e1a; color:#c8a850;
+  padding:8px 16px; border-radius:6px; font-family:Georgia,serif;
+  font-size:13px; z-index:2000; display:none; pointer-events:none;
+  letter-spacing:0.5px;
+`;
+document.body.appendChild(coordBox);
+
+// ── Banner (shown during active modes) ──
+const modeBanner = document.createElement('div');
+modeBanner.style.cssText = `
+  position:fixed; top:60px; left:50%; transform:translateX(-50%);
+  background:#2a1a00; border:1px solid #8a6030; color:#c8a850;
+  padding:6px 16px; border-radius:6px; font-family:Georgia,serif;
+  font-size:12px; z-index:2000; pointer-events:none; letter-spacing:0.5px;
+  display:none;
+`;
+document.body.appendChild(modeBanner);
+
+// ── Road Tracing Panel ──
+const tracePanel = document.createElement('div');
+tracePanel.style.cssText = `
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+  background:#0d0a04; border:1px solid #5a3e1a; border-bottom:none;
+  color:#c8a850; padding:10px 16px; border-radius:8px 8px 0 0;
+  font-family:Georgia,serif; font-size:12px; z-index:2000;
+  display:none; flex-direction:column; gap:8px; min-width:420px;
+  box-shadow:0 -2px 12px rgba(0,0,0,0.5);
+`;
+tracePanel.innerHTML = `
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+    <span id="tracePanelTitle" style="color:#c8a850;font-variant:small-caps;letter-spacing:1px;font-size:13px;">Road Tracing Mode</span>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span id="traceCount" style="color:#8a7040;font-size:11px;">0 points</span>
+      <button id="traceUndoBtn" onclick="traceUndo()" style="padding:3px 10px;background:#1a1208;border:1px solid #5a3e1a;color:#c8a850;border-radius:4px;cursor:pointer;font-family:Georgia,serif;font-size:11px;">↩ Undo</button>
+      <button id="traceFinishBtn" onclick="traceFinish()" style="padding:3px 10px;background:#1a2a0a;border:1px solid #4a7a1a;color:#90c840;border-radius:4px;cursor:pointer;font-family:Georgia,serif;font-size:11px;">✓ Done</button>
+      <button onclick="traceCancel()" style="padding:3px 10px;background:#2a0a0a;border:1px solid #7a1a1a;color:#c84040;border-radius:4px;cursor:pointer;font-family:Georgia,serif;font-size:11px;">✕ Cancel</button>
+    </div>
+  </div>
+  <div id="traceOutput" style="display:none;background:#080604;border:1px solid #3a2a0a;border-radius:4px;padding:8px;font-size:11px;color:#8a7040;line-height:1.6;max-height:120px;overflow-y:auto;word-break:break-all;"></div>
+  <div style="color:#6a5030;font-size:11px;">Click along the road on the map to record waypoints. Click ✓ Done when finished.</div>
+`;
+document.body.appendChild(tracePanel);
+
+// ── Road Tracing modal (road selector) ──
+const traceModal = document.createElement('div');
+traceModal.style.cssText = `
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  background:#0d0a04; border:1px solid #5a3e1a; color:#c8a850;
+  padding:20px 24px; border-radius:8px; font-family:Georgia,serif;
+  z-index:3000; display:none; flex-direction:column; gap:12px;
+  min-width:300px; box-shadow:0 4px 24px rgba(0,0,0,0.7);
+`;
+traceModal.innerHTML = `
+  <div style="font-size:14px;font-variant:small-caps;letter-spacing:1px;border-bottom:1px solid #3a2a0a;padding-bottom:8px;">Select Road to Trace</div>
+  <div style="color:#8a7040;font-size:12px;line-height:1.6;">Choose a road, then click along it on the map.<br>When done, copy the output into the <code style="color:#c8a850;">roads</code> object in the code.</div>
+  <div style="display:flex;flex-direction:column;gap:6px;" id="roadSelectBtns"></div>
+  <button onclick="traceModal.style.display='none'" style="margin-top:4px;padding:5px 12px;background:#1a1208;border:1px solid #5a3e1a;color:#8a7040;border-radius:4px;cursor:pointer;font-family:Georgia,serif;font-size:12px;align-self:flex-end;">Cancel</button>
+`;
+document.body.appendChild(traceModal);
+
+// Populate road select buttons
+const roadSelectContainer = traceModal.querySelector('#roadSelectBtns');
+Object.entries(roads).forEach(([id, road]) => {
+  const btn = document.createElement('button');
+  const hasWaypoints = road.waypoints && road.waypoints.length > 1;
+  btn.style.cssText = `padding:7px 14px;background:#1a1208;border:1px solid ${hasWaypoints ? '#4a7a1a' : '#5a3e1a'};color:${hasWaypoints ? '#90c840' : '#c8a850'};border-radius:4px;cursor:pointer;font-family:Georgia,serif;font-size:12px;text-align:left;`;
+  btn.textContent = road.name + (hasWaypoints ? ' ✓ (re-trace to update)' : ' — not yet traced');
+  btn.onclick = () => { traceModal.style.display = 'none'; startTrace(id); };
+  roadSelectContainer.appendChild(btn);
+});
+
+function startTrace(roadId) {
+  traceRoadId = roadId;
+  traceWaypoints = [];
+  traceMarkers = [];
+  if (tracePolyline) { map.removeLayer(tracePolyline); tracePolyline = null; }
+
+  toolMode = 'trace';
+  modeBanner.textContent = `✏️ Tracing: ${roads[roadId].name} — click along the road. Undo last point with ↩`;
+  modeBanner.style.display = 'block';
+  tracePanel.style.display = 'flex';
+  tracePanel.querySelector('#tracePanelTitle').textContent = `Tracing: ${roads[roadId].name}`;
+  tracePanel.querySelector('#traceCount').textContent = '0 points';
+  tracePanel.querySelector('#traceOutput').style.display = 'none';
+  map.getContainer().style.cursor = 'crosshair';
+}
+
+function traceUndo() {
+  if (traceWaypoints.length === 0) return;
+  traceWaypoints.pop();
+  const lastMarker = traceMarkers.pop();
+  if (lastMarker) map.removeLayer(lastMarker);
+  updateTracePolyline();
+  tracePanel.querySelector('#traceCount').textContent = traceWaypoints.length + ' points';
+}
+
+function updateTracePolyline() {
+  if (tracePolyline) map.removeLayer(tracePolyline);
+  if (traceWaypoints.length > 1) {
+    tracePolyline = L.polyline(traceWaypoints, {
+      color: '#f0c040', weight: 2.5, opacity: 0.85, dashArray: '6,3'
+    }).addTo(map);
+  }
+}
+
+function traceFinish() {
+  if (traceWaypoints.length < 2) {
+    alert('Please click at least 2 points along the road before finishing.');
+    return;
+  }
+
+  // Write waypoints into the live roads object immediately
+  roads[traceRoadId].waypoints = traceWaypoints.slice();
+
+  // Build output string for copy-paste into code
+  const waypointStr = traceWaypoints.map(([lat,lng]) =>
+    `  [${Math.round(lat)}, ${Math.round(lng)}]`
+  ).join(',\n');
+
+  const output = `// Paste this into roads.${traceRoadId}.waypoints:\n[\n${waypointStr}\n]`;
+
+  const outEl = tracePanel.querySelector('#traceOutput');
+  outEl.textContent = output;
+  outEl.style.display = 'block';
+
+  // Copy to clipboard
+  navigator.clipboard.writeText(`[\n${waypointStr}\n]`).catch(()=>{});
+
+  modeBanner.textContent = `✓ ${roads[traceRoadId].name} traced (${traceWaypoints.length} points) — copied to clipboard! Road is now active.`;
+
+  // Clean up trace visuals but keep panel open so user can copy output
+  traceMarkers.forEach(m => map.removeLayer(m));
+  traceMarkers = [];
+  if (tracePolyline) { map.removeLayer(tracePolyline); tracePolyline = null; }
+
+  // Draw the finished road as a permanent preview
+  const finishedLine = L.polyline(roads[traceRoadId].waypoints, {
+    color: '#f0c040', weight: 2, opacity: 0.5
+  }).addTo(map);
+  window._roadLines = window._roadLines || [];
+  window._roadLines.push(finishedLine);
+
+  toolMode = 'off';
+  map.getContainer().style.cursor = '';
+  tracePanel.querySelector('#traceCount').textContent = traceWaypoints.length + ' points ✓';
+
+  // Refresh markers — road positions will now resolve correctly
+  renderMarkers(curCh);
+}
+
+function traceCancel() {
+  toolMode = 'off';
+  traceRoadId = null;
+  traceWaypoints = [];
+  traceMarkers.forEach(m => map.removeLayer(m));
+  traceMarkers = [];
+  if (tracePolyline) { map.removeLayer(tracePolyline); tracePolyline = null; }
+  modeBanner.style.display = 'none';
+  tracePanel.style.display = 'none';
+  map.getContainer().style.cursor = '';
+}
+
+// ── Unified map click handler ──
+map.on('click', function(e) {
+  const lat = Math.round(e.latlng.lat);
+  const lng = Math.round(e.latlng.lng);
+  const pixelX = lng;
+  const pixelY = IMG_H - lat;
+
+  if (toolMode === 'calibrate') {
+    coordBox.textContent = `px(${pixelX}, ${pixelY})  —  copied to clipboard`;
+    coordBox.style.display = 'block';
+    navigator.clipboard.writeText(`px(${pixelX}, ${pixelY})`).catch(()=>{});
+    setTimeout(() => { coordBox.style.display = 'none'; }, 4000);
+
+  } else if (toolMode === 'trace') {
+    const pt = [e.latlng.lat, e.latlng.lng];
+    traceWaypoints.push(pt);
+
+    // Small gold dot at click point
+    const dot = L.circleMarker(pt, {
+      radius: 4, color: '#f0c040', fillColor: '#f0c040',
+      fillOpacity: 1, weight: 1.5, interactive: false
+    }).addTo(map);
+    traceMarkers.push(dot);
+
+    updateTracePolyline();
+    tracePanel.querySelector('#traceCount').textContent = traceWaypoints.length + ' points';
+
+  } else {
+    // Tapping empty map (not a marker, not in a tool mode) closes any open tooltip
+    closeAllTooltips();
+  }
+});
+
+function closeAllTooltips() {
+  Object.values(markers).forEach(m => m.closeTooltip());
+}
+
+// ── Tool toggle functions (called from header buttons) ──
+function toggleFreeLook() {
+  freeLook = !freeLook;
+  const btn = document.getElementById('btnFreeLook');
+  btn.classList.toggle('active', freeLook);
+  btn.title = freeLook
+    ? 'Free Look ON — map stays put when changing chapters. Click to re-enable auto-zoom.'
+    : 'Free Look — map stays where you left it when advancing chapters';
+}
+
+function toggleCalibrateMode() {
+  if (toolMode === 'calibrate') {
+    toolMode = 'off';
+    modeBanner.style.display = 'none';
+    map.getContainer().style.cursor = '';
+    document.getElementById('btnCalibrate').classList.remove('active');
+  } else {
+    traceCancel();
+    toolMode = 'calibrate';
+    modeBanner.textContent = '📍 Calibration mode — click anywhere on the map to get coordinates';
+    modeBanner.style.display = 'block';
+    map.getContainer().style.cursor = 'crosshair';
+    document.getElementById('btnCalibrate').classList.add('active');
+  }
+}
+
+function openTraceModal() {
+  // Refresh button states (roads may have been traced this session)
+  roadSelectContainer.innerHTML = '';
+  Object.entries(roads).forEach(([id, road]) => {
+    const btn = document.createElement('button');
+    const hasWaypoints = road.waypoints && road.waypoints.length > 1;
+    btn.style.cssText = `padding:7px 14px;background:#1a1208;border:1px solid ${hasWaypoints ? '#4a7a1a' : '#5a3e1a'};color:${hasWaypoints ? '#90c840' : '#c8a850'};border-radius:4px;cursor:pointer;font-family:Georgia,serif;font-size:12px;text-align:left;`;
+    btn.textContent = road.name + (hasWaypoints ? ' ✓ (re-trace to update)' : ' — not yet traced');
+    btn.onclick = () => { traceModal.style.display = 'none'; startTrace(id); };
+    roadSelectContainer.appendChild(btn);
+  });
+  traceModal.style.display = 'flex';
+}
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+
+let curCh = 1;
+let showDeceased = true;
+let openPanelId = null;
+let freeLook = false;
+const markers = {};
+
+// ─── CHAPTER NAV ─────────────────────────────────────────────────────────────
+
+const menu = document.getElementById('jumpMenu');
+allChapters.forEach(c => {
+  const o = document.createElement('option');
+  o.value = c.n;
+  o.textContent = `Ch. ${c.n} — ${c.name}`;
+  menu.appendChild(o);
+});
+
+function getChObj(n){ return allChapters.find(c=>c.n===n) || {n, name:"Chapter "+n}; }
+
+function stepCh(dir){ setChapter(curCh + dir); }
+function jumpTo(val){ if(val) setChapter(parseInt(val)); }
+
+// ─── CHARACTER LOGIC ─────────────────────────────────────────────────────────
+
+function resolvePos(entry) {
+  // Road entry format: { from, to, road:"kingsroad", pct:0.45, place:"...", note:"..." }
+  // pct can also be a named stop string e.g. pct:"winterfell"
+  // Raw px() entries pass through unchanged.
+  if (!entry || !entry.road) return entry;
+  const resolved = getRoadPos(entry.road, entry.pct);
+  if (!resolved) {
+    console.warn(`Road "${entry.road}" has no waypoints yet. Use ✏️ Trace Road to record it.`);
+    return null;
+  }
+  return { from: entry.from, to: entry.to, pos: resolved, place: entry.place, note: entry.note };
+}
+
+function getPos(c, ch){
+  // Never show before introduction
+  if(ch < c.firstChapter) return null;
+  if(!c.positions || c.positions.length === 0) return null;
+
+  // Rule 1: If the character's position data directly covers this chapter, use it.
+  //         This reflects where they ARE at the start of the chapter.
+  for(let p of c.positions) if(ch >= p.from && ch <= p.to) return resolvePos(p);
+
+  // Rule 2: No direct entry for this chapter — return the most recent known
+  //         position from any earlier chapter. Characters persist at their
+  //         last confirmed location rather than disappearing.
+  let lastKnown = null;
+  for(let p of c.positions){
+    if(p.from <= ch) lastKnown = p;
+  }
+  if(lastKnown) return resolvePos(lastKnown);
+
+  // Rule 3: Edge case — chapter is before any position entry, use first.
+  return resolvePos(c.positions[0]);
+}
+
+function isDeadAt(c, ch){ return c.deathChapter !== null && ch > c.deathChapter && c.deathStatus === 'dead'; }
+function isMissingAt(c, ch){ return c.deathChapter !== null && ch > c.deathChapter && c.deathStatus === 'missing'; }
+
+function buildTierText(c, ch){
+  return c.tiers.filter(t => t.revealChapter < ch).map(t => t.text).join(' ');
+}
+
+// ─── RIBBON MARKERS ──────────────────────────────────────────────────────────
+
+function makeRibbonHTML(name, ink, isDead, isMissing, textInk){
+  const displayInk = (isDead || isMissing) ? '#666' : ink;
+  const textColor = (isDead || isMissing) ? '#aaa' : (textInk || '#f5ecd0');
+  const opacity = (isDead || isMissing) ? 0.55 : 1;
+  const strike = (isDead || isMissing) ? 'text-decoration:line-through;' : '';
+  const charW = 7.5;
+  const w = name.length * charW + 20;
+  const h = 20;
+  const totalW = w + 20; // include tails
+  const cx = totalW / 2;
+
+  return `<svg width="${totalW}" height="${h+6}" xmlns="http://www.w3.org/2000/svg" style="opacity:${opacity}">
+    <!-- left tail -->
+    <polygon points="${10},${h*0.25} 0,${h*0.5} ${10},${h*0.75}" fill="${displayInk}" opacity="0.8"/>
+    <!-- right tail -->
+    <polygon points="${totalW-10},${h*0.25} ${totalW},${h*0.5} ${totalW-10},${h*0.75}" fill="${displayInk}" opacity="0.8"/>
+    <!-- body -->
+    <path d="M10,2 Q${cx},0 ${totalW-10},2 L${totalW-10},${h-2} Q${cx},${h} 10,${h-2} Z" fill="${displayInk}" opacity="0.92"/>
+    <!-- highlight -->
+    <path d="M14,5 Q${cx},3 ${totalW-14},5" stroke="#fff" stroke-width="0.8" fill="none" opacity="0.25"/>
+    <!-- text -->
+    <text x="${cx}" y="${h*0.65}" text-anchor="middle" font-family="Georgia,serif" font-size="9" font-style="italic" fill="${textColor}" style="${strike}" letter-spacing="0.3">${name}</text>
+    <!-- anchor dot -->
+    <circle cx="${cx}" cy="${h+3}" r="2" fill="${displayInk}" opacity="0.7"/>
+  </svg>`;
+}
+
+function renderMarkers(ch){
+  // Clear existing markers and leader lines
+  Object.values(markers).forEach(m => map.removeLayer(m));
+  Object.keys(markers).forEach(k => delete markers[k]);
+  if(window._leaderLines){
+    window._leaderLines.forEach(l => map.removeLayer(l));
+  }
+  window._leaderLines = [];
+
+  const povChars = allChars.filter(c => c.isPov);
+
+  // Group characters by location coordinate key
+  const groups = {};
+  povChars.forEach(c => {
+    const pos = getPos(c, ch);
+    if(!pos) return;
+    const dead = isDeadAt(c, ch);
+    const missing = isMissingAt(c, ch);
+    if((dead || missing) && !showDeceased) return;
+    const key = pos.pos[0] + ',' + pos.pos[1];
+    if(!groups[key]) groups[key] = {anchorPos: pos.pos, chars: []};
+    groups[key].chars.push({c, pos, dead, missing});
+  });
+
+  // For each group, fan ribbons out around the anchor point
+  Object.values(groups).forEach(group => {
+    const {anchorPos, chars} = group;
+    const count = chars.length;
+
+    // Fan offsets in map units — spread ribbons around anchor
+    // Single char: no offset, no leader line
+    // Multiple chars: fan outward with leader lines back to anchor
+    const fanOffsets = getFanOffsets(count, anchorPos);
+
+    chars.forEach(({c, pos, dead, missing}, i) => {
+      const ribbonPos = fanOffsets[i];
+      const needsLeader = count > 1;
+
+      const html = makeRibbonHTML(c.name, c.ink, dead, missing, c.textInk);
+      const iconW = c.name.length * 7.5 + 40;
+      const icon = L.divIcon({
+        html,
+        className: 'ribbon-label',
+        iconAnchor: [iconW / 2, 22]
+      });
+
+      const marker = L.marker(ribbonPos, {icon, interactive:true}).addTo(map);
+
+      // Draw leader line from ribbon anchor dot to location coordinate
+      if(needsLeader){
+        const lineColor = (dead || missing) ? '#666' : c.ink;
+        const line = L.polyline([anchorPos, ribbonPos], {
+          color: lineColor,
+          weight: 1.5,
+          opacity: 0.85,
+          dashArray: '4, 3'
+        }).addTo(map);
+        window._leaderLines.push(line);
+
+        // Small dot at the true location anchor
+        const dot = L.circleMarker(anchorPos, {
+          radius: 3,
+          color: '#c8a850',
+          fillColor: '#c8a850',
+          fillOpacity: 1,
+          weight: 1.5,
+          interactive: false
+        }).addTo(map);
+        window._leaderLines.push(dot);
+      }
+
+      // Tooltip
+      // Note is suppressed during the chapter it first applies (pos.from),
+      // consistent with the "after the chapter is over" rule.
+      let tipHtml = `<div class="tip-name">${c.name}</div>`;
+      if(dead) tipHtml += `<div class="tip-dead">&#9760; Deceased — ${c.deathNote}</div>`;
+      else if(missing) tipHtml += `<div class="tip-missing">&#63; Missing — ${c.deathNote}</div>`;
+      else {
+        tipHtml += `<div class="tip-place">${pos.place}</div>`;
+        if(ch > pos.from) tipHtml += `<div class="tip-note">${pos.note}</div>`;
+      }
+
+      marker.bindTooltip(tipHtml, {
+        className: 'ribbon-tip',
+        direction: 'top',
+        offset: [0, -20],
+        sticky: false
+      });
+
+      // Tooltips normally open on hover, but phones/tablets have no hover
+      // state — so tapping a marker toggles its tooltip open/closed too.
+      marker.on('click', function(e) {
+        if (this.isTooltipOpen()) {
+          this.closeTooltip();
+        } else {
+          closeAllTooltips();
+          this.openTooltip();
+        }
+        L.DomEvent.stopPropagation(e);
+      });
+
+      markers[c.id] = marker;
+    });
+  });
+}
+
+function getFanOffsets(count, anchorPos){
+  // Returns ribbon positions stacked to the left, clamped between a min and
+  // max screen-pixel distance so they stay close at all zoom levels.
+  if(count === 1) return [anchorPos];
+
+  const [lat, lng] = anchorPos;
+
+  const zoom = map.getZoom();
+  const scale = Math.pow(2, zoom);
+
+  // Desired screen distances — clamped so they never get too far or too close
+  const rawOffsetX = 160;          // ideal left offset in screen px
+  const rawStepY   = 26;           // ideal vertical step in screen px
+  const minOffsetX = 60;           // never closer than this (px)
+  const maxOffsetX = 120;          // never further than this (px)
+  const minStepY   = 18;
+  const maxStepY   = 28;
+
+  const clamp = (val, mn, mx) => Math.min(mx, Math.max(mn, val));
+  const screenOffsetX = clamp(rawOffsetX, minOffsetX, maxOffsetX);
+  const screenStepY   = clamp(rawStepY,   minStepY,   maxStepY);
+
+  // Convert clamped screen px → map units
+  const mapOffsetLng = -(screenOffsetX / scale);
+  const mapStepLat   =  (screenStepY   / scale);
+
+  const totalHeight = (count - 1) * mapStepLat;
+  const startLat = lat + totalHeight / 2;
+
+  const offsets = [];
+  for(let i = 0; i < count; i++){
+    offsets.push([startLat - i * mapStepLat, lng + mapOffsetLng]);
+  }
+  return offsets;
+}
+
+// ─── PANELS ──────────────────────────────────────────────────────────────────
+
+function buildCard(c, ch){
+  const dead = isDeadAt(c, ch);
+  const missing = isMissingAt(c, ch);
+  const statusClass = dead ? 'status-dead' : missing ? 'status-missing' : 'status-alive';
+  const statusLabel = dead ? 'Deceased' : missing ? 'Missing' : 'Active';
+  const tierText = buildTierText(c, ch);
+  const div = document.createElement('div');
+  div.className = 'char-card';
+  div.innerHTML = `
+    <div class="char-card-header" onclick="toggleDetail(this)">
+      <div class="char-swatch" style="background:${c.ink}"></div>
+      <div style="flex:1">
+        <div class="char-name">${c.name}</div>
+        <div class="char-role">${c.house ? c.house + ' · ' : ''}${c.role}</div>
+      </div>
+      <span class="char-status ${statusClass}">${statusLabel}</span>
+      <span class="char-expand">&#9660;</span>
+    </div>
+    <div class="char-detail">
+      <div class="reveal-tier">${tierText || 'No information recorded yet.'}</div>
+      ${dead ? `<div class="reveal-tier fate-note"><strong>Fate:</strong> ${c.deathNote}</div>` : ''}
+      ${missing ? `<div class="reveal-tier missing-note"><strong>Last known:</strong> ${c.deathNote}</div>` : ''}
+    </div>`;
+  return div;
+}
+
+function toggleDetail(header){
+  const detail = header.nextElementSibling;
+  const arrow = header.querySelector('.char-expand');
+  const open = detail.classList.contains('open');
+  detail.classList.toggle('open');
+  detail.style.display = open ? 'none' : 'block';
+  if(arrow) arrow.textContent = open ? '▼' : '▲';
+}
+
+function openPanel(id){
+  const overlay = document.getElementById('panelOverlay');
+  const body = document.getElementById('panelBody');
+  const titleEl = document.getElementById('panelTitle');
+
+  openPanelId = id;
+  overlay.classList.add('open');
+
+  // Update filter button states
+  ['side','glossary','deceased'].forEach(p => {
+    const btn = document.getElementById('btn' + p[0].toUpperCase() + p.slice(1));
+    if(btn) btn.classList.toggle('active', p === id);
+  });
+
+  body.innerHTML = '';
+
+  if(id === 'side'){
+    titleEl.textContent = 'Primary Characters';
+    const vis = allChars.filter(c => c.isPov && c.firstChapter <= curCh);
+    if(!vis.length){
+      body.innerHTML = '<p class="empty-note">No POV characters introduced yet.</p>';
+    } else {
+      vis.forEach(c => body.appendChild(buildCard(c, curCh)));
+    }
+  } else if(id === 'glossary'){
+    titleEl.textContent = 'Character Glossary';
+    // Show a character from their sideChapter (first referenced) or firstChapter.
+    // For POV chars not yet at their first POV chapter, render using sideTiers.
+    const all = [...allChars].filter(c => {
+      const introAt = (c.isPov && c.sideChapter) ? c.sideChapter : c.firstChapter;
+      return introAt < curCh;
+    }).sort((a,b) => a.name.localeCompare(b.name));
+    if(!all.length){
+      body.innerHTML = '<p class="empty-note">No characters introduced yet.</p>';
+    } else {
+      all.forEach(c => {
+        // Use side version for POV chars before their first POV chapter
+        const useAsSide = c.isPov && c.sideChapter && curCh < c.firstChapter;
+        if(useAsSide){
+          const sideChar = Object.assign({}, c, {isPov:false, tiers:c.sideTiers});
+          body.appendChild(buildCard(sideChar, curCh));
+        } else {
+          body.appendChild(buildCard(c, curCh));
+        }
+      });
+    }
+  } else if(id === 'deceased'){
+    titleEl.textContent = 'Deceased & Missing';
+    const rel = allChars.filter(c => c.firstChapter <= curCh && c.deathChapter !== null && curCh >= c.deathChapter);
+    if(!rel.length){
+      body.innerHTML = '<p class="empty-note">No deaths or disappearances recorded yet.</p>';
+    } else {
+      rel.forEach(c => body.appendChild(buildCard(c, curCh)));
+    }
+  }
+}
+
+function closePanel(){
+  document.getElementById('panelOverlay').classList.remove('open');
+  ['side','glossary','deceased'].forEach(p => {
+    const btn = document.getElementById('btn' + p[0].toUpperCase() + p.slice(1));
+    if(btn) btn.classList.remove('active');
+  });
+  // Keep deceased filter button active state separate
+  document.getElementById('btnDeceased').classList.toggle('active', showDeceased);
+  openPanelId = null;
+}
+
+function toggleDeceased(){
+  showDeceased = !showDeceased;
+  document.getElementById('btnDeceased').classList.toggle('active', showDeceased);
+  if(showDeceased && openPanelId !== 'side' && openPanelId !== 'glossary'){
+    // don't auto-open panel, just update map
+  }
+  renderMarkers(curCh);
+}
+
+// ─── CHAPTER POV MAP ────────────────────────────────────────────────────────
+const chapterPOV = {
+  0:  null,       // Prologue — Will (not a tracked character)
+  1:  "bran",
+  2:  "cat",
+  3:  "dany",
+  4:  "ned",
+  5:  "jon",
+  6:  "cat",
+  7:  "arya",
+  8:  "bran",
+  9:  "tyrion",
+  10: "jon",
+  11: "dany",
+  12: "ned",
+  13: "tyrion",
+  14: "cat",
+  15: "sansa",
+  16: "ned",
+  17: "bran",
+  18: "cat",
+  19: "jon",
+  20: "ned",
+  21: "tyrion",
+  22: "arya",
+  23: "dany",
+  24: "bran",
+  25: "ned",
+  26: "jon",
+  27: "ned",
+  28: "cat",
+  29: "sansa",
+  30: "ned",
+  31: "tyrion",
+  32: "arya",
+  33: "ned",
+  34: "cat",
+  35: "ned",
+  36: "dany",
+  37: "bran",
+  38: "tyrion",  // Tyrion V (was Eddard X)
+  39: "ned",     // Eddard X (was Jon V)
+  40: "cat",     // Catelyn VII (was Eddard XI)
+  41: "jon",     // Jon V (was Tyrion V)
+  42: "tyrion",  // Tyrion VI (was Arya IV)
+  43: "ned",     // Eddard XI (was Jon VI)
+  44: "sansa",   // Sansa III (was Eddard XII)
+  45: "ned",     // Eddard XII (was Sansa III)
+  46: "dany",    // Daenerys V (was Eddard XIII)
+  47: "ned",     // Eddard XIII (was Daenerys V)
+  48: "jon",     // Jon VI (was Jon VII)
+  49: "ned",     // Eddard XIV
+  50: "arya",    // Arya IV (was Arya V)
+  51: "sansa",   // Sansa IV
+  52: "jon",     // Jon VII (was Jon VIII)
+  53: "bran",
+  54: "dany",
+  55: "cat",
+  56: "tyrion",  // Tyrion VII (was Tyrion VI)
+  57: "sansa",
+  58: "ned",
+  59: "cat",
+  60: "jon",     // Jon VIII (was Jon IX)
+  61: "dany",
+  62: "tyrion",  // Tyrion VIII
+  63: "cat",     // Catelyn X (was Eddard XVI)
+  64: "dany",
+  65: "arya",    // Arya V (was Arya VI)
+  66: "bran",
+  67: "sansa",
+  68: "dany",
+  69: "tyrion",  // Tyrion IX (was Tyrion VIII)
+  70: "jon",     // Jon IX (was Jon X)
+  71: "cat",     // Catelyn XI (was Catelyn X)
+  72: "dany",
+  73: "jon",     // Jon X (was Jon XI)
+};
+
+// ─── CHAPTER UPDATE ──────────────────────────────────────────────────────────
+
+function setChapter(n){
+  curCh = Math.max(0, Math.min(72, n));
+  const ch = getChObj(curCh);
+
+  document.getElementById('chDisplay').innerHTML = `Ch. ${curCh} — <span>${ch.name}</span>`;
+  document.getElementById('prevBtn').disabled = curCh <= 0;
+  document.getElementById('nextBtn').disabled = curCh >= 72;
+  document.getElementById('jumpMenu').value = '';
+
+  renderMarkers(curCh);
+
+  // Zoom to the POV character for this chapter (unless Free Look is on)
+  const povId = chapterPOV[curCh];
+  if(povId && !freeLook){
+    const povChar = allChars.find(c => c.id === povId);
+    if(povChar){
+      const pos = getPos(povChar, curCh);
+      if(pos){
+        // Use the anchor position (not the ribbon offset)
+        // Smooth pan/zoom to the character — zoom level 0 is comfortable
+        map.flyTo(pos.pos, 1.0, {
+          animate: true,
+          duration: 2.0,
+          easeLinearity: 0.2
+        });
+      }
+    }
+  }
+
+  // Refresh open panel
+  if(openPanelId) openPanel(openPanelId);
+
+  const deadCount = allChars.filter(c => c.firstChapter <= curCh && c.deathChapter && curCh >= c.deathChapter).length;
+  const activeCount = allChars.filter(c => c.isPov && getPos(c, curCh)).length;
+  document.getElementById('statusBar').textContent =
+    `A Game of Thrones  ·  ${activeCount} POV character${activeCount !== 1 ? 's' : ''} active  ·  ${deadCount} death${deadCount !== 1 ? 's' : ''}/disappearance${deadCount !== 1 ? 's' : ''} recorded through Chapter ${curCh}`;
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+// Re-render on zoom so leader line offsets stay proportional
+map.on('zoomend', function(){ renderMarkers(curCh); });
+
+setChapter(0);
+</script>
+
+
+</body></html>

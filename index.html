@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fantasy Reading Companion</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'EB Garamond', Georgia, serif;
+    background: #0a0804;
+    color: #d8cba8;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Ambient background ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 30%, rgba(42,28,10,0.6) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 50% at 80% 70%, rgba(20,15,8,0.5) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Top bar ── */
+  .top-bar {
+    position: relative;
+    z-index: 2;
+    padding: 20px 32px;
+    text-align: center;
+    border-bottom: 1px solid rgba(90,62,26,0.3);
+    background: rgba(6,4,2,0.7);
+  }
+  .top-bar h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-weight: 400;
+    font-size: clamp(20px, 4vw, 36px);
+    color: #c8a850;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+  .top-bar p {
+    margin-top: 6px;
+    font-size: 14px;
+    color: #8a7a58;
+    font-style: italic;
+    letter-spacing: 1px;
+  }
+
+  /* ── Main content ── */
+  .page-content {
+    position: relative;
+    z-index: 1;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* ── VIEW: Series selection ── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .section-label {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6a5a38;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  /* ── Series card ── */
+  .series-card {
+    position: relative;
+    border: 1px solid rgba(90,62,26,0.4);
+    border-radius: 4px;
+    background: linear-gradient(135deg, rgba(18,14,8,0.95) 0%, rgba(12,10,6,0.95) 100%);
+    padding: 32px;
+    cursor: pointer;
+    transition: all 0.35s ease;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .series-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, #c8a850 50%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.35s;
+  }
+  .series-card:hover {
+    border-color: rgba(140,100,40,0.6);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 60px rgba(120,90,30,0.06);
+  }
+  .series-card:hover::before { opacity: 1; }
+
+  .series-card .series-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(18px, 3vw, 26px);
+    font-weight: 600;
+    color: #d4b860;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .series-card .series-author {
+    font-size: 15px;
+    color: #8a7a58;
+    font-style: italic;
+    margin-bottom: 14px;
+  }
+  .series-card .series-desc {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #a09878;
+    max-width: 700px;
+  }
+  .series-card .series-meta {
+    margin-top: 16px;
+    font-size: 13px;
+    color: #6a5a38;
+    letter-spacing: 0.5px;
+  }
+  .series-card .series-arrow {
+    position: absolute;
+    right: 28px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+    color: #5a4a28;
+    transition: all 0.3s;
+  }
+  .series-card:hover .series-arrow {
+    color: #c8a850;
+    transform: translateY(-50%) translateX(4px);
+  }
+
+  .series-card.coming-soon {
+    opacity: 0.4;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  /* ── VIEW: Book selection ── */
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #8a7a58;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 8px 0;
+    margin-bottom: 28px;
+    transition: color 0.2s;
+  }
+  .back-btn:hover { color: #c8a850; }
+  .back-btn .arrow { font-size: 16px; }
+
+  .book-series-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-weight: 400;
+    font-size: clamp(18px, 3.5vw, 28px);
+    color: #c8a850;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .book-series-subtitle {
+    font-size: 14px;
+    color: #6a5a38;
+    font-style: italic;
+    margin-bottom: 36px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Book list ── */
+  .book-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .book-entry {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    border: 1px solid rgba(90,62,26,0.3);
+    border-radius: 3px;
+    background: rgba(14,11,6,0.9);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+  }
+  .book-entry:hover {
+    border-color: rgba(140,100,40,0.5);
+    transform: translateX(4px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  .book-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    min-height: 80px;
+    background: rgba(20,16,8,0.8);
+    border-right: 1px solid rgba(90,62,26,0.25);
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 24px;
+    color: #5a4a28;
+    flex-shrink: 0;
+    transition: color 0.3s;
+  }
+  .book-entry:hover .book-number { color: #c8a850; }
+
+  .book-info {
+    flex: 1;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .book-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(14px, 2.5vw, 18px);
+    font-weight: 600;
+    color: #d4b860;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    transition: color 0.3s;
+  }
+  .book-entry:hover .book-title { color: #f0d870; }
+
+  .book-details {
+    font-size: 13px;
+    color: #7a6a48;
+    line-height: 1.5;
+  }
+
+  .book-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+    flex-shrink: 0;
+  }
+  .status-badge {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .status-badge.ready {
+    color: #90b860;
+    border: 1px solid rgba(100,140,50,0.4);
+    background: rgba(60,80,20,0.15);
+  }
+  .status-badge.in-progress {
+    color: #c8a850;
+    border: 1px solid rgba(160,120,40,0.4);
+    background: rgba(80,60,15,0.15);
+  }
+  .status-badge.coming {
+    color: #6a5a38;
+    border: 1px solid rgba(90,62,26,0.25);
+    background: transparent;
+  }
+
+  .book-entry.disabled {
+    opacity: 0.35;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  /* ── Footer note ── */
+  .footer-note {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(90,62,26,0.2);
+    font-size: 13px;
+    color: #5a4a30;
+    line-height: 1.6;
+    text-align: center;
+    font-style: italic;
+  }
+
+  /* ── Subtle entrance animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-in {
+    animation: fadeUp 0.5s ease forwards;
+    opacity: 0;
+  }
+  .animate-in:nth-child(1) { animation-delay: 0.05s; }
+  .animate-in:nth-child(2) { animation-delay: 0.12s; }
+  .animate-in:nth-child(3) { animation-delay: 0.19s; }
+  .animate-in:nth-child(4) { animation-delay: 0.26s; }
+  .animate-in:nth-child(5) { animation-delay: 0.33s; }
+  .animate-in:nth-child(6) { animation-delay: 0.40s; }
+  .animate-in:nth-child(7) { animation-delay: 0.47s; }
+  .animate-in:nth-child(8) { animation-delay: 0.54s; }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .page-content { padding: 32px 16px 60px; }
+    .series-card { padding: 24px 20px; }
+    .series-card .series-arrow { display: none; }
+    .book-number { width: 48px; font-size: 20px; }
+    .book-info { padding: 12px 14px; }
+    .book-status { padding: 0 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1>Fantasy Reading Companion</h1>
+  <p>A spoiler-free interactive map for your reading journey</p>
+</div>
+
+<div class="page-content">
+
+  <!-- ── VIEW 1: Choose your series ── -->
+  <div class="view active" id="viewSeries">
+    <div class="section-label">Choose Your Series</div>
+
+    <div class="series-card animate-in" onclick="showBooks('asoiaf')">
+      <div class="series-title">A Song of Ice and Fire</div>
+      <div class="series-author">George R. R. Martin</div>
+      <div class="series-desc">
+        Track character locations chapter by chapter across Westeros and Essos.
+        The map reveals only what you have read — nothing ahead, nothing spoiled.
+      </div>
+      <div class="series-meta">7 planned novels · 2 books available</div>
+      <div class="series-arrow">›</div>
+    </div>
+
+    <div class="series-card coming-soon animate-in">
+      <div class="series-title">More Series Coming</div>
+      <div class="series-author">&nbsp;</div>
+      <div class="series-desc">
+        Future support planned for other books with associated maps.
+      </div>
+      <div class="series-meta">Stay tuned</div>
+    </div>
+  </div>
+
+  <!-- ── VIEW 2: Choose your book (ASOIAF) ── -->
+  <div class="view" id="viewBooks-asoiaf">
+    <button class="back-btn" onclick="showSeries()">
+      <span class="arrow">‹</span> All Series
+    </button>
+
+    <div class="book-series-title">A Song of Ice and Fire</div>
+    <div class="book-series-subtitle">Select the book you are reading</div>
+
+    <div class="book-list">
+
+      <a class="book-entry animate-in" href="AGOT_Reading_Companion.html">
+        <div class="book-number">I</div>
+        <div class="book-info">
+          <div class="book-title">A Game of Thrones</div>
+          <div class="book-details">73 chapters · 8 POV characters · Fully tracked</div>
+        </div>
+        <div class="book-status">
+          <span class="status-badge ready">Complete</span>
+        </div>
+      </a>
+
+      <a class="book-entry animate-in" href="ACOK_Reading_Companion.html">
+        <div class="book-number">II</div>
+        <div class="book-info">
+          <div class="book-title">A Clash of Kings</div>
+          <div class="book-details">70 chapters · 10 POV characters · In progress</div>
+        </div>
+        <div class="book-status">
+          <span class="status-badge in-progress">In Progress</span>
+        </div>
+      </a>
+
+      <div class="book-entry disabled animate-in">
+        <div class="book-number">III</div>
+        <div class="book-info">
+          <div class="book-title">A Storm of Swords</div>
+          <div class="book-details">82 chapters · 10 POV characters</div>
+        </div>
+        <div class="book-status">
+          <span class="status-badge coming">Coming</span>
+        </div>
+      </div>
+
+      <div class="book-entry disabled animate-in">
+        <div class="book-number">IV</div>
+        <div class="book-info">
+          <div class="book-title">A Feast for Crows</div>
+          <div class="book-details">46 chapters · 12 POV characters</div>
+        </div>
+        <div class="book-status">
+          <span class="status-badge coming">Coming</span>
+        </div>
+      </div>
+
+      <div class="book-entry disabled animate-in">
+        <div class="book-number">V</div>
+        <div class="book-info">
+          <div class="book-title">A Dance with Dragons</div>
+          <div class="book-details">73 chapters · 18 POV characters</div>
+        </div>
+        <div class="book-status">
+          <span class="status-badge coming">Coming</span>
+        </div>
+      </div>
+
+      <div class="book-entry disabled animate-in">
+        <div class="book-number">VI</div>
+        <div class="book-info">
+          <div class="book-title">The Winds of Winter</div>
+          <div class="book-details">Forthcoming</div>
+        </div>
+        <div class="book-status">
+          <span class="status-badge coming">Coming</span>
+        </div>
+      </div>
+
+      <div class="book-entry disabled animate-in">
+        <div class="book-number">VII</div>
+        <div class="book-info">
+          <div class="book-title">A Dream of Spring</div>
+          <div class="book-details">Forthcoming</div>
+        </div>
+        <div class="book-status">
+          <span class="status-badge coming">Coming</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer-note">
+      Each book uses the same interactive map of the Known World.<br>
+      Character positions carry over from the previous book's final chapter.
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showBooks(seriesId) {
+  document.getElementById('viewSeries').classList.remove('active');
+  const bookView = document.getElementById('viewBooks-' + seriesId);
+  bookView.classList.add('active');
+
+  // Re-trigger animations
+  bookView.querySelectorAll('.animate-in').forEach(el => {
+    el.style.animation = 'none';
+    el.offsetHeight; // force reflow
+    el.style.animation = '';
+  });
+}
+
+function showSeries() {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('viewSeries').classList.add('active');
+}
+</script>
+
+</body>
+</html>
