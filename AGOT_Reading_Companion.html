@@ -428,9 +428,10 @@ const allChars = [
    tiers:[
      {revealChapter:4,  text:"Warden of the North and Lord of Winterfell. An old friend of King Robert, known for his strict honour. Father to Robb, Sansa, Arya, Bran, and Rickon, and guardian of Jon Snow."},
      {revealChapter:16, text:"Now serving as Hand of the King in King's Landing. He is investigating Jon Arryn's death and growing uneasy about what he is finding."},
-     {revealChapter:35, text:"Has discovered that Joffrey and the royal children may not be Robert's true heirs — a secret that puts his life in grave danger."},
+     {revealChapter:35, text:"Has noticed a strange pattern while looking into Robert's bastard children — all of them are dark-haired like the king, unlike Joffrey, Tommen, and Myrcella."},
+     {revealChapter:45, text:"Has pieced the pattern together — Joffrey and the royal children are not Robert's true heirs. A secret that puts his life in grave danger."},
      {revealChapter:51, text:"Arrested and imprisoned after attempting to expose Cersei's secret and being betrayed by Littlefinger."},
-     {revealChapter:63, text:"Confessed to treason in exchange for a promise of mercy. Joffrey broke that promise and had him executed publicly. His death fractures the realm."}
+     {revealChapter:65, text:"Confessed to treason in exchange for a promise of mercy. Joffrey broke that promise and had him executed publicly. His death fractures the realm."}
    ]},
 
   {id:"cat", name:"Catelyn Stark", house:"Stark", role:"Lady of Winterfell",
@@ -440,7 +441,8 @@ const allChars = [
    ],
    deathChapter:null, deathStatus:"alive", deathNote:null,
    positions:[
-     {from:2,  to:13,  pos:px(1154,1220),  place:"Winterfell",                note:"Lady of Winterfell — tending to her family as the royal party visits"},
+     {from:2,  to:3,   pos:px(1154,1220),  place:"Winterfell",                note:"Lady of Winterfell — has just learned Jon Arryn is dead, and that King Robert is marching north to Winterfell"},
+     {from:4,  to:13,  pos:px(1154,1220),  place:"Winterfell",                note:"Lady of Winterfell — tending to her family as the royal party visits"},
      {from:14, to:14,  pos:px(1154,1220),  place:"Winterfell",                note:"Preparing to sail south to King's Landing with Ser Rodrik"},
      {from:15, to:17,  pos:px(1750,2280),  place:"At sea — sailing south",    note:"Travelling by ship to King's Landing with Ser Rodrik"},
      {from:18, to:19,  pos:px(1394,2516), place:"King's Landing",            note:"Arrived secretly in King's Landing with Ser Rodrik"},
@@ -474,7 +476,8 @@ const allChars = [
    ],
    deathChapter:null, deathStatus:"alive", deathNote:null,
    positions:[
-     {from:3,  to:11, pos:px(2113,2488),  place:"Pentos",                   note:"Living in exile in Pentos with Viserys — recently wed to Khal Drogo"},
+     {from:3,  to:10, pos:px(2113,2488),  place:"Pentos",                   note:"Living in exile in Pentos with Viserys — betrothed to Khal Drogo, awaiting the wedding"},
+     {from:11, to:11, pos:px(2113,2488),  place:"Pentos",                   note:"Wed to Khal Drogo in a day-long Dothraki ceremony outside Pentos — now his khaleesi"},
      {from:12, to:22, road:"dothraki",  pct:0.10, place:"Riding east — Norvos and Qohor", note:"Traveling east through the Free Cities and the Forest of Qohor toward the Dothraki Sea"},
      {from:23, to:35, road:"dothraki",  pct:0.45, place:"Dothraki Sea — western edge",   note:"Just emerged from the Forest of Qohor — Daenerys sees the vast grasslands for the first time and stands up to Viserys"},
      {from:36, to:53, pos:px(4719,2315),  place:"Vaes Dothrak",             note:"Arrived at the sacred city of the Dothraki — staying until Drogo swears to sail west"},
@@ -531,7 +534,8 @@ const allChars = [
      {from:28, to:30, road:"kingsroad", pct:"inn", place:"Inn at the Crossroads",          note:"Arrested by Catelyn Stark — travelling with her party as prisoner"},
      {from:31, to:33, road:"highroad",  pct:0.589, place:"High Road — Mountains of the Moon", note:"Prisoner alongside Catelyn — mountain clan attacks in the passes; surviving men battered but moving"},
      {from:34, to:34, pos:px(1468,2071), place:"Gates of the Moon",        note:"Catelyn ascends the Giant's Lance alone at night; Tyrion kept in a tower cell at the Gates of the Moon until morning"},
-     {from:35, to:40, pos:px(1486,2033), place:"The Eyrie",                note:"Imprisoned in a sky cell — demands trial by combat; Bronn wins his freedom and Lysa releases him"},
+     {from:35, to:39, pos:px(1486,2033), place:"The Eyrie",                note:"Imprisoned in a sky cell — has demanded a trial by combat; Bronn has volunteered to fight as his champion"},
+     {from:40, to:40, pos:px(1486,2033), place:"The Eyrie",                note:"Freed — Bronn defeated Ser Vardis Egen in trial by combat and Lysa released him"},
      {from:41, to:42, road:"highroad",  pct:0.589, place:"High Road — Mountains of the Moon", note:"Back on the high road with Bronn — escaped the Eyrie, now recruiting Vale mountain clans with promises of steel and the Vale itself"},
      {from:43, to:55, pos:px(1350,2100),  place:"Foothills west of the Vale — with Hill Tribes",  note:"Leading Vale mountain clans westward — descending from the Mountains of the Moon toward Lord Tywin's host"},
      {from:56, to:61, pos:px(1220,2060),  place:"Lannister camp — Riverlands",     note:"Arrived at Lord Tywin's host near the Green Fork; placed in command of the Hill Tribes for the coming battle"},
@@ -543,8 +547,9 @@ const allChars = [
      {revealChapter:13, text:"Riding north with Jon Snow and Benjen Stark toward the Wall. Sharp, curious company on the road."},
      {revealChapter:21, text:"Has visited the Wall and seen its sorry state firsthand — too few men, crumbling infrastructure, and little support from the south. He left the maester at Castle Black plans for a saddle that could let Bran ride again. Now heading south."},
      {revealChapter:31, text:"Taken prisoner by Catelyn Stark at the Inn at the Crossroads and brought to the Eyrie to face Lysa Tully's justice."},
-     {revealChapter:38, text:"Demanded a trial by combat at the Eyrie. The sellsword Bronn fought as his champion and won his freedom."},
-     {revealChapter:41, text:"Won his freedom at the Eyrie through trial by combat — his champion Bronn defeated Lysa's knight Ser Vardis. Now on the high road with Bronn, recruiting fierce Vale mountain clans with promises of steel and glory."},
+     {revealChapter:38, text:"Demanded a trial by combat at the Eyrie. The sellsword Bronn has volunteered to fight as his champion."},
+     {revealChapter:40, text:"Freed — his champion Bronn defeated Lysa's knight Ser Vardis Egen in trial by combat."},
+     {revealChapter:41, text:"Now on the high road with Bronn, recruiting fierce Vale mountain clans with promises of steel and glory."},
      {revealChapter:56, text:"Led his Hill Tribes out of the mountains to join Lord Tywin's host in the Riverlands. His father has placed him and his clansmen in the vanguard for the battle ahead."},
      {revealChapter:62, text:"Fought at the Battle of the Green Fork. His father has named him Acting Hand of the King."}
    ]},
@@ -601,7 +606,7 @@ const allChars = [
      {from:16, to:19, road:"kingsroad", pct:0.82, place:"Kingsroad south — final stretch",  note:"Continuing south with Ned after the direwolf incident"},
      {from:20, to:49, pos:px(1394,2516), place:"King's Landing",                  note:"Training with Syrio Forel — navigating the Red Keep"},
      {from:50, to:64, pos:px(1394,2516), place:"King's Landing", status:"in hiding",      note:"Surviving in the city after Ned's arrest — taken under Yoren's wing"},
-     {from:65, to:65, pos:px(1394,2516), place:"King's Landing — the Sept",       note:"Witnesses Ned's execution — Yoren of the Night's Watch takes her away"},
+     {from:65, to:65, pos:px(1394,2516), place:"King's Landing — the Sept",       note:"In the crowd for her father's confession — Yoren pulls her away before the sentence is carried out, sparing her from seeing it"},
      {from:66, to:68, road:"kingsroad", pct:0.82, place:"Kingsroad north — leaving King's Landing", note:"Disguised as 'Arry', just north of King's Landing with Yoren's party"},
      {from:69, to:73, road:"kingsroad", pct:"twins", place:"Kingsroad north — Riverlands",  note:"Heading north through the Riverlands with Night's Watch recruits"}
    ],
@@ -642,7 +647,7 @@ const allChars = [
    tiers:[
      {revealChapter:4,  text:"Queen of the Seven Kingdoms, wife of Robert. Daughter of Lord Tywin Lannister. Sharp, proud, and fiercely protective of her children."},
      {revealChapter:20, text:"Increasingly at odds with Ned Stark, whose investigation into the succession threatens her family's grip on power."},
-     {revealChapter:35, text:"Ned has discovered her secret — that her children are not Robert's. She moves swiftly to neutralise him."},
+     {revealChapter:45, text:"Ned has discovered her secret — that her children are not Robert's. She moves swiftly to neutralise him."},
      {revealChapter:51, text:"With Robert dead and Joffrey on the throne, she is the dominant power in King's Landing."}
    ]},
 
@@ -662,7 +667,7 @@ const allChars = [
      {revealChapter:4,  text:"Crown Prince and heir to the Iron Throne. Betrothed to Sansa Stark."},
      {revealChapter:22, text:"Has shown his cruelty openly — he is petty, vindictive, and dangerous."},
      {revealChapter:44, text:"Now king following Robert's death. Surrounded by Lannister advisors, he has proven as cruel in power as he was as a prince."},
-     {revealChapter:63, text:"Broke the promise of mercy made to Ned Stark and ordered his public execution at the Great Sept of Baelor."}
+     {revealChapter:65, text:"Broke the promise of mercy made to Ned Stark and ordered his public execution at the Great Sept of Baelor."}
    ]},
 
 
@@ -718,7 +723,7 @@ const allChars = [
      {revealChapter:1,  text:"The previous Hand of the King, recently deceased. His death prompted Robert to travel to Winterfell and ask Ned to replace him. The cause of his death is unknown."},
      {revealChapter:12, text:"Ned has been told he died of a sudden illness. Ned is not sure he believes it. Jon Arryn was apparently investigating something sensitive before he died."},
      {revealChapter:25, text:"Jon Arryn was investigating the question of royal succession — examining the children of King Robert. Whatever he found may have gotten him killed."},
-     {revealChapter:46, text:"Ned has pieced together what Jon Arryn discovered: that the royal children are not Robert's. This is what cost Jon Arryn his life — though who ordered it remains unclear to Ned."}
+     {revealChapter:45, text:"Ned has pieced together what Jon Arryn discovered: that the royal children are not Robert's. This is what cost Jon Arryn his life — though who ordered it remains unclear to Ned."}
    ]},
 
   {id:"varys", name:"Varys", house:"None", role:"Master of Whisperers",
@@ -779,7 +784,8 @@ const allChars = [
    deathChapter:null, deathStatus:"alive", deathNote:null,
    tiers:[
      {revealChapter:31, text:"A skilled and ruthless sellsword who attached himself to Catelyn's party on the road to the Eyrie."},
-     {revealChapter:38, text:"Volunteered to be Tyrion's champion in his trial by combat at the Eyrie. He defeated and killed Ser Vardis Egen, winning Tyrion's freedom. He now rides with Tyrion."}
+     {revealChapter:38, text:"Volunteered to be Tyrion's champion in his trial by combat at the Eyrie."},
+     {revealChapter:40, text:"Defeated and killed Ser Vardis Egen in trial by combat, winning Tyrion's freedom. Now rides with Tyrion."}
    ]},
 
   {id:"rodrik", name:"Ser Rodrik Cassel", house:"Stark", role:"Master-at-arms of Winterfell",
@@ -1476,8 +1482,9 @@ function resolvePos(entry) {
 }
 
 function getPos(c, ch){
-  // Never show before introduction
-  if(ch < c.firstChapter) return null;
+  // Never show before introduction — same before/after rule as isRevealed(),
+  // so a character's debut chapter doesn't leak a chapter early on "opening."
+  if(!isRevealed(c.firstChapter, ch, curPhase)) return null;
   if(!c.positions || c.positions.length === 0) return null;
 
   // Rule 1: If the character's position data directly covers this chapter, use it.
@@ -1907,8 +1914,16 @@ function buildRecapHTML(ch, phase){
   } else {
     const povChar = allChars.find(c => c.id === povId);
     const pos = povChar ? getPos(povChar, ch) : null;
-    if(!povChar || !pos){
-      body = povChar ? `<strong>${povChar.name}</strong> — first appearance.` : '';
+    if(!povChar){
+      body = '';
+    } else if(!pos && phase === 'before'){
+      // Never been placed anywhere before, and the chapter hasn't happened
+      // yet — nothing truthful to show. Stay silent rather than announce
+      // "first appearance," which is itself a bit of a tell. Comes back
+      // once the reader finishes the chapter and we have a real position.
+      body = '';
+    } else if(!pos){
+      body = `<strong>${povChar.name}</strong> — first appearance.`;
     } else if(phase === 'before'){
       body = `<strong>${povChar.name}</strong> — last seen: ${pos.place}.`;
     } else {

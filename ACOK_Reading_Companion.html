@@ -1077,7 +1077,9 @@ function resolvePos(entry) {
   return { from: entry.from, to: entry.to, pos: resolved, place: entry.place, note: entry.note, status: entry.status };
 }
 function getPos(c, ch){
-  if(ch < c.firstChapter) return null;
+  // Never show before introduction — same before/after rule as isRevealed(),
+  // so a character's debut chapter doesn't leak a chapter early on "opening."
+  if(!isRevealed(c.firstChapter, ch, curPhase)) return null;
   if(!c.positions || c.positions.length === 0) return null;
   for(let p of c.positions) if(ch >= p.from && ch <= p.to) return resolvePos(p);
   let lastKnown = null;
@@ -1392,8 +1394,15 @@ function buildRecapHTML(ch, phase){
   } else {
     const povChar = allChars.find(c => c.id === povId);
     const pos = povChar ? getPos(povChar, ch) : null;
-    if(!povChar || !pos){
-      body = povChar ? `<strong>${povChar.name}</strong> — first appearance.` : '';
+    if(!povChar){
+      body = '';
+    } else if(!pos && phase === 'before'){
+      // Never been placed anywhere before, and the chapter hasn't happened
+      // yet — nothing truthful to show. Stays silent until "finished."
+      // See AGOT_Reading_Companion.html for the full rationale.
+      body = '';
+    } else if(!pos){
+      body = `<strong>${povChar.name}</strong> — first appearance.`;
     } else if(phase === 'before'){
       body = `<strong>${povChar.name}</strong> — last seen: ${pos.place}.`;
     } else {
