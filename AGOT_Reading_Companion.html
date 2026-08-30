@@ -2,7 +2,7 @@
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Westeros Reading Companion</title>
+<title>A Game of Thrones — Reading Companion</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
@@ -36,6 +36,15 @@
     white-space: nowrap;
   }
 
+  #homeLink {
+    font-size: 14px;
+    color: #8a7040;
+    text-decoration: none;
+    margin-right: 4px;
+    transition: color 0.15s;
+  }
+  #homeLink:hover { color: #c8a850; }
+
   .nav-btn {
     width: 32px; height: 32px;
     border-radius: 6px;
@@ -60,7 +69,7 @@
   }
   #chDisplay span { color: #8a7040; font-size: 12px; }
 
-  #jumpMenu {
+  #jumpMenu, #bookMenu {
     font-size: 12px;
     padding: 5px 8px;
     border-radius: 6px;
@@ -260,7 +269,7 @@
       font-size: 12px;
       min-width: 0;
     }
-    #jumpMenu {
+    #jumpMenu, #bookMenu {
       max-width: 140px;
       font-size: 12px;
       padding: 8px 6px;
@@ -290,7 +299,12 @@
 <body>
 
 <div id="header">
-  <div id="title">⚔ Westeros Reading Companion</div>
+  <a id="homeLink" href="index.html" title="Back to series selection">‹</a>
+  <div id="title">⚔ A Game of Thrones</div>
+  <select id="bookMenu" onchange="if(this.value) window.location.href = this.value;" title="Switch book">
+    <option value="AGOT_Reading_Companion.html" selected="">A Game of Thrones</option>
+    <option value="ACOK_Reading_Companion.html">A Clash of Kings</option>
+  </select>
   <button class="nav-btn" id="prevBtn" onclick="stepCh(-1)" title="Previous chapter" disabled="">←</button>
   <button class="nav-btn" id="nextBtn" onclick="stepCh(1)" title="Next chapter">→</button>
   <div id="chDisplay">Ch. 0 — <span>Prologue</span></div>
@@ -300,8 +314,8 @@
   <button class="filter-btn active" id="btnDeceased" onclick="toggleDeceased()">☠ Deceased</button>
   <button class="filter-btn" id="btnSide" onclick="openPanel(&#39;side&#39;)">Primary Characters</button>
   <button class="filter-btn" id="btnGlossary" onclick="openPanel(&#39;glossary&#39;)">Glossary</button>
+  <button class="filter-btn" id="btnFreeLook" onclick="toggleFreeLook()" title="Free Look — map stays where you left it when advancing chapters">🔭 Free Look</button>
   <div id="devTools" style="margin-left:auto;display:none;gap:6px;">
-    <button class="filter-btn" id="btnFreeLook" onclick="toggleFreeLook()" title="Free Look — map stays where you left it when advancing chapters">🔭 Free Look</button>
     <button class="filter-btn" id="btnCalibrate" onclick="toggleCalibrateMode()" title="Click anywhere on map to get px() coordinates">📍 Calibrate</button>
     <button class="filter-btn" id="btnTrace" onclick="openTraceModal()" title="Trace road paths for automatic character positioning">✏️ Trace Road</button>
   </div>
@@ -1382,6 +1396,14 @@ let curCh = 1;
 let showDeceased = true;
 let openPanelId = null;
 let freeLook = false;
+
+// The "snap to character" zoom (used when advancing chapters) was zoomed in
+// too far. This pulls it back by 1 zoom level on desktop and 2 on mobile —
+// mobile screens are smaller, so the same zoom level feels more cropped.
+// 700px matches the @media breakpoint used for the mobile layout above.
+function getSnapZoom(){
+  return window.innerWidth <= 700 ? -1.0 : 0.0;
+}
 const markers = {};
 
 // ─── CHAPTER NAV ─────────────────────────────────────────────────────────────
@@ -1450,25 +1472,29 @@ function makeRibbonHTML(name, ink, isDead, isMissing, textInk){
   const textColor = (isDead || isMissing) ? '#aaa' : (textInk || '#f5ecd0');
   const opacity = (isDead || isMissing) ? 0.55 : 1;
   const strike = (isDead || isMissing) ? 'text-decoration:line-through;' : '';
-  const charW = 7.5;
-  const w = name.length * charW + 20;
-  const h = 20;
-  const totalW = w + 20; // include tails
+  // Banner size — bumped up from the original 7.5/20 so names read
+  // clearly on the map. Keep charW, w, and totalW in sync with the
+  // iconW calc in renderMarkers() below, or the ribbon will be
+  // mis-centered on its marker position.
+  const charW = 9.5;
+  const w = name.length * charW + 26;
+  const h = 26;
+  const totalW = w + 26; // include tails
   const cx = totalW / 2;
 
-  return `<svg width="${totalW}" height="${h+6}" xmlns="http://www.w3.org/2000/svg" style="opacity:${opacity}">
+  return `<svg width="${totalW}" height="${h+8}" xmlns="http://www.w3.org/2000/svg" style="opacity:${opacity}">
     <!-- left tail -->
-    <polygon points="${10},${h*0.25} 0,${h*0.5} ${10},${h*0.75}" fill="${displayInk}" opacity="0.8"/>
+    <polygon points="${13},${h*0.25} 0,${h*0.5} ${13},${h*0.75}" fill="${displayInk}" opacity="0.8"/>
     <!-- right tail -->
-    <polygon points="${totalW-10},${h*0.25} ${totalW},${h*0.5} ${totalW-10},${h*0.75}" fill="${displayInk}" opacity="0.8"/>
+    <polygon points="${totalW-13},${h*0.25} ${totalW},${h*0.5} ${totalW-13},${h*0.75}" fill="${displayInk}" opacity="0.8"/>
     <!-- body -->
-    <path d="M10,2 Q${cx},0 ${totalW-10},2 L${totalW-10},${h-2} Q${cx},${h} 10,${h-2} Z" fill="${displayInk}" opacity="0.92"/>
+    <path d="M13,2 Q${cx},0 ${totalW-13},2 L${totalW-13},${h-2} Q${cx},${h} 13,${h-2} Z" fill="${displayInk}" opacity="0.92"/>
     <!-- highlight -->
-    <path d="M14,5 Q${cx},3 ${totalW-14},5" stroke="#fff" stroke-width="0.8" fill="none" opacity="0.25"/>
+    <path d="M17,6 Q${cx},3 ${totalW-17},6" stroke="#fff" stroke-width="1" fill="none" opacity="0.25"/>
     <!-- text -->
-    <text x="${cx}" y="${h*0.65}" text-anchor="middle" font-family="Georgia,serif" font-size="9" font-style="italic" fill="${textColor}" style="${strike}" letter-spacing="0.3">${name}</text>
+    <text x="${cx}" y="${h*0.65}" text-anchor="middle" font-family="Georgia,serif" font-size="12" font-style="italic" fill="${textColor}" style="${strike}" letter-spacing="0.4">${name}</text>
     <!-- anchor dot -->
-    <circle cx="${cx}" cy="${h+3}" r="2" fill="${displayInk}" opacity="0.7"/>
+    <circle cx="${cx}" cy="${h+4}" r="2.5" fill="${displayInk}" opacity="0.7"/>
   </svg>`;
 }
 
@@ -1511,11 +1537,12 @@ function renderMarkers(ch){
       const needsLeader = count > 1;
 
       const html = makeRibbonHTML(c.name, c.ink, dead, missing, c.textInk);
-      const iconW = c.name.length * 7.5 + 40;
+      // Must match charW/padding used inside makeRibbonHTML() above.
+      const iconW = c.name.length * 9.5 + 52;
       const icon = L.divIcon({
         html,
         className: 'ribbon-label',
-        iconAnchor: [iconW / 2, 22]
+        iconAnchor: [iconW / 2, 29]
       });
 
       const marker = L.marker(ribbonPos, {icon, interactive:true}).addTo(map);
@@ -1590,11 +1617,11 @@ function getFanOffsets(count, anchorPos){
 
   // Desired screen distances — clamped so they never get too far or too close
   const rawOffsetX = 160;          // ideal left offset in screen px
-  const rawStepY   = 26;           // ideal vertical step in screen px
+  const rawStepY   = 34;           // ideal vertical step in screen px (bumped up for larger banners)
   const minOffsetX = 60;           // never closer than this (px)
   const maxOffsetX = 120;          // never further than this (px)
-  const minStepY   = 18;
-  const maxStepY   = 28;
+  const minStepY   = 24;
+  const maxStepY   = 36;
 
   const clamp = (val, mn, mx) => Math.min(mx, Math.max(mn, val));
   const screenOffsetX = clamp(rawOffsetX, minOffsetX, maxOffsetX);
@@ -1827,8 +1854,8 @@ function setChapter(n){
       const pos = getPos(povChar, curCh);
       if(pos){
         // Use the anchor position (not the ribbon offset)
-        // Smooth pan/zoom to the character — zoom level 0 is comfortable
-        map.flyTo(pos.pos, 1.0, {
+        // Smooth pan/zoom to the character
+        map.flyTo(pos.pos, getSnapZoom(), {
           animate: true,
           duration: 2.0,
           easeLinearity: 0.2
