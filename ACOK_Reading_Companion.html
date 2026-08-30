@@ -95,6 +95,24 @@
   .filter-btn.active { background: #2a1e08; color: #c8a850; border-color: #8a6030; }
   .filter-btn:hover { background: #2a1e08; color: #c8a850; }
 
+  #recapPanel {
+    background: #140f06;
+    border-bottom: 1px solid #3a2a0a;
+    padding: 8px 16px;
+    font-size: 13px;
+    color: #b89a54;
+    font-family: Georgia, serif;
+    line-height: 1.5;
+    flex-shrink: 0;
+  }
+  #recapPanel .recap-tag {
+    color: #c8a850;
+    font-variant: small-caps;
+    letter-spacing: 0.5px;
+  }
+  #recapPanel .recap-sep { color: #4a3a18; margin: 0 8px; }
+  #recapPanel strong { color: #e8dbb8; font-weight: normal; }
+
   #map {
     width: 100%;
     flex: 1 1 auto;
@@ -244,6 +262,10 @@
       max-width: 220px;
       font-size: 13px;
     }
+    #recapPanel {
+      font-size: 12px;
+      padding: 7px 10px;
+    }
   }
 </style>
 </head>
@@ -271,6 +293,8 @@
     <button class="filter-btn" id="btnTrace" onclick="openTraceModal()" title="Trace road paths for automatic character positioning">✏️ Trace Road</button>
   </div>
 </div>
+
+<div id="recapPanel"></div>
 
 <div id="map"></div>
 
@@ -378,7 +402,7 @@ const allChars = [
    ink:"#5a6a6a", textInk:"#e8e8e8", isPov:true, firstChapter:2,
    deathChapter:null, deathStatus:"alive", deathNote:null,
    positions:[
-     {from:0,  to:69, pos:px(1394,2516), place:"King's Landing — hostage", note:"Held hostage at court — enduring Joffrey's cruelty"}
+     {from:0,  to:69, pos:px(1394,2516), place:"King's Landing", status:"hostage", note:"Held hostage at court — enduring Joffrey's cruelty"}
    ],
    tiers:[
      {revealChapter:2, text:"A hostage in King's Landing. Joffrey forces her to attend court and punishes her for Robb's victories in the field. Ser Dontos Hollard, a drunken knight she saved from execution, has begun secretly meeting with her."}
@@ -1012,6 +1036,7 @@ function openTraceModal() {
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
 let curCh = 0;
+let curPhase = 'before'; // 'before' = opening the chapter, 'after' = just finished it
 let showDeceased = true;
 let openPanelId = null;
 let freeLook = false;
@@ -1034,15 +1059,22 @@ allChapters.forEach(c => {
   menu.appendChild(o);
 });
 function getChObj(n){ return allChapters.find(c=>c.n===n) || {n, name:"Chapter "+n}; }
-function stepCh(dir){ setChapter(curCh + dir); }
-function jumpTo(val){ if(val) setChapter(parseInt(val)); }
+// Each chapter has two stops: Before N (index 2N) and After N (index 2N+1).
+function toIndex(ch, phase){ return ch * 2 + (phase === 'after' ? 1 : 0); }
+function fromIndex(idx){ return { ch: Math.floor(idx / 2), phase: (idx % 2 === 0) ? 'before' : 'after' }; }
+function stepCh(dir){
+  const idx = Math.max(MIN_STEP, Math.min(MAX_STEP, toIndex(curCh, curPhase) + dir));
+  const next = fromIndex(idx);
+  setChapter(next.ch, next.phase);
+}
+function jumpTo(val){ if(val) setChapter(parseInt(val), 'before'); }
 
 // ─── CHARACTER LOGIC ─────────────────────────────────────────────────────────
 function resolvePos(entry) {
   if (!entry || !entry.road) return entry;
   const resolved = getRoadPos(entry.road, entry.pct);
   if (!resolved) { console.warn(`Road "${entry.road}" has no waypoints yet.`); return null; }
-  return { from: entry.from, to: entry.to, pos: resolved, place: entry.place, note: entry.note };
+  return { from: entry.from, to: entry.to, pos: resolved, place: entry.place, note: entry.note, status: entry.status };
 }
 function getPos(c, ch){
   if(ch < c.firstChapter) return null;
@@ -1053,9 +1085,15 @@ function getPos(c, ch){
   if(lastKnown) return resolvePos(lastKnown);
   return resolvePos(c.positions[0]);
 }
-function isDeadAt(c, ch){ return c.deathChapter !== null && ch > c.deathChapter && c.deathStatus === 'dead'; }
-function isMissingAt(c, ch){ return c.deathChapter !== null && ch > c.deathChapter && c.deathStatus === 'missing'; }
-function buildTierText(c, ch){ return c.tiers.filter(t => t.revealChapter < ch).map(t => t.text).join(' '); }
+// One shared rule for every gate in the file: Before N is strictly-less-than,
+// After N is less-than-or-equal. See AGOT_Reading_Companion.html for the
+// full explanation — kept short here since the files share this logic.
+function isRevealed(revealChapter, ch, phase){
+  return phase === 'after' ? revealChapter <= ch : revealChapter < ch;
+}
+function isDeadAt(c, ch){ return c.deathChapter !== null && isRevealed(c.deathChapter, ch, curPhase) && c.deathStatus === 'dead'; }
+function isMissingAt(c, ch){ return c.deathChapter !== null && isRevealed(c.deathChapter, ch, curPhase) && c.deathStatus === 'missing'; }
+function buildTierText(c, ch){ return c.tiers.filter(t => isRevealed(t.revealChapter, ch, curPhase)).map(t => t.text).join(' '); }
 
 // ─── RIBBON MARKERS ──────────────────────────────────────────────────────────
 function makeRibbonHTML(name, ink, isDead, isMissing, textInk){
@@ -1122,8 +1160,10 @@ function renderMarkers(ch){
       if(dead) tipHtml += `<div class="tip-dead">&#9760; Deceased — ${c.deathNote}</div>`;
       else if(missing) tipHtml += `<div class="tip-missing">&#63; Missing — ${c.deathNote}</div>`;
       else {
-        tipHtml += `<div class="tip-place">${pos.place}</div>`;
-        if(ch > pos.from) tipHtml += `<div class="tip-note">${pos.note}</div>`;
+        const eventRevealed = isRevealed(pos.from, ch, curPhase);
+        const placeLine = (eventRevealed && pos.status) ? `${pos.place} — ${pos.status}` : pos.place;
+        tipHtml += `<div class="tip-place">${placeLine}</div>`;
+        if(eventRevealed) tipHtml += `<div class="tip-note">${pos.note}</div>`;
       }
       marker.bindTooltip(tipHtml, { className: 'ribbon-tip', direction: 'top', offset: [0, -20], sticky: false });
 
@@ -1210,7 +1250,7 @@ function openPanel(id){
   body.innerHTML = '';
   if(id === 'side'){
     titleEl.textContent = 'Primary Characters';
-    const vis = allChars.filter(c => c.isPov && c.firstChapter <= curCh);
+    const vis = allChars.filter(c => c.isPov && isRevealed(c.firstChapter, curCh, curPhase));
     if(!vis.length){
       body.innerHTML = '<p class="empty-note">No POV characters introduced yet.</p>';
     } else {
@@ -1220,13 +1260,13 @@ function openPanel(id){
     titleEl.textContent = 'Character Glossary';
     const all = [...allChars].filter(c => {
       const introAt = (c.isPov && c.sideChapter) ? c.sideChapter : c.firstChapter;
-      return introAt < curCh;
+      return isRevealed(introAt, curCh, curPhase);
     }).sort((a,b) => a.name.localeCompare(b.name));
     if(!all.length){
       body.innerHTML = '<p class="empty-note">No characters introduced yet.</p>';
     } else {
       all.forEach(c => {
-        const useAsSide = c.isPov && c.sideChapter && curCh < c.firstChapter;
+        const useAsSide = c.isPov && c.sideChapter && !isRevealed(c.firstChapter, curCh, curPhase);
         if(useAsSide){
           const sideChar = Object.assign({}, c, {isPov:false, tiers:c.sideTiers});
           body.appendChild(buildCard(sideChar, curCh));
@@ -1237,7 +1277,7 @@ function openPanel(id){
     }
   } else if(id === 'deceased'){
     titleEl.textContent = 'Deceased & Missing';
-    const rel = allChars.filter(c => c.firstChapter <= curCh && c.deathChapter !== null && curCh >= c.deathChapter);
+    const rel = allChars.filter(c => isRevealed(c.firstChapter, curCh, curPhase) && c.deathChapter !== null && isRevealed(c.deathChapter, curCh, curPhase));
     if(!rel.length){
       body.innerHTML = '<p class="empty-note">No deaths or disappearances recorded yet.</p>';
     } else {
@@ -1336,14 +1376,44 @@ const chapterPOV = {
 
 // ─── CHAPTER UPDATE ──────────────────────────────────────────────────────────
 const MAX_CH = 69;
+const MIN_STEP = toIndex(0, 'before');
+const MAX_STEP = toIndex(MAX_CH, 'after');
 
-function setChapter(n){
+// Builds the always-visible recap line — see AGOT_Reading_Companion.html for
+// the full rationale. Before N is a refresher (last known place only); After
+// N reveals what just happened, once isRevealed says the reader has caught up.
+function buildRecapHTML(ch, phase){
+  const chObj = getChObj(ch);
+  const tag = phase === 'after' ? 'Finished' : 'Opening';
+  const povId = chapterPOV[ch];
+  let body;
+  if(!povId){
+    body = phase === 'after' ? `The ${chObj.name} has ended.` : `About to begin the ${chObj.name}.`;
+  } else {
+    const povChar = allChars.find(c => c.id === povId);
+    const pos = povChar ? getPos(povChar, ch) : null;
+    if(!povChar || !pos){
+      body = povChar ? `<strong>${povChar.name}</strong> — first appearance.` : '';
+    } else if(phase === 'before'){
+      body = `<strong>${povChar.name}</strong> — last seen: ${pos.place}.`;
+    } else {
+      const eventRevealed = isRevealed(pos.from, ch, phase);
+      body = `<strong>${povChar.name}</strong> — ${eventRevealed ? pos.note : 'no new developments recorded.'}`;
+    }
+  }
+  return `<span class="recap-tag">${tag} · Ch. ${ch} — ${chObj.name}</span><span class="recap-sep">|</span>${body}`;
+}
+
+function setChapter(n, phase){
   curCh = Math.max(0, Math.min(MAX_CH, n));
-  const ch = getChObj(curCh);
-  document.getElementById('chDisplay').innerHTML = `Ch. ${curCh} — <span>${ch.name}</span>`;
-  document.getElementById('prevBtn').disabled = curCh <= 0;
-  document.getElementById('nextBtn').disabled = curCh >= MAX_CH;
+  curPhase = (phase === 'after') ? 'after' : 'before';
+  const chObj = getChObj(curCh);
+  document.getElementById('chDisplay').innerHTML = `Ch. ${curCh} — <span>${chObj.name}</span>`;
+  const idx = toIndex(curCh, curPhase);
+  document.getElementById('prevBtn').disabled = idx <= MIN_STEP;
+  document.getElementById('nextBtn').disabled = idx >= MAX_STEP;
   document.getElementById('jumpMenu').value = '';
+  document.getElementById('recapPanel').innerHTML = buildRecapHTML(curCh, curPhase);
   renderMarkers(curCh);
   const povId = chapterPOV[curCh];
   if(povId && !freeLook){
@@ -1356,15 +1426,16 @@ function setChapter(n){
     }
   }
   if(openPanelId) openPanel(openPanelId);
-  const deadCount = allChars.filter(c => c.firstChapter <= curCh && c.deathChapter !== null && curCh >= c.deathChapter).length;
+  const deadCount = allChars.filter(c => isRevealed(c.firstChapter, curCh, curPhase) && c.deathChapter !== null && isRevealed(c.deathChapter, curCh, curPhase)).length;
   const activeCount = allChars.filter(c => c.isPov && getPos(c, curCh)).length;
+  const asOf = curPhase === 'after' ? 'through' : 'entering';
   document.getElementById('statusBar').textContent =
-    `A Clash of Kings  ·  ${activeCount} POV character${activeCount !== 1 ? 's' : ''} active  ·  ${deadCount} death${deadCount !== 1 ? 's' : ''}/disappearance${deadCount !== 1 ? 's' : ''} recorded through Chapter ${curCh}`;
+    `A Clash of Kings  ·  ${activeCount} POV character${activeCount !== 1 ? 's' : ''} active  ·  ${deadCount} death${deadCount !== 1 ? 's' : ''}/disappearance${deadCount !== 1 ? 's' : ''} recorded ${asOf} Chapter ${curCh}`;
 }
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 map.on('zoomend', function(){ renderMarkers(curCh); });
-setChapter(0);
+setChapter(0, 'before');
 </script>
 
 </body></html>
