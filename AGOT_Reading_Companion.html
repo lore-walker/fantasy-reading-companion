@@ -128,17 +128,18 @@
     background: #1a2a3a;
   }
 
-  /* ── First-POV Debut Reveal ──────────────────────────────────────────── */
-  /* The map itself dims/desaturates under the overlay rather than being
-     replaced by a solid block, so there's a faint sense of "the world is
-     still there, just not in focus yet" behind the reveal. */
-  #map.debut-dimmed {
+  /* ── Chapter Reveal ───────────────────────────────────────────────────── */
+  /* Every chapter opens the way the books themselves do: before anything
+     else, a name-only heading. The map itself dims/desaturates under the
+     overlay rather than being replaced by a solid block, so there's a faint
+     sense of "the world is still there, just not in focus yet" underneath. */
+  #map.map-dimmed {
     filter: grayscale(0.9) brightness(0.32) contrast(1.05);
     transition: filter 1.1s ease;
   }
   #map { transition: filter 0.6s ease; }
 
-  #debutOverlay {
+  #chapterRevealOverlay {
     position: absolute;
     inset: 0;
     z-index: 900;
@@ -150,9 +151,9 @@
     pointer-events: none;
     transition: opacity 0.9s ease;
   }
-  #debutOverlay.visible { opacity: 1; pointer-events: auto; }
+  #chapterRevealOverlay.visible { opacity: 1; pointer-events: auto; }
 
-  #debutName {
+  #chapterRevealName {
     font-family: Georgia, 'Times New Roman', serif;
     font-size: clamp(2.2rem, 6vw, 4.2rem);
     font-variant: small-caps;
@@ -166,26 +167,30 @@
     clip-path: inset(0 100% 0 0);
     text-shadow: 0 0 0 rgba(240, 212, 136, 0);
   }
-  #debutOverlay.revealing #debutName {
-    animation: debutReveal 2.3s cubic-bezier(.32,.02,.18,1) forwards;
+  #chapterRevealOverlay.revealing #chapterRevealName {
+    animation: chapterNameReveal 2.3s cubic-bezier(.32,.02,.18,1) forwards;
   }
-  @keyframes debutReveal {
+  @keyframes chapterNameReveal {
     0%   { clip-path: inset(0 100% 0 0); text-shadow: 0 0 0 rgba(240,212,136,0); }
     55%  { text-shadow: 0 0 22px rgba(240,212,136,0.85); }
     85%  { clip-path: inset(0 0 0 0); text-shadow: 0 0 22px rgba(240,212,136,0.7); }
     100% { clip-path: inset(0 0 0 0); text-shadow: 0 0 8px rgba(240,212,136,0.35); }
   }
 
-  /* One-time flourish on a debut character's own banner the moment it first
-     appears (chapter "finished") — glow in, not a position/scale change, so
-     it never fights Leaflet's own transform on the marker. */
-  .ribbon-label.debut-reveal svg {
-    animation: debutBannerReveal 1.5s ease-out;
+  /* Persistent glow on the current chapter's own POV banner. Fades in the
+     moment the reveal lifts (same feel as before), but now HOLDS a soft
+     standing glow at the end (100%) instead of fading back to nothing, so
+     it stays lit for as long as the reader remains on this chapter — through
+     zooming, panning, or any other re-render. Opacity/drop-shadow only,
+     never transform, so it can't fight Leaflet's own positioning transform
+     on the marker. */
+  .ribbon-label.banner-glow svg {
+    animation: bannerGlowIn 1.3s ease-out forwards;
   }
-  @keyframes debutBannerReveal {
+  @keyframes bannerGlowIn {
     0%   { opacity: 0; filter: drop-shadow(0 0 0 rgba(240,212,136,0)); }
-    45%  { opacity: 1; filter: drop-shadow(0 0 14px rgba(240,212,136,0.9)); }
-    100% { opacity: 1; filter: drop-shadow(0 0 0 rgba(240,212,136,0)); }
+    50%  { opacity: 1; filter: drop-shadow(0 0 14px rgba(240,212,136,0.9)); }
+    100% { opacity: 1; filter: drop-shadow(0 0 7px rgba(240,212,136,0.6)); }
   }
 
   .leaflet-control-zoom a {
@@ -415,7 +420,7 @@
 
 <div id="mapWrap">
   <div id="map"></div>
-  <div id="debutOverlay"><div id="debutName"></div></div>
+  <div id="chapterRevealOverlay"><div id="chapterRevealName"></div></div>
 </div>
 
 <div id="panelOverlay">
@@ -1487,7 +1492,7 @@ function traceFinish() {
     map.getContainer().style.cursor = '';
     tracePanel.querySelector('#traceCount').textContent = traceWaypoints.length + ' points ✓';
     traceCustomTarget = null;
-    renderMarkers(curCh);
+    renderMarkers(curCh, currentGlowId);
     return;
   }
 
@@ -1527,7 +1532,7 @@ function traceFinish() {
   tracePanel.querySelector('#traceCount').textContent = traceWaypoints.length + ' points ✓';
 
   // Refresh markers — road positions will now resolve correctly
-  renderMarkers(curCh);
+  renderMarkers(curCh, currentGlowId);
 }
 
 function traceCancel() {
@@ -1662,24 +1667,13 @@ function fromIndex(idx){ return { ch: Math.floor(idx / 2), phase: (idx % 2 === 0
 const MIN_STEP = toIndex(0, 'before');
 const MAX_STEP = toIndex(72, 'after');
 
-let animating = false; // guards against overlapping tweens on rapid clicks
-
+// Every chapter's "before" phase now dims the map to the Chapter Reveal (see
+// renderChapterMap()), so there's never a marker already on screen to walk
+// from — every step, in either direction, is the same instant setChapter().
 function stepCh(dir){
-  if(animating) return; // ignore clicks mid-animation rather than stack transitions
   const idx = Math.max(MIN_STEP, Math.min(MAX_STEP, toIndex(curCh, curPhase) + dir));
   const next = fromIndex(idx);
-  // Only animate the single step from a chapter's own "opening" to its own
-  // "finished" (dir>0 while curPhase is 'before' always lands on the SAME
-  // chapter's 'after' — see toIndex/fromIndex). Crossing from one chapter's
-  // "finished" into the next chapter's "opening" stays instant, and so do
-  // jumps and stepping backward — there's no single chapter's story being
-  // walked through in either of those cases.
-  const isSameChapterAdvance = dir > 0 && curPhase === 'before' && next.ch === curCh && next.phase === 'after';
-  if(isSameChapterAdvance){
-    advanceChapterAnimated(next.ch, next.phase);
-  } else {
-    setChapter(next.ch, next.phase);
-  }
+  setChapter(next.ch, next.phase);
 }
 // Jumping via the dropdown always lands on Before N — a deliberate refresher
 // stop, not a full skip into what N contains.
@@ -1721,37 +1715,44 @@ function isTransit(p){ return p.kind === 'transit'; }
 
 // The confirmed arrival active at ch/curPhase — same phase-aware search as
 // before, but restricted to arrival entries only.
-function getActiveArrival(c, ch){
+// `phase` is optional on all three functions below — omit it and they read
+// the global curPhase exactly as before. The Chapter Reveal (further down)
+// passes 'after' explicitly while curPhase is still 'before', purely to
+// look ahead at where this chapter's POV character will end up so the
+// camera can move there silently behind the dim.
+function getActiveArrival(c, ch, phase){
+  phase = phase || curPhase;
   // AT6 (Session 15) removed the firstChapter gate entirely so a character
   // could show a position before their own POV debut (e.g. Sansa at
   // Winterfell in ch4, ahead of her ch15 debut). That's superseded now: a
   // POV character's own first-ever series appearance is a spoiler-sensitive
-  // moment on its own (see the First-POV Debut Reveal below), so the gate is
-  // back — UNLESS this character is marked `continuingPOV:true`, meaning
-  // they already had their own POV chapter in an earlier book. For a
-  // continuing character, THIS book's `firstChapter` isn't a debut at all —
-  // it's just where this book's own narration catches up to them — so they
-  // may still carry a position from before it (typically a `from:0` entry
-  // picking up where the previous book left off).
-  if(!c.continuingPOV && !isRevealed(c.firstChapter, ch, curPhase)) return null;
+  // moment on its own (see Chapter Reveal below), so the gate is back —
+  // UNLESS this character is marked `continuingPOV:true`, meaning they
+  // already had their own POV chapter in an earlier book. For a continuing
+  // character, THIS book's `firstChapter` isn't a debut at all — it's just
+  // where this book's own narration catches up to them — so they may still
+  // carry a position from before it (typically a `from:0` entry picking up
+  // where the previous book left off).
+  if(!c.continuingPOV && !isRevealed(c.firstChapter, ch, phase)) return null;
   if(!c.positions || c.positions.length === 0) return null;
   const arrivals = c.positions.filter(isArrival);
   if(!arrivals.length) return null;
-  for(let p of arrivals) if(isRevealed(p.from, ch, curPhase) && ch <= p.to) return p;
+  for(let p of arrivals) if(isRevealed(p.from, ch, phase) && ch <= p.to) return p;
   let lastKnown = null;
-  for(let p of arrivals){ if(isRevealed(p.from, ch, curPhase)) lastKnown = p; }
+  for(let p of arrivals){ if(isRevealed(p.from, ch, phase)) lastKnown = p; }
   return lastKnown; // null if nothing has been revealed yet — correctly hidden
 }
 
 // A transit entry's note can surface WITHOUT moving the marker — e.g.
 // "planning to set sail for King's Landing" at the chapter that actually
 // says so, while "place" stays frozen at the last real arrival.
-function getActiveTransitNote(c, ch){
+function getActiveTransitNote(c, ch, phase){
+  phase = phase || curPhase;
   if(!c.positions) return null;
   // Same debut gate as getActiveArrival() above — without this, a transit
   // note could leak a not-yet-revealed character's travel status even
   // though getActiveArrival() itself correctly returns null for them.
-  if(!c.continuingPOV && !isRevealed(c.firstChapter, ch, curPhase)) return null;
+  if(!c.continuingPOV && !isRevealed(c.firstChapter, ch, phase)) return null;
   // A transit's note only applies while the reader hasn't yet reached the
   // arrival it leads into — once that arrival is itself active (its own
   // "from" is later than this transit's), the transit is in the past and
@@ -1761,22 +1762,22 @@ function getActiveTransitNote(c, ch){
   // revert oddly right before arrival — but that means the transit and the
   // next arrival briefly share the same chapter number, and only phase
   // (via the active-arrival comparison below) can tell them apart.
-  const activeArrival = getActiveArrival(c, ch);
+  const activeArrival = getActiveArrival(c, ch, phase);
   for(let p of c.positions){
     if(!isTransit(p)) continue;
-    if(!isRevealed(p.from, ch, curPhase) || ch > p.to) continue;
+    if(!isRevealed(p.from, ch, phase) || ch > p.to) continue;
     if(activeArrival && activeArrival.from > p.from) continue;
     return p.note;
   }
   return null;
 }
 
-function getPos(c, ch){
-  const arrival = getActiveArrival(c, ch);
+function getPos(c, ch, phase){
+  const arrival = getActiveArrival(c, ch, phase);
   if(!arrival) return null;
   const resolved = resolvePos(arrival);
   if(!resolved) return null;
-  const transitNote = getActiveTransitNote(c, ch);
+  const transitNote = getActiveTransitNote(c, ch, phase);
   return transitNote !== null ? { ...resolved, note: transitNote } : resolved;
 }
 
@@ -1917,7 +1918,7 @@ function computeMarkerState(ch){
   return state;
 }
 
-function renderMarkers(ch, debutRevealId){
+function renderMarkers(ch, glowId){
   // Clear existing markers and leader lines
   Object.values(markers).forEach(m => map.removeLayer(m));
   Object.keys(markers).forEach(k => delete markers[k]);
@@ -1957,7 +1958,7 @@ function renderMarkers(ch, debutRevealId){
       const iconW = c.name.length * 9.5 + 52;
       const icon = L.divIcon({
         html,
-        className: 'ribbon-label' + (c.id === debutRevealId ? ' debut-reveal' : ''),
+        className: 'ribbon-label' + (c.id === glowId ? ' banner-glow' : ''),
         iconAnchor: [iconW / 2, 29]
       });
 
@@ -2164,7 +2165,7 @@ function toggleDeceased(){
   if(showDeceased && openPanelId !== 'side' && openPanelId !== 'glossary'){
     // don't auto-open panel, just update map
   }
-  renderMarkers(curCh);
+  renderMarkers(curCh, currentGlowId);
 }
 
 // ─── CHAPTER POV MAP ────────────────────────────────────────────────────────
@@ -2305,6 +2306,22 @@ function updateChapterUI(){
     `A Game of Thrones  ·  ${activeCount} POV character${activeCount !== 1 ? 's' : ''} active  ·  ${deadCount} death${deadCount !== 1 ? 's' : ''}/disappearance${deadCount !== 1 ? 's' : ''} recorded ${asOf} Chapter ${curCh}`;
 }
 
+// Most of the time the Chapter Reveal has already silently pre-positioned
+// the camera behind the dim (see renderChapterMap()), so this pan has
+// nowhere left to go. It still matters when landing directly on an
+// already-read "finished" chapter (stepping backward with Prev) — that
+// jump skips the dim/pre-position step entirely, so the camera has to
+// travel for real. Duration scales with the actual distance so a short
+// local hop and a trip across the whole continent don't move at different
+// apparent speeds — one consistent, unhurried pace throughout.
+const CAMERA_SPEED_UNITS_PER_MS = 0.5 / 3; // ~a third of the old marker-walk pace
+const CAMERA_MIN_DURATION_S = 0.6;
+function flyDurationSeconds(fromLatLng, toLatLng){
+  const dLat = toLatLng[0] - fromLatLng.lat, dLng = toLatLng[1] - fromLatLng.lng;
+  const dist = Math.sqrt(dLat*dLat + dLng*dLng);
+  return Math.max(CAMERA_MIN_DURATION_S, (dist / CAMERA_SPEED_UNITS_PER_MS) / 1000);
+}
+
 function flyToCurrentPOV(){
   // Zoom to the POV character for this chapter (unless Free Look is on)
   const povId = chapterPOV[curCh];
@@ -2317,89 +2334,93 @@ function flyToCurrentPOV(){
   // Smooth pan/zoom to the character
   map.flyTo(pos.pos, getSnapZoom(), {
     animate: true,
-    duration: 2.0,
+    duration: flyDurationSeconds(map.getCenter(), pos.pos),
     easeLinearity: 0.2
   });
 }
 
-// ─── First-POV Debut Reveal ────────────────────────────────────────────────
-// A POV character's own first-ever chapter is treated as a spoiler-sensitive
-// moment in its own right: on the OPENING of that chapter the map dims out
-// and only their name appears — no marker, no location, nothing. On
-// FINISHED, the map reappears already framed on their (now-confirmed)
-// location and their banner reveals itself with a matching glow.
+// ─── Chapter Reveal ─────────────────────────────────────────────────────────
+// Every chapter opens the way the books themselves do: before anything
+// else, just a name — no marker, no location, nothing. On "finished", the
+// map reappears already framed on the confirmed location and that chapter's
+// own POV character gets a glowing banner that stays lit for as long as the
+// reader remains on this chapter (see `currentGlowId` below).
 //
-// `continuingPOV:true` on a character means they already had their own POV
-// chapter in an earlier book — for them, this book's own `firstChapter` is
-// just where the narration catches back up to them, not a series debut, so
-// this treatment never applies and they render normally throughout.
-function isDebutChar(c){ return !!c && c.isPov && c.continuingPOV !== true; }
+// This used to be reserved for a POV character's own series debut. It now
+// fires for every chapter, on every navigation path (Next, Prev, dropdown
+// jump) — same "no seen-it flag, fires every time" rule the debut version
+// used, just no longer restricted to debuts.
 
-// The character's very own debut position — the one entry whose "from"
-// equals their firstChapter. Looked up directly rather than through
-// getActiveArrival()/isRevealed(), since during the "opening" grey-out the
-// normal reveal gate correctly returns null (nothing to show yet) — but we
-// still need to know WHERE they'll turn out to be, purely to move the
-// camera into place silently behind the dimmed map.
-function getDebutArrival(c){
-  if(!c || !c.positions) return null;
-  return c.positions.find(p => isArrival(p) && p.from === c.firstChapter) || null;
+// Tracks which character's banner should carry the persistent glow right
+// now — the current chapter's own POV, or null while the reveal is up (no
+// markers are on screen at all during the dim). Read by every renderMarkers()
+// call so a zoom, a filter toggle, or any other incidental re-render doesn't
+// drop the glow while the reader is still on this chapter.
+let currentGlowId = null;
+
+// Chapter titles look like "Eddard IV" (see allChapters) — the reveal only
+// ever shows the POV's own first name, exactly the way the books head each
+// chapter. The roman numeral (a wiki-style aid, not part of the book's own
+// heading) stays visible in the header (#chDisplay) and the jump dropdown.
+// Some prologue/epilogue entries also carry a parenthetical POV credit
+// (e.g. "Prologue (Cressen)" in a later book) for the dropdown's benefit —
+// that credit is exactly the kind of name this reveal exists to hold back,
+// so it's stripped too, same as the roman numeral. AGOT's own "Prologue"
+// has neither suffix, so it passes through unchanged.
+function chapterRevealText(ch){
+  return getChObj(ch).name
+    .replace(/\s*\([^)]*\)\s*$/, '')
+    .replace(/\s+[IVXLCDM]+$/, '');
 }
 
-// If `ch` is some character's own debut chapter, returns that character
-// (regardless of phase — callers check curPhase separately). Otherwise null.
-function debutCharForChapter(ch){
-  const povId = chapterPOV[ch];
-  if(!povId) return null;
-  const c = allChars.find(x => x.id === povId);
-  if(!c || !isDebutChar(c) || ch !== c.firstChapter) return null;
-  return c;
-}
-
-function showDebutOverlay(name){
-  const overlay = document.getElementById('debutOverlay');
-  document.getElementById('debutName').textContent = name;
-  document.getElementById('map').classList.add('debut-dimmed');
+function showChapterReveal(name){
+  const overlay = document.getElementById('chapterRevealOverlay');
+  document.getElementById('chapterRevealName').textContent = name;
+  document.getElementById('map').classList.add('map-dimmed');
   overlay.classList.remove('revealing');
   overlay.classList.add('visible');
   void overlay.offsetWidth; // force reflow so the reveal animation restarts every time
   overlay.classList.add('revealing');
 }
 
-function hideDebutOverlay(){
-  const overlay = document.getElementById('debutOverlay');
+function hideChapterReveal(){
+  const overlay = document.getElementById('chapterRevealOverlay');
   overlay.classList.remove('visible', 'revealing');
-  document.getElementById('map').classList.remove('debut-dimmed');
+  document.getElementById('map').classList.remove('map-dimmed');
 }
 
-// Every chapter-navigation path (Next, Prev, dropdown jump, and the end of
-// any marker-movement tween) ends up here once curCh/curPhase are already
-// set — this used to just be "renderMarkers(curCh); flyToCurrentPOV();"
-// inline at each call site; centralizing it is what lets the debut-reveal
-// check live in exactly one place instead of three.
+// Every chapter-navigation path (Next, Prev, dropdown jump) ends up here
+// once curCh/curPhase are already set.
 function renderChapterMap(){
-  const debutChar = debutCharForChapter(curCh);
-
-  if(debutChar && curPhase === 'before'){
+  if(curPhase === 'before'){
     // Nothing should be visible yet — clear every marker/dot/line off the
-    // map, then silently move the camera to where the character will
-    // actually turn out to be, entirely behind the dimmed overlay, so the
-    // reveal doesn't also involve a visible pan once it lifts.
+    // map, then silently move the camera to where this chapter's POV
+    // character will actually turn out to be (if we can already tell),
+    // entirely behind the dimmed overlay, so the reveal never involves a
+    // visible pan once it lifts.
     Object.values(markers).forEach(m => map.removeLayer(m));
     Object.keys(markers).forEach(k => delete markers[k]);
     if(window._leaderLines) window._leaderLines.forEach(l => map.removeLayer(l));
     window._leaderLines = [];
     Object.keys(dots).forEach(k => delete dots[k]);
 
-    const resolved = resolvePos(getDebutArrival(debutChar));
-    if(resolved && !freeLook) map.setView(resolved.pos, getSnapZoom(), {animate:false});
+    const povId = chapterPOV[curCh];
+    const povChar = povId ? allChars.find(c => c.id === povId) : null;
+    // Look ahead at phase:'after' — this is exactly what the debut version
+    // did for a character's own firstChapter, generalized to any chapter:
+    // the position isn't "revealed" yet (curPhase is still 'before'), but
+    // we still need to know where to point the camera behind the curtain.
+    const upcoming = povChar ? getPos(povChar, curCh, 'after') : null;
+    if(upcoming && !freeLook) map.setView(upcoming.pos, getSnapZoom(), {animate:false});
 
-    showDebutOverlay(debutChar.name);
+    currentGlowId = null;
+    showChapterReveal(chapterRevealText(curCh));
     return;
   }
 
-  hideDebutOverlay();
-  renderMarkers(curCh, (debutChar && curPhase === 'after') ? debutChar.id : null);
+  hideChapterReveal();
+  currentGlowId = chapterPOV[curCh] || null;
+  renderMarkers(curCh, currentGlowId);
   flyToCurrentPOV();
 }
 
@@ -2410,26 +2431,14 @@ function setChapter(n, phase){
   renderChapterMap();
 }
 
-// ─── MARKER MOVEMENT ANIMATION ────────────────────────────────────────────
-// Only used for single-step forward reading (the Next button). Jumps via
-// the chapter dropdown and stepping backward (Prev) stay instant — walking
-// a character backward through the story reads oddly, and an arbitrary
-// jump has no continuous "story" to animate through.
+// ─── FLIGHT PATH HELPER ────────────────────────────────────────────────────
+// The marker-walking animation this used to drive was retired along with
+// the debut-only reveal — every chapter's "before" phase now dims the map
+// (see renderChapterMap()), so there's never a marker on screen to walk
+// from, and journeys resolve as an instant snap once a chapter is revealed.
+// buildFlightPath() itself is kept because the 🧭 Untraced Routes dev tool
+// still uses it to measure how long a straight-line (untraced) hop is.
 //
-// Same duration/easing family as flyToCurrentPOV()'s map pan, so the camera
-// and the character arrive together.
-// Session 15 fix: duration is now paced by distance, not a flat value — a
-// character crossing the whole map takes noticeably longer than one moving
-// to an adjacent location. Clamped so short hops don't feel instant and
-// very long journeys (Winterfell to the Dothraki Sea) don't drag forever.
-const MOVE_SPEED_UNITS_PER_MS = 0.5;   // ~500 map units/second
-const MOVE_MIN_DURATION_MS = 900;
-const MOVE_MAX_DURATION_MS = 6000;
-function durationForDistance(totalLength){
-  return Math.max(MOVE_MIN_DURATION_MS, Math.min(MOVE_MAX_DURATION_MS, totalLength / MOVE_SPEED_UNITS_PER_MS));
-}
-function easeInOutQuad(t){ return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2; }
-
 // Turns the chain of transit legs between two arrivals into an ordered list
 // of {kind, length, ...} segments the animation can walk at constant speed.
 // Each segment is either "road" (follows a named road's real waypoints
@@ -2477,199 +2486,10 @@ function buildFlightPath(c, prevArrival, nextArrival){
   return legs;
 }
 
-// Position along a multi-leg path at a given cumulative distance (0..total).
-function posAlongFlightPath(legs, totalLength, targetDist){
-  let acc = 0;
-  for(let i = 0; i < legs.length; i++){
-    const leg = legs[i];
-    const legLen = leg.length || 0;
-    const isLast = i === legs.length - 1;
-    if(acc + legLen >= targetDist || isLast){
-      const t = legLen > 0 ? Math.max(0, Math.min(1, (targetDist - acc) / legLen)) : 1;
-      if(leg.kind === 'road') return roadPosAtDistance(leg.roadId, leg.distA + t * (leg.distB - leg.distA));
-      return [ leg.fromPos[0] + t*(leg.toPos[0]-leg.fromPos[0]), leg.fromPos[1] + t*(leg.toPos[1]-leg.fromPos[1]) ];
-    }
-    acc += legLen;
-  }
-  return null;
-}
-
-function advanceChapterAnimated(newCh, newPhase){
-  // Snapshot the OLD state before touching curCh/curPhase — computeMarkerState()
-  // reads both globally, same as getPos()/isRevealed() do everywhere else.
-  const prevState = computeMarkerState(curCh);
-
-  curCh = newCh;
-  curPhase = (newPhase === 'after') ? 'after' : 'before';
-  updateChapterUI();
-
-  const newState = computeMarkerState(curCh);
-
-  // A "mover" is a character present both before and after this step whose
-  // true location (anchorPos) actually changed — not just their fanned-out
-  // ribbon offset, which can shift slightly if someone else joins or leaves
-  // their location without them moving at all.
-  const movers = [];
-  Object.keys(newState).forEach(id => {
-    const prev = prevState[id];
-    const next = newState[id];
-    if(!prev) return; // wasn't on the map before (first appearance) — no walk-in, just render normally
-    if(prev.anchorPos[0] === next.anchorPos[0] && prev.anchorPos[1] === next.anchorPos[1]) return;
-    movers.push({id, prev, next});
-  });
-
-  if(movers.length === 0){
-    // Nothing is actually walking this step — render and pan exactly as
-    // the plain instant path does (including the debut-reveal check).
-    renderChapterMap();
-    return;
-  }
-
-  // Something IS walking. Deliberately do NOT call renderMarkers() yet —
-  // every marker, leader line, and anchor dot currently on screen is left
-  // exactly as-is for the duration of the tween(s). Only the movers' own
-  // markers are touched, right up until the final batch finishes.
-  animating = true;
-
-  // Session 14: characters heading to the SAME destination (travelling
-  // together) animate simultaneously; characters heading to DIFFERENT
-  // destinations in the same step animate one batch after another, not
-  // all at once. Batches are ordered book-order where determinable —
-  // in practice that means the chapter's own POV character's batch goes
-  // first, since that's the one thing we can always tell from the data;
-  // any remaining batches follow in the order they were found.
-  const povId = chapterPOV[curCh];
-  const batchMap = {};
-  movers.forEach(m => {
-    const key = m.next.anchorPos[0] + ',' + m.next.anchorPos[1];
-    (batchMap[key] = batchMap[key] || []).push(m);
-  });
-  const batches = Object.values(batchMap).sort((a, b) => {
-    const aFirst = a.some(m => m.id === povId) ? 0 : 1;
-    const bFirst = b.some(m => m.id === povId) ? 0 : 1;
-    return aFirst - bFirst;
-  });
-
-  const allMoverIds = new Set(movers.map(m => m.id));
-  runMoveBatch(batches, 0, allMoverIds);
-}
-
-function runMoveBatch(batches, idx, allMoverIds){
-  if(idx >= batches.length){
-    animating = false;
-    // Final reconciliation pass — this is the ONE moment everything (fan
-    // positions, leader lines, dots, tooltips, any newly revealed or
-    // departed characters) snaps to its exact correct state, now that
-    // every batch has actually arrived. Also where the debut-reveal check
-    // runs, same as the plain instant path.
-    renderChapterMap();
-    return;
-  }
-
-  const batch = batches[idx];
-  const povId = chapterPOV[curCh];
-  const primaryMoverId = (povId && batch.some(m => m.id === povId)) ? povId : batch[0].id;
-  const followCamera = !freeLook;
-  const zoomAtStart = map.getZoom();
-  const startTime = performance.now();
-  let pending = batch.length;
-
-  const advance = () => { pending--; if(pending <= 0) runMoveBatch(batches, idx + 1, allMoverIds); };
-
-  // Companions travelling together share one location dot, animated once
-  // per starting point rather than once per character. If someone who
-  // ISN'T moving this step remains behind at that same spot, the existing
-  // dot stays put for them and a fresh one is created for the travellers;
-  // otherwise (nobody left behind) the existing dot is reused directly and
-  // simply moves — no duplicate ever appears.
-  const startClusters = {};
-  batch.forEach(m => {
-    const key = m.prev.anchorPos[0] + ',' + m.prev.anchorPos[1];
-    (startClusters[key] = startClusters[key] || []).push(m);
-  });
-  const travelDots = {};
-  Object.entries(startClusters).forEach(([startKey, clusterMovers]) => {
-    const anyId = clusterMovers[0].id;
-    const existingDot = dots[anyId];
-    let stayerRemains = false;
-    Object.keys(dots).forEach(otherId => {
-      if(dots[otherId] === existingDot && !allMoverIds.has(otherId)) stayerRemains = true;
-    });
-    if(existingDot && !stayerRemains){
-      travelDots[startKey] = existingDot; // reuse in place, nothing left behind to keep it there
-    } else {
-      const startPos = clusterMovers[0].prev.anchorPos;
-      const freshDot = L.circleMarker(startPos, {
-        radius: 3, color: '#c8a850', fillColor: '#c8a850',
-        fillOpacity: 1, weight: 1.5, interactive: false
-      }).addTo(map);
-      window._leaderLines.push(freshDot);
-      travelDots[startKey] = freshDot;
-    }
-  });
-
-  batch.forEach(({id, prev, next}) => {
-    const marker = markers[id];
-    if(!marker){ advance(); return; }
-
-    // No snap-back needed — this marker is already sitting at its old
-    // ribbon position, since nothing above touched it.
-    const fromRibbon = prev.ribbonPos, toRibbon = next.ribbonPos;
-    const startKey = prev.anchorPos[0] + ',' + prev.anchorPos[1];
-    const travelDot = travelDots[startKey];
-
-    // The full route since the last arrival, however many now-finished
-    // chapters it was spread across — walked here as one continuous
-    // flight, following any named roads it passes through along the way.
-    const legs = buildFlightPath(prev.c, prev.rawEntry, next.rawEntry);
-    const totalLength = legs.reduce((sum, leg) => sum + (leg.length || 0), 0) || 1;
-    // Session 15 fix: duration now scales with the real distance travelled
-    // instead of a flat 2s for every hop, long or short.
-    const duration = durationForDistance(totalLength);
-
-    function frame(now){
-      const t = Math.min(1, (now - startTime) / duration);
-      const e = easeInOutQuad(t);
-      const anchorNow = posAlongFlightPath(legs, totalLength, e * totalLength) || next.anchorPos;
-
-      // Carry the fan-offset interpolation on top of the anchor's position
-      // along the route, same as before, so grouped characters still land
-      // in their correct fanned spot at the end.
-      const offFromLat = fromRibbon[0] - prev.anchorPos[0], offFromLng = fromRibbon[1] - prev.anchorPos[1];
-      const offToLat   = toRibbon[0]   - next.anchorPos[0], offToLng   = toRibbon[1]   - next.anchorPos[1];
-      const ribbonPosNow = [
-        anchorNow[0] + offFromLat + e * (offToLat - offFromLat),
-        anchorNow[1] + offFromLng + e * (offToLng - offFromLng)
-      ];
-      marker.setLatLng(ribbonPosNow);
-      // The dot IS the character's true location — it moves in lockstep
-      // with the anchor (never removed/recreated mid-flight), while the
-      // ribbon is just its label and can lag/fan for readability.
-      if(travelDot) travelDot.setLatLng(anchorNow);
-
-      // Camera tracks the true anchor position (not the cosmetic fan
-      // offset) of whichever mover is "primary" for THIS batch, every
-      // frame — a real follow along the whole route, not a separate flyTo
-      // racing the marker to the endpoint.
-      if(followCamera && id === primaryMoverId){
-        map.setView(anchorNow, zoomAtStart, {animate:false});
-      }
-
-      if(t < 1){
-        requestAnimationFrame(frame);
-      } else {
-        advance();
-      }
-    }
-    requestAnimationFrame(frame);
-  });
-}
-
-
-
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-// Re-render on zoom so leader line offsets stay proportional
-map.on('zoomend', function(){ renderMarkers(curCh); });
+// Re-render on zoom so leader line offsets stay proportional. Pass the
+// tracked glow id through so zooming mid-chapter doesn't drop the glow.
+map.on('zoomend', function(){ renderMarkers(curCh, currentGlowId); });
 
 setChapter(0, 'before');
 </script>

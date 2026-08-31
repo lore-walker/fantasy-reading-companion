@@ -1,0 +1,2233 @@
+{
+  "bookId": "agot",
+  "title": "A Game of Thrones",
+  "icon": "⚔",
+  "allChapters": [
+    {
+      "n": 0,
+      "name": "Prologue"
+    },
+    {
+      "n": 1,
+      "name": "Bran I"
+    },
+    {
+      "n": 2,
+      "name": "Catelyn I"
+    },
+    {
+      "n": 3,
+      "name": "Daenerys I"
+    },
+    {
+      "n": 4,
+      "name": "Eddard I"
+    },
+    {
+      "n": 5,
+      "name": "Jon I"
+    },
+    {
+      "n": 6,
+      "name": "Catelyn II"
+    },
+    {
+      "n": 7,
+      "name": "Arya I"
+    },
+    {
+      "n": 8,
+      "name": "Bran II"
+    },
+    {
+      "n": 9,
+      "name": "Tyrion I"
+    },
+    {
+      "n": 10,
+      "name": "Jon II"
+    },
+    {
+      "n": 11,
+      "name": "Daenerys II"
+    },
+    {
+      "n": 12,
+      "name": "Eddard II"
+    },
+    {
+      "n": 13,
+      "name": "Tyrion II"
+    },
+    {
+      "n": 14,
+      "name": "Catelyn III"
+    },
+    {
+      "n": 15,
+      "name": "Sansa I"
+    },
+    {
+      "n": 16,
+      "name": "Eddard III"
+    },
+    {
+      "n": 17,
+      "name": "Bran III"
+    },
+    {
+      "n": 18,
+      "name": "Catelyn IV"
+    },
+    {
+      "n": 19,
+      "name": "Jon III"
+    },
+    {
+      "n": 20,
+      "name": "Eddard IV"
+    },
+    {
+      "n": 21,
+      "name": "Tyrion III"
+    },
+    {
+      "n": 22,
+      "name": "Arya II"
+    },
+    {
+      "n": 23,
+      "name": "Daenerys III"
+    },
+    {
+      "n": 24,
+      "name": "Bran IV"
+    },
+    {
+      "n": 25,
+      "name": "Eddard V"
+    },
+    {
+      "n": 26,
+      "name": "Jon IV"
+    },
+    {
+      "n": 27,
+      "name": "Eddard VI"
+    },
+    {
+      "n": 28,
+      "name": "Catelyn V"
+    },
+    {
+      "n": 29,
+      "name": "Sansa II"
+    },
+    {
+      "n": 30,
+      "name": "Eddard VII"
+    },
+    {
+      "n": 31,
+      "name": "Tyrion IV"
+    },
+    {
+      "n": 32,
+      "name": "Arya III"
+    },
+    {
+      "n": 33,
+      "name": "Eddard VIII"
+    },
+    {
+      "n": 34,
+      "name": "Catelyn VI"
+    },
+    {
+      "n": 35,
+      "name": "Eddard IX"
+    },
+    {
+      "n": 36,
+      "name": "Daenerys IV"
+    },
+    {
+      "n": 37,
+      "name": "Bran V"
+    },
+    {
+      "n": 38,
+      "name": "Tyrion V"
+    },
+    {
+      "n": 39,
+      "name": "Eddard X"
+    },
+    {
+      "n": 40,
+      "name": "Catelyn VII"
+    },
+    {
+      "n": 41,
+      "name": "Jon V"
+    },
+    {
+      "n": 42,
+      "name": "Tyrion VI"
+    },
+    {
+      "n": 43,
+      "name": "Eddard XI"
+    },
+    {
+      "n": 44,
+      "name": "Sansa III"
+    },
+    {
+      "n": 45,
+      "name": "Eddard XII"
+    },
+    {
+      "n": 46,
+      "name": "Daenerys V"
+    },
+    {
+      "n": 47,
+      "name": "Eddard XIII"
+    },
+    {
+      "n": 48,
+      "name": "Jon VI"
+    },
+    {
+      "n": 49,
+      "name": "Eddard XIV"
+    },
+    {
+      "n": 50,
+      "name": "Arya IV"
+    },
+    {
+      "n": 51,
+      "name": "Sansa IV"
+    },
+    {
+      "n": 52,
+      "name": "Jon VII"
+    },
+    {
+      "n": 53,
+      "name": "Bran VI"
+    },
+    {
+      "n": 54,
+      "name": "Daenerys VI"
+    },
+    {
+      "n": 55,
+      "name": "Catelyn VIII"
+    },
+    {
+      "n": 56,
+      "name": "Tyrion VII"
+    },
+    {
+      "n": 57,
+      "name": "Sansa V"
+    },
+    {
+      "n": 58,
+      "name": "Eddard XV"
+    },
+    {
+      "n": 59,
+      "name": "Catelyn IX"
+    },
+    {
+      "n": 60,
+      "name": "Jon VIII"
+    },
+    {
+      "n": 61,
+      "name": "Daenerys VII"
+    },
+    {
+      "n": 62,
+      "name": "Tyrion VIII"
+    },
+    {
+      "n": 63,
+      "name": "Catelyn X"
+    },
+    {
+      "n": 64,
+      "name": "Daenerys VIII"
+    },
+    {
+      "n": 65,
+      "name": "Arya V"
+    },
+    {
+      "n": 66,
+      "name": "Bran VII"
+    },
+    {
+      "n": 67,
+      "name": "Sansa VI"
+    },
+    {
+      "n": 68,
+      "name": "Daenerys IX"
+    },
+    {
+      "n": 69,
+      "name": "Tyrion IX"
+    },
+    {
+      "n": 70,
+      "name": "Jon IX"
+    },
+    {
+      "n": 71,
+      "name": "Catelyn XI"
+    },
+    {
+      "n": 72,
+      "name": "Daenerys X"
+    }
+  ],
+  "allChars": [
+    {
+      "id": "ned",
+      "name": "Ned Stark",
+      "house": "Stark",
+      "role": "Lord of Winterfell",
+      "ink": "#5a6a6a",
+      "textInk": "#e8e8e8",
+      "isPov": true,
+      "firstChapter": 4,
+      "sideChapter": 1,
+      "sideTiers": [
+        {
+          "revealChapter": 1,
+          "text": "Lord of Winterfell and Warden of the North. Eddard Stark is a man of deep honour who has just been asked by his old friend King Robert to become Hand of the King."
+        },
+        {
+          "revealChapter": 2,
+          "text": "Has accepted the King's offer and will ride south to King's Landing with his daughters Sansa and Arya."
+        }
+      ],
+      "deathChapter": 65,
+      "deathStatus": "dead",
+      "deathNote": "Executed at the Great Sept of Baelor on King Joffrey's orders.",
+      "positions": [
+        {
+          "from": 4,
+          "to": 11,
+          "pos": [
+            3712,
+            1154
+          ],
+          "place": "Winterfell",
+          "kind": "arrival",
+          "note": "Lord of Winterfell — receives King Robert and his court"
+        },
+        {
+          "from": 12,
+          "to": 12,
+          "pos": [
+            3382,
+            1250
+          ],
+          "place": "The Barrowlands",
+          "kind": "arrival",
+          "note": "Woken before dawn by Robert — the two rode ahead of the column together, a rare private stretch of the journey"
+        },
+        {
+          "from": 13,
+          "to": 15,
+          "road": "kingsroad",
+          "pct": 0.36,
+          "place": "Kingsroad south — with Sansa and Arya",
+          "kind": "transit",
+          "note": "Rejoined his daughters in the royal column, continuing south"
+        },
+        {
+          "from": 15,
+          "to": 15,
+          "road": "kingsroad",
+          "pct": "rubyford",
+          "place": "Ruby Ford — Kingsroad south",
+          "kind": "arrival",
+          "note": "Camped near the Trident — the Joffrey and Nymeria incident"
+        },
+        {
+          "from": 16,
+          "to": 20,
+          "road": "kingsroad",
+          "pct": 0.82,
+          "place": "Kingsroad south — final stretch",
+          "kind": "transit",
+          "note": "Continuing south to King's Landing with Sansa and Arya"
+        },
+        {
+          "from": 20,
+          "to": 34,
+          "pos": [
+            2416,
+            1394
+          ],
+          "place": "King's Landing",
+          "kind": "arrival",
+          "note": "Serving as Hand of the King — investigating Jon Arryn's death"
+        },
+        {
+          "from": 35,
+          "to": 57,
+          "pos": [
+            2416,
+            1394
+          ],
+          "place": "King's Landing",
+          "kind": "arrival",
+          "note": "Hand of the King — now sitting on dangerous knowledge about the succession"
+        },
+        {
+          "from": 58,
+          "to": 64,
+          "pos": [
+            2416,
+            1394
+          ],
+          "place": "King's Landing",
+          "kind": "arrival",
+          "status": "imprisoned",
+          "note": "Arrested and held in the black cells of the Red Keep"
+        },
+        {
+          "from": 65,
+          "to": 73,
+          "pos": [
+            2416,
+            1394
+          ],
+          "place": "King's Landing",
+          "kind": "arrival",
+          "note": "Executed at the Great Sept of Baelor"
+        }
+      ],
+      "tiers": [
+        {
+          "revealChapter": 4,
+          "text": "Warden of the North and Lord of Winterfell. An old friend of King Robert, known for his strict honour. Father to Robb, Sansa, Arya, Bran, and Rickon, and guardian of Jon Snow."
+        },
+        {
+          "revealChapter": 16,
+          "text": "Now serving as Hand of the King in King's Landing. He is investigating Jon Arryn's death and growing uneasy about what he is finding."
+        },
+        {
+          "revealChapter": 35,
+          "text": "Has noticed a strange pattern while looking into Robert's bastard children — all of them are dark-haired like the king, unlike Joffrey, Tommen, and Myrcella."
+        },
+        {
+          "revealChapter": 45,
+          "text": "Has pieced the pattern together — Joffrey and the royal children are not Robert's true heirs. A secret that puts his life in grave danger."
+        },
+        {
+          "revealChapter": 51,
+          "text": "Arrested and imprisoned after attempting to expose Cersei's secret and being betrayed by Littlefinger."
+        },
+        {
+          "revealChapter": 65,
+          "text": "Confessed to treason in exchange for a promise of mercy. Joffrey broke that promise and had him executed publicly. His death fractures the realm."
+        }
+      ]
+    },
+    {
+      "id": "cat",
+      "name": "Catelyn Stark",
+      "house": "Stark",
+      "role": "Lady of Winterfell",
+      "ink": "#5a6a6a",
+      "textInk": "#e8e8e8",
+      "isPov": true,
+      "firstChapter": 2,
+      "sideChapter": 1,
+      "sideTiers": [
+        {
+          "revealChapter": 1,
+          "text": "Wife of Eddard Stark and Lady of Winterfell. Born a Tully of Riverrun. Mother of Robb, Sansa, Arya, Bran, and Rickon."
+        }
+      ],
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "positions": [
+        {
+          "from": 2,
+          "to": 3,
+          "pos": [
+            3712,
+            1154
+          ],
+          "place": "Winterfell",
+          "kind": "arrival",
+          "note": "Lady of Winterfell — has just learned Jon Arryn is dead, and that King Robert is marching north to Winterfell"
+        },
+        {
+          "from": 4,
+          "to": 13,
+          "pos": [
+            3712,
+            1154
+          ],
+          "place": "Winterfell",
+          "kind": "arrival",
+          "note": "Lady of Winterfell — tending to her family as the royal party visits"
+        },
+        {
+          "from": 14,
+          "to": 14,
+          "pos": [
+            3712,
+            1154
+          ],
+          "place": "Winterfell",
+          "kind": "arrival",
+          "note": "Preparing to sail south to King's Landing with Ser Rodrik"
+        },
+        {
+          "from": 15,
+          "to": 18,
+          "pos": [
+            2652,
+            1750
+          ],
+          "place": "At sea — sailing south",
+          "kind": "transit",
+          "note": "Travelling by ship to King's Landing with Ser Rodrik"
+        },
+        {
+          "from": 18,
+          "to": 19,
+          "pos": [
+            2416,
+            1394
+          ],
+          "place": "King's Landing",
+          "kind": "arrival",
+          "note": "Arrived secretly in King's Landing with Ser Rodrik"
+        },
+        {
+          "from": 20,
+          "to": 27,
+          "pos": [
+            2416,
+            1394
+          ],
+          "place": "King's Landing",
+          "kind": "arrival",
+          "note": "Met Ned in secret — shared the assassin's dagger and Lysa's warning"
+        },
+        {
+          "from": 21,
+          "to": 28,
+          "road": "kingsroad",
+          "pct": "riverlands",
+          "place": "Kingsroad north — riding back to Winterfell",
+          "kind": "transit",
+          "note": "Riding north after secretly warning Ned — passing through the Riverlands"
+        },
+        {
+          "from": 28,
+          "to": 30,
+          "road": "kingsroad",
+          "pct": "inn",
+          "place": "Inn at the Crossroads",
+          "kind": "arrival",
+          "note": "Arrests Tyrion Lannister — departs with him as prisoner"
+        },
+        {
+          "from": 31,
+          "to": 33,
+          "road": "highroad",
+          "pct": 0.589,
+          "place": "High Road — Mountains of the Moon",
+          "kind": "arrival",
+          "note": "Escorting Tyrion as prisoner through the mountain clans"
+        },
+        {
+          "from": 34,
+          "to": 37,
+          "pos": [
+            2899,
+            1486
+          ],
+          "place": "The Eyrie",
+          "kind": "arrival",
+          "note": "Keeping Tyrion prisoner — awaiting Lysa's justice"
+        },
+        {
+          "from": 38,
+          "to": 40,
+          "pos": [
+            2899,
+            1486
+          ],
+          "place": "The Eyrie",
+          "kind": "arrival",
+          "note": "Departing the Eyrie — Bronn won Tyrion's freedom by trial by combat"
+        },
+        {
+          "from": 41,
+          "to": 55,
+          "pos": [
+            3082,
+            1650
+          ],
+          "place": "Travelling — Vale to White Harbor",
+          "kind": "transit",
+          "note": "Crossed the Vale to Gulltown with Ser Brynden; sailed north along the Narrow Sea to White Harbor; riding west to meet Robb's army"
+        },
+        {
+          "from": 55,
+          "to": 58,
+          "road": "kingsroad",
+          "pct": "moatcailin",
+          "place": "Moat Cailin",
+          "kind": "arrival",
+          "note": "Joined Robb's army at Moat Cailin — a key voice in his war councils as they plan to march south"
+        },
+        {
+          "from": 59,
+          "to": 62,
+          "pos": [
+            3009,
+            1117
+          ],
+          "place": "The Twins",
+          "kind": "arrival",
+          "note": "Catelyn negotiates passage across the Green Fork for Robb's army"
+        },
+        {
+          "from": 63,
+          "to": 70,
+          "pos": [
+            2752,
+            1055
+          ],
+          "place": "Riverrun",
+          "kind": "arrival",
+          "note": "Robb lifts the siege — Catelyn reunited with Edmure and her father"
+        },
+        {
+          "from": 71,
+          "to": 73,
+          "pos": [
+            2752,
+            1055
+          ],
+          "place": "Riverrun",
+          "kind": "arrival",
+          "status": "King in the North",
+          "note": "Northern lords proclaim Robb Stark King in the North"
+        }
+      ],
+      "tiers": [
+        {
+          "revealChapter": 2,
+          "text": "Wife of Eddard Stark and Lady of Winterfell. Born a Tully of Riverrun. Devoted mother of five."
+        },
+        {
+          "revealChapter": 6,
+          "text": "Received a secret warning from her sister Lysa that the Lannisters may be behind Jon Arryn's death. She has decided to travel south to warn Ned."
+        },
+        {
+          "revealChapter": 14,
+          "text": "An assassin came for the comatose Bran in the night, armed with a Valyrian steel dagger. Catelyn fought him off. She is planning to sail for King's Landing with Ser Rodrik, taking the dagger as evidence."
+        },
+        {
+          "revealChapter": 28,
+          "text": "Has captured Tyrion Lannister at the Inn at the Crossroads and departed with him as prisoner — destination unknown to most."
+        },
+        {
+          "revealChapter": 34,
+          "text": "Has brought Tyrion to the Eyrie, her sister Lysa's seat. Lysa is changed — unstable and gripped by fear — and has thrown Tyrion in a sky cell to await her justice."
+        },
+        {
+          "revealChapter": 40,
+          "text": "Preparing to leave the Eyrie — Lysa refused to commit the Vale's forces to war and Ser Brynden has resigned in disgust. Plans to sail north from Gulltown to find Robb's army."
+        },
+        {
+          "revealChapter": 55,
+          "text": "Has rejoined Robb's host at Moat Cailin after sailing north from Gulltown with Ser Brynden. She brings news of the Vale and is a key voice in his war councils."
+        },
+        {
+          "revealChapter": 59,
+          "text": "Negotiated passage across the Green Fork with the Freys on Robb's behalf — at a steep personal price. The war in the Riverlands is intensifying."
+        }
+      ]
+    },
+    {
+      "id": "dany",
+      "name": "Daenerys",
+      "house": "Targaryen",
+      "role": "Exiled princess",
+      "ink": "#1a1a2a",
+      "textInk": "#cc2020",
+      "isPov": true,
+      "firstChapter": 3,
+      "sideChapter": 1,
+      "sideTiers": [
+        {
+          "revealChapter": 1,
+          "text": "Daenerys Targaryen, last surviving daughter of the Mad King Aerys. Living in exile in Essos with her brother Viserys, who dreams of reclaiming the Iron Throne."
+        }
+      ],
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "positions": [
+        {
+          "from": 3,
+          "to": 10,
+          "pos": [
+            2444,
+            2113
+          ],
+          "place": "Pentos",
+          "kind": "arrival",
+          "note": "Living in exile in Pentos with Viserys — betrothed to Khal Drogo, awaiting the wedding"
+        },
+        {
+          "from": 11,
+          "to": 11,
+          "pos": [
+            2444,
+            2113
+          ],
+          "place": "Pentos",
+          "kind": "arrival",
+          "note": "Wed to Khal Drogo in a day-long Dothraki ceremony outside Pentos — now his khaleesi"
+        },
+        {
+          "from": 12,
+          "to": 23,
+          "road": "dothraki",
+          "pct": 0.1,
+          "place": "Riding east — Norvos and Qohor",
+          "kind": "transit",
+          "note": "Traveling east through the Free Cities and the Forest of Qohor toward the Dothraki Sea"
+        },
+        {
+          "from": 23,
+          "to": 35,
+          "road": "dothraki",
+          "pct": 0.45,
+          "place": "Dothraki Sea — western edge",
+          "kind": "arrival",
+          "note": "Just emerged from the Forest of Qohor — Daenerys sees the vast grasslands for the first time and stands up to Viserys"
+        },
+        {
+          "from": 36,
+          "to": 53,
+          "pos": [
+            2617,
+            4719
+          ],
+          "place": "Vaes Dothrak",
+          "kind": "arrival",
+          "note": "Arrived at the sacred city of the Dothraki — staying until Drogo swears to sail west"
+        },
+        {
+          "from": 54,
+          "to": 61,
+          "pos": [
+            2312,
+            4640
+          ],
+          "place": "Southern Dothraki Sea — riding toward Lhazar",
+          "kind": "transit",
+          "note": "Khalasar striking south toward the Lhazarene lands to take slaves for the planned invasion of Westeros"
+        },
+        {
+          "from": 61,
+          "to": 63,
+          "pos": [
+            1848,
+            4520
+          ],
+          "place": "Lhazar",
+          "kind": "arrival",
+          "note": "In the Lamb Men's lands — Drogo wounded at the sack of a Lhazarene town; Mirri Maz Duur brought in to heal him"
+        },
+        {
+          "from": 64,
+          "to": 71,
+          "pos": [
+            1848,
+            4520
+          ],
+          "place": "Lhazar — camped",
+          "kind": "arrival",
+          "status": "Drogo comatose",
+          "note": "Khalasar disintegrating as Drogo lies mindless; Daenerys prepares his funeral pyre"
+        },
+        {
+          "from": 72,
+          "to": 72,
+          "pos": [
+            1802,
+            4540
+          ],
+          "place": "Lhazar — Drogo's funeral pyre",
+          "kind": "arrival",
+          "note": "Drogo's funeral pyre lit in the Lhazareen hills — Daenerys walks into the flames and the dragons are born"
+        }
+      ],
+      "tiers": [
+        {
+          "revealChapter": 3,
+          "text": "Last surviving daughter of the Mad King Aerys Targaryen. Living in exile in Pentos, sold in marriage to Khal Drogo by her brother Viserys."
+        },
+        {
+          "revealChapter": 11,
+          "text": "Finding her confidence as a khaleesi. She is learning Dothraki and earning the respect of Drogo's riders."
+        },
+        {
+          "revealChapter": 36,
+          "text": "Her brother Viserys is dead. She is growing into her identity as the Unburnt, protective of three dragon eggs gifted at her wedding."
+        },
+        {
+          "revealChapter": 54,
+          "text": "Drogo's wound has worsened dangerously on the march south. His khalasar is beginning to fracture around him as he shows weakness."
+        },
+        {
+          "revealChapter": 64,
+          "text": "In desperation she turned to the blood magic of Mirri Maz Duur to save Drogo — but the cost was devastating. He lives, but as a mindless shell. She has ended his suffering."
+        },
+        {
+          "revealChapter": 72,
+          "text": "Drogo is gone. She walked into his funeral pyre with her dragon eggs and emerged unburned, with three living dragons — the first in over a century."
+        }
+      ]
+    },
+    {
+      "id": "jon",
+      "name": "Jon Snow",
+      "house": "Stark",
+      "role": "Bastard of Winterfell / Night's Watch",
+      "ink": "#4a5a5a",
+      "textInk": "#cccccc",
+      "isPov": true,
+      "firstChapter": 5,
+      "sideChapter": 1,
+      "sideTiers": [
+        {
+          "revealChapter": 1,
+          "text": "Ned Stark's bastard son, raised at Winterfell alongside his trueborn siblings. He is treated well but never quite belongs. He wants to join the Night's Watch."
+        },
+        {
+          "revealChapter": 2,
+          "text": "Has decided to take the black and join the Night's Watch. Will ride north with his uncle Benjen."
+        }
+      ],
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "positions": [
+        {
+          "from": 5,
+          "to": 10,
+          "pos": [
+            3712,
+            1154
+          ],
+          "place": "Winterfell",
+          "kind": "arrival",
+          "note": "Preparing to join the Night's Watch"
+        },
+        {
+          "from": 13,
+          "to": 18,
+          "road": "kingsroad",
+          "pct": "wolfswood",
+          "place": "Kingsroad north — Wolfswood",
+          "kind": "arrival",
+          "note": "Riding north with Tyrion Lannister and Benjen Stark toward the Wall"
+        },
+        {
+          "from": 19,
+          "to": 51,
+          "pos": [
+            4186,
+            1368
+          ],
+          "place": "Castle Black",
+          "kind": "arrival",
+          "note": "Training and serving with the Night's Watch"
+        },
+        {
+          "from": 52,
+          "to": 59,
+          "pos": [
+            4192,
+            1372
+          ],
+          "place": "Castle Black — preparing the ranging",
+          "kind": "arrival",
+          "note": "Jon prepares to depart with Lord Commander Mormont's great ranging beyond the Wall"
+        },
+        {
+          "from": 60,
+          "to": 69,
+          "pos": [
+            4312,
+            1340
+          ],
+          "place": "Whitetree — beyond the Wall",
+          "kind": "arrival",
+          "note": "Passing through abandoned wildling villages"
+        },
+        {
+          "from": 70,
+          "to": 73,
+          "pos": [
+            4266,
+            1304
+          ],
+          "place": "Craster's Keep",
+          "kind": "arrival",
+          "note": "Deep beyond the Wall — wildlings uniting under Mance Rayder"
+        }
+      ],
+      "tiers": [
+        {
+          "revealChapter": 5,
+          "text": "Ned Stark's bastard son. Choosing to take the black and join the Night's Watch rather than remain at Winterfell without a true place in the family."
+        },
+        {
+          "revealChapter": 19,
+          "text": "Arrived at Castle Black. Struggling to adjust — his fellow recruits are thieves and criminals, hardened men he once looked down on."
+        },
+        {
+          "revealChapter": 26,
+          "text": "Befriended a timid but sharp-minded new recruit named Samwell Tarly, putting a stop to the bullying he was suffering. Jon is finding his footing among the Watch."
+        },
+        {
+          "revealChapter": 39,
+          "text": "Assigned as steward to Lord Commander Mormont — a role he resented but is beginning to understand may be grooming him for leadership."
+        },
+        {
+          "revealChapter": 52,
+          "text": "Encountered a reanimated wight at Castle Black — a dead ranger returned from beyond the Wall. He is beginning to understand the true nature of the threat from the north."
+        },
+        {
+          "revealChapter": 60,
+          "text": "Marching beyond the Wall with Lord Commander Mormont's great ranging. The threat of the Others and Mance Rayder's gathering wildling army grows more real with every mile."
+        }
+      ]
+    },
+    {
+      "id": "tyrion",
+      "name": "Tyrion Lannister",
+      "house": "Lannister",
+      "role": "Lord Tywin's son",
+      "ink": "#8B0000",
+      "textInk": "#f0c040",
+      "isPov": true,
+      "firstChapter": 9,
+      "sideChapter": 4,
+      "sideTiers": [
+        {
+          "revealChapter": 4,
+          "text": "Youngest son of Lord Tywin Lannister and brother of Cersei and Jaime. A dwarf, sharp-witted and well-read, visiting Winterfell with King Robert's party."
+        },
+        {
+          "revealChapter": 5,
+          "text": "Spoke with Jon Snow at the Winterfell feast. Advised him to embrace being a bastard rather than be ashamed of it. He has broken away from the royal party and plans to ride north with Jon and Benjen Stark to see the Wall."
+        }
+      ],
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "positions": [
+        {
+          "from": 9,
+          "to": 10,
+          "pos": [
+            3712,
+            1154
+          ],
+          "place": "Winterfell",
+          "kind": "arrival",
+          "note": "Visiting with King Robert's party — speaks with Jon Snow"
+        },
+        {
+          "from": 13,
+          "to": 18,
+          "road": "kingsroad",
+          "pct": "wolfswood",
+          "place": "Kingsroad north — Wolfswood",
+          "kind": "arrival",
+          "note": "Riding north with Jon Snow and Benjen Stark toward the Wall"
+        },
+        {
+          "from": 19,
+          "to": 21,
+          "pos": [
+            4186,
+            1368
+          ],
+          "place": "Castle Black",
+          "kind": "arrival",
+          "note": "Visiting the Wall as an honored guest of the officers — last night before departing"
+        },
+        {
+          "from": 22,
+          "to": 28,
+          "road": "kingsroad",
+          "pct": 0.028,
+          "place": "Kingsroad south — riding from the Wall",
+          "kind": "transit",
+          "note": "Riding south from Castle Black toward King's Landing"
+        },
+        {
+          "from": 28,
+          "to": 30,
+          "road": "kingsroad",
+          "pct": "inn",
+          "place": "Inn at the Crossroads",
+          "kind": "arrival",
+          "note": "Arrested by Catelyn Stark — travelling with her party as prisoner"
+        },
+        {
+          "from": 31,
+          "to": 33,
+          "road": "highroad",
+          "pct": 0.589,
+          "place": "High Road — Mountains of the Moon",
+          "kind": "arrival",
+          "note": "Prisoner alongside Catelyn — mountain clan attacks in the passes; surviving men battered but moving"
+        },
+        {
+          "from": 34,
+          "to": 34,
+          "pos": [
+            2861,
+            1468
+          ],
+          "place": "Gates of the Moon",
+          "kind": "arrival",
+          "note": "Catelyn ascends the Giant's Lance alone at night; Tyrion kept in a tower cell at the Gates of the Moon until morning"
+        },
+        {
+          "from": 35,
+          "to": 39,
+          "pos": [
+            2899,
+            1486
+          ],
+          "place": "The Eyrie",
+          "kind": "arrival",
+          "note": "Imprisoned in a sky cell — has demanded a trial by combat; Bronn has volunteered to fight as his champion"
+        },
+        {
+          "from": 40,
+          "to": 40,
+          "pos": [
+            2899,
+            1486
+          ],
+          "place": "The Eyrie",
+          "kind": "arrival",
+          "note": "Freed — Bronn defeated Ser Vardis Egen in trial by combat and Lysa released him"
+        },
+        {
+          "from": 41,
+          "to": 42,
+          "road": "highroad",
+          "pct": 0.589,
+          "place": "High Road — Mountains of the Moon",
+          "kind": "arrival",
+          "note": "Back on the high road with Bronn — escaped the Eyrie, now recruiting Vale mountain clans with promises of steel and the Vale itself"
+        },
+        {
+          "from": 43,
+          "to": 56,
+          "pos": [
+            2832,
+            1350
+          ],
+          "place": "Foothills west of the Vale — with Hill Tribes",
+          "kind": "transit",
+          "note": "Leading Vale mountain clans westward — descending from the Mountains of the Moon toward Lord Tywin's host"
+        },
+        {
+          "from": 56,
+          "to": 61,
+          "pos": [
+            2872,
+            1220
+          ],
+          "place": "Lannister camp — Riverlands",
+          "kind": "arrival",
+          "note": "Arrived at Lord Tywin's host near the Green Fork; placed in command of the Hill Tribes for the coming battle"
+        },
+        {
+          "from": 62,
+          "to": 68,
+          "pos": [
+            2872,
+            1220
+          ],
+          "place": "Battle of the Green Fork",
+          "kind": "arrival",
+          "note": "Fighting with Tywin's vanguard against Roose Bolton's northern host"
+        },
+        {
+          "from": 69,
+          "to": 73,
+          "pos": [
+            2680,
+            1294
+          ],
+          "place": "Harrenhal",
+          "kind": "arrival",
+          "note": "Tywin's army camps at Harrenhal after learning of Jaime's defeat"
+        }
+      ],
+      "tiers": [
+        {
+          "revealChapter": 9,
+          "text": "Youngest son of Lord Tywin Lannister. A dwarf, witty and sharp-minded. Travelling north with King Robert's party."
+        },
+        {
+          "revealChapter": 13,
+          "text": "Riding north with Jon Snow and Benjen Stark toward the Wall. Sharp, curious company on the road."
+        },
+        {
+          "revealChapter": 21,
+          "text": "Has visited the Wall and seen its sorry state firsthand — too few men, crumbling infrastructure, and little support from the south. He left the maester at Castle Black plans for a saddle that could let Bran ride again. Spending his last night at Castle Black before heading south in the morning."
+        },
+        {
+          "revealChapter": 31,
+          "text": "Taken prisoner by Catelyn Stark at the Inn at the Crossroads and brought to the Eyrie to face Lysa Tully's justice."
+        },
+        {
+          "revealChapter": 38,
+          "text": "Demanded a trial by combat at the Eyrie. The sellsword Bronn has volunteered to fight as his champion."
+        },
+        {
+          "revealChapter": 40,
+          "text": "Freed — his champion Bronn defeated Lysa's knight Ser Vardis Egen in trial by combat."
+        },
+        {
+          "revealChapter": 41,
+          "text": "Now on the high road with Bronn, recruiting fierce Vale mountain clans with promises of steel and glory."
+        },
+        {
+          "revealChapter": 56,
+          "text": "Led his Hill Tribes out of the mountains to join Lord Tywin's host in the Riverlands. His father has placed him and his clansmen in the vanguard for the battle ahead."
+        },
+        {
+          "revealChapter": 62,
+          "text": "Fought at the Battle of the Green Fork. His father has named him Acting Hand of the King."
+        }
+      ]
+    },
+    {
+      "id": "bran",
+      "name": "Bran Stark",
+      "house": "Stark",
+      "role": "Son of Eddard Stark",
+      "ink": "#5a6a6a",
+      "textInk": "#e8e8e8",
+      "isPov": true,
+      "firstChapter": 1,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "positions": [
+        {
+          "from": 1,
+          "to": 3,
+          "pos": [
+            3712,
+            1154
+          ],
+          "place": "Winterfell",
+          "kind": "arrival",
+          "note": "Witnessed a deserter's execution outside Winterfell and helped find a litter of orphaned direwolf pups on the ride home"
+        },
+        {
+          "from": 4,
+          "to": 7,
+          "pos": [
+            3712,
+            1154
+          ],
+          "place": "Winterfell",
+          "kind": "arrival",
+          "note": "At Winterfell with the royal party — keen to see King's Landing"
+        },
+        {
+          "from": 8,
+          "to": 11,
+          "pos": [
+            3712,
+            1154
+          ],
+          "place": "Winterfell",
+          "kind": "arrival",
+          "note": "Comatose after his fall — Catelyn keeps vigil at his bedside"
+        },
+        {
+          "from": 12,
+          "to": 36,
+          "pos": [
+            3712,
+            1154
+          ],
+          "place": "Winterfell",
+          "kind": "arrival",
+          "note": "Recovering at Winterfell — Robb holds the castle in Ned's absence"
+        },
+        {
+          "from": 37,
+          "to": 52,
+          "pos": [
+            3712,
+            1154
+          ],
+          "place": "Winterfell",
+          "kind": "arrival",
+          "note": "Riding again — Robb prepares to march south with the bannermen"
+        },
+        {
+          "from": 53,
+          "to": 73,
+          "pos": [
+            3712,
+            1154
+          ],
+          "place": "Winterfell",
+          "kind": "arrival",
+          "note": "The Stark in Winterfell — Robb has marched south, Bran holds the castle"
+        }
+      ],
+      "tiers": [
+        {
+          "revealChapter": 1,
+          "text": "Ned's second son, a keen climber and adventurer."
+        },
+        {
+          "revealChapter": 8,
+          "text": "Pushed from a tower window by Jaime Lannister after witnessing something he should not have. Survived but is crippled and has been unconscious."
+        },
+        {
+          "revealChapter": 17,
+          "text": "Has awoken from his coma. Cannot remember what he saw. Learning to live without the use of his legs, with his direwolf Summer always near."
+        },
+        {
+          "revealChapter": 37,
+          "text": "Ruling Winterfell in his father's absence alongside Maester Luwin. Experiencing vivid wolf-dreams that feel like more than sleep."
+        }
+      ]
+    },
+    {
+      "id": "sansa",
+      "name": "Sansa Stark",
+      "house": "Stark",
+      "role": "Daughter of Eddard Stark",
+      "ink": "#5a6a6a",
+      "textInk": "#e8e8e8",
+      "isPov": true,
+      "firstChapter": 15,
+      "sideChapter": 4,
+      "sideTiers": [
+        {
+          "revealChapter": 4,
+          "text": "Ned's eldest daughter, eleven years old. Gentle, courteous, and beautiful. She arrived at Winterfell with King Robert's party and has been betrothed to Prince Joffrey."
+        },
+        {
+          "revealChapter": 6,
+          "text": "Will travel south to King's Landing with her father to be raised at court, with her betrothal to Prince Joffrey secured."
+        }
+      ],
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "positions": [
+        {
+          "from": 15,
+          "to": 15,
+          "road": "kingsroad",
+          "pct": "rubyford",
+          "place": "Ruby Ford — Kingsroad south",
+          "kind": "arrival",
+          "note": "Travelling south with Ned and Arya — the Joffrey and Nymeria incident"
+        },
+        {
+          "from": 16,
+          "to": 20,
+          "road": "kingsroad",
+          "pct": 0.82,
+          "place": "Kingsroad south — final stretch",
+          "kind": "transit",
+          "note": "Continuing south toward King's Landing with her father"
+        },
+        {
+          "from": 20,
+          "to": 28,
+          "pos": [
+            2416,
+            1394
+          ],
+          "place": "King's Landing",
+          "kind": "arrival",
+          "note": "Betrothed to Prince Joffrey — life at court begins"
+        },
+        {
+          "from": 29,
+          "to": 44,
+          "pos": [
+            2416,
+            1394
+          ],
+          "place": "King's Landing",
+          "kind": "arrival",
+          "note": "Trapped at court as Joffrey's cruelty becomes undeniable"
+        },
+        {
+          "from": 45,
+          "to": 73,
+          "pos": [
+            2416,
+            1394
+          ],
+          "place": "King's Landing",
+          "kind": "arrival",
+          "status": "hostage",
+          "note": "Held hostage at court after her father's arrest"
+        }
+      ],
+      "tiers": [
+        {
+          "revealChapter": 15,
+          "text": "Ned's eldest daughter. Gentle and well-mannered. Betrothed to Prince Joffrey, which she considers a romantic dream come true."
+        },
+        {
+          "revealChapter": 29,
+          "text": "Beginning to see cracks in her fairy-tale. Joffrey's cruelty is becoming harder to ignore."
+        },
+        {
+          "revealChapter": 45,
+          "text": "Trapped in King's Landing after her father's arrest. A hostage of the Lannisters, kept alive by her value as a future queen."
+        },
+        {
+          "revealChapter": 67,
+          "text": "Forced to watch her father's public execution. Every illusion she held about Joffrey and court life has been shattered."
+        }
+      ]
+    },
+    {
+      "id": "arya",
+      "name": "Arya Stark",
+      "house": "Stark",
+      "role": "Daughter of Eddard Stark",
+      "ink": "#5a6a6a",
+      "textInk": "#e8e8e8",
+      "isPov": true,
+      "firstChapter": 7,
+      "sideChapter": 1,
+      "sideTiers": [
+        {
+          "revealChapter": 1,
+          "text": "Ned's younger daughter. Unlike her sister Sansa, she is headstrong, tomboyish, and more interested in swords than needlework. Named her direwolf Nymeria."
+        },
+        {
+          "revealChapter": 6,
+          "text": "Will travel south to King's Landing with her father and Sansa."
+        }
+      ],
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "positions": [
+        {
+          "from": 7,
+          "to": 11,
+          "pos": [
+            3712,
+            1154
+          ],
+          "place": "Winterfell",
+          "kind": "arrival",
+          "note": "Saying goodbye before leaving south with Ned"
+        },
+        {
+          "from": 12,
+          "to": 15,
+          "road": "kingsroad",
+          "pct": 0.36,
+          "place": "Kingsroad south — with Ned and Sansa",
+          "kind": "transit",
+          "note": "Travelling south in King Robert's royal party"
+        },
+        {
+          "from": 15,
+          "to": 15,
+          "road": "kingsroad",
+          "pct": "rubyford",
+          "place": "Ruby Ford — Kingsroad south",
+          "kind": "arrival",
+          "note": "Play-fighting with Mycah near the Trident — the Joffrey incident"
+        },
+        {
+          "from": 16,
+          "to": 20,
+          "road": "kingsroad",
+          "pct": 0.82,
+          "place": "Kingsroad south — final stretch",
+          "kind": "transit",
+          "note": "Continuing south with Ned after the direwolf incident"
+        },
+        {
+          "from": 20,
+          "to": 49,
+          "pos": [
+            2416,
+            1394
+          ],
+          "place": "King's Landing",
+          "kind": "arrival",
+          "note": "Training with Syrio Forel — navigating the Red Keep"
+        },
+        {
+          "from": 50,
+          "to": 64,
+          "pos": [
+            2416,
+            1394
+          ],
+          "place": "King's Landing",
+          "kind": "arrival",
+          "status": "in hiding",
+          "note": "Surviving in the city after Ned's arrest — taken under Yoren's wing"
+        },
+        {
+          "from": 65,
+          "to": 65,
+          "pos": [
+            2416,
+            1394
+          ],
+          "place": "King's Landing — the Sept",
+          "kind": "arrival",
+          "note": "In the crowd for her father's confession — Yoren pulls her away before the sentence is carried out, sparing her from seeing it"
+        },
+        {
+          "from": 66,
+          "to": 68,
+          "road": "kingsroad",
+          "pct": 0.82,
+          "place": "Kingsroad north — leaving King's Landing",
+          "kind": "arrival",
+          "note": "Disguised as 'Arry', just north of King's Landing with Yoren's party"
+        },
+        {
+          "from": 69,
+          "to": 73,
+          "road": "kingsroad",
+          "pct": "twins",
+          "place": "Kingsroad north — Riverlands",
+          "kind": "transit",
+          "note": "Heading north through the Riverlands with Night's Watch recruits"
+        }
+      ],
+      "tiers": [
+        {
+          "revealChapter": 7,
+          "text": "Ned's younger daughter. Headstrong and fierce, she has no interest in the ladylike life expected of her."
+        },
+        {
+          "revealChapter": 22,
+          "text": "Training with Syrio Forel in the Braavosi Water Dance style. Growing more capable and independent."
+        },
+        {
+          "revealChapter": 32,
+          "text": "Overheard two men plotting in the tunnels beneath the Red Keep — one of them spoke of killing her father. She warned Ned. He didn't believe her."
+        },
+        {
+          "revealChapter": 50,
+          "text": "Fled the Red Keep when Lannister soldiers came to arrest her. Syrio Forel held them off with a broken practice sword so she could escape. She is now surviving alone on the streets of King's Landing."
+        },
+        {
+          "revealChapter": 66,
+          "text": "Escaped King's Landing with Yoren's party of Night's Watch recruits, disguised as a boy called 'Arry'. She witnessed her father's execution before leaving."
+        }
+      ]
+    },
+    {
+      "id": "robert",
+      "name": "King Robert Baratheon",
+      "house": "Baratheon",
+      "role": "King of the Seven Kingdoms",
+      "ink": "#a07030",
+      "isPov": false,
+      "firstChapter": 1,
+      "deathChapter": 34,
+      "deathStatus": "dead",
+      "deathNote": "Fatally gored by a boar while hunting. He dies shortly after, leaving the realm to Joffrey.",
+      "tiers": [
+        {
+          "revealChapter": 1,
+          "text": "The reigning king of the Seven Kingdoms. An old friend and companion of Ned Stark. Travels to Winterfell to ask Ned to serve as his Hand."
+        },
+        {
+          "revealChapter": 4,
+          "text": "A great warrior in his youth, now grown fat and restless as king. His marriage to Cersei Lannister is cold and political."
+        },
+        {
+          "revealChapter": 34,
+          "text": "Fatally wounded by a boar during a hunt. It is later suggested his wine was tampered with, dulling his senses. He dies leaving a fractured realm."
+        }
+      ]
+    },
+    {
+      "id": "cersei",
+      "name": "Cersei Lannister",
+      "house": "Lannister",
+      "role": "Queen of the Seven Kingdoms",
+      "ink": "#b0b020",
+      "isPov": false,
+      "firstChapter": 4,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "tiers": [
+        {
+          "revealChapter": 4,
+          "text": "Queen of the Seven Kingdoms, wife of Robert. Daughter of Lord Tywin Lannister. Sharp, proud, and fiercely protective of her children."
+        },
+        {
+          "revealChapter": 20,
+          "text": "Increasingly at odds with Ned Stark, whose investigation into the succession threatens her family's grip on power."
+        },
+        {
+          "revealChapter": 45,
+          "text": "Ned has discovered her secret — that her children are not Robert's. She moves swiftly to neutralise him."
+        },
+        {
+          "revealChapter": 51,
+          "text": "With Robert dead and Joffrey on the throne, she is the dominant power in King's Landing."
+        }
+      ]
+    },
+    {
+      "id": "jaime",
+      "name": "Jaime Lannister",
+      "house": "Lannister",
+      "role": "Kingsguard — the Kingslayer",
+      "ink": "#a09030",
+      "isPov": false,
+      "firstChapter": 1,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "tiers": [
+        {
+          "revealChapter": 1,
+          "text": "Twin brother of Queen Cersei. One of the finest swordsmen in the realm. Known as the Kingslayer for slaying King Aerys during Robert's Rebellion."
+        },
+        {
+          "revealChapter": 8,
+          "text": "Pushed Bran from a tower window after Bran witnessed his secret relationship with Cersei."
+        },
+        {
+          "revealChapter": 56,
+          "text": "Captured by Robb Stark at the Battle of the Whispering Wood. Now a prisoner at Riverrun — a valuable hostage."
+        }
+      ]
+    },
+    {
+      "id": "joffrey",
+      "name": "Joffrey Baratheon",
+      "house": "Baratheon",
+      "role": "Robert's eldest son",
+      "ink": "#a03030",
+      "isPov": false,
+      "firstChapter": 4,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "tiers": [
+        {
+          "revealChapter": 4,
+          "text": "Crown Prince and heir to the Iron Throne. Betrothed to Sansa Stark."
+        },
+        {
+          "revealChapter": 22,
+          "text": "Has shown his cruelty openly — he is petty, vindictive, and dangerous."
+        },
+        {
+          "revealChapter": 44,
+          "text": "Now king following Robert's death. Surrounded by Lannister advisors, he has proven as cruel in power as he was as a prince."
+        },
+        {
+          "revealChapter": 65,
+          "text": "Broke the promise of mercy made to Ned Stark and ordered his public execution at the Great Sept of Baelor."
+        }
+      ]
+    },
+    {
+      "id": "robb",
+      "name": "Robb Stark",
+      "house": "Stark",
+      "role": "Heir to Winterfell",
+      "ink": "#4060a0",
+      "isPov": false,
+      "firstChapter": 1,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "tiers": [
+        {
+          "revealChapter": 1,
+          "text": "Ned's eldest son and heir to Winterfell. Fourteen years old, dutiful and capable."
+        },
+        {
+          "revealChapter": 37,
+          "text": "Has called the Northern bannermen and is marching south to rescue his father."
+        },
+        {
+          "revealChapter": 55,
+          "text": "Won a stunning victory at the Battle of the Whispering Wood, capturing Jaime Lannister."
+        },
+        {
+          "revealChapter": 71,
+          "text": "Proclaimed King in the North by his bannermen."
+        }
+      ]
+    },
+    {
+      "id": "viserys",
+      "name": "Viserys Targaryen",
+      "house": "Targaryen",
+      "role": "Exiled prince",
+      "ink": "#8050a0",
+      "isPov": false,
+      "firstChapter": 3,
+      "deathChapter": 36,
+      "deathStatus": "dead",
+      "deathNote": "Killed by Khal Drogo, who poured molten gold over his head — the crown he had long demanded.",
+      "tiers": [
+        {
+          "revealChapter": 3,
+          "text": "Daenerys's older brother. Obsessed with reclaiming the Iron Throne. Sold his sister to Khal Drogo in exchange for an army."
+        },
+        {
+          "revealChapter": 11,
+          "text": "Increasingly unstable and threatening toward Daenerys."
+        },
+        {
+          "revealChapter": 36,
+          "text": "Killed by Khal Drogo after threatening Daenerys with a drawn sword. Drogo fulfilled the letter of Vaes Dothrak's law — no blood may be shed in the sacred city — by killing him with molten gold instead. Daenerys watched without tears."
+        }
+      ]
+    },
+    {
+      "id": "drogo",
+      "name": "Khal Drogo",
+      "house": "Dothraki",
+      "role": "Khal",
+      "ink": "#a05020",
+      "isPov": false,
+      "firstChapter": 3,
+      "deathChapter": 64,
+      "deathStatus": "dead",
+      "deathNote": "Died after a chest wound turned fatal. A blood magic ritual kept him alive but mindless; Daenerys ended his suffering.",
+      "tiers": [
+        {
+          "revealChapter": 3,
+          "text": "One of the most feared khals on the Dothraki Sea, undefeated in battle. Daenerys has been sold to him as a bride."
+        },
+        {
+          "revealChapter": 11,
+          "text": "Has come to genuinely care for Daenerys after she asserted herself in their relationship."
+        },
+        {
+          "revealChapter": 36,
+          "text": "Swore to give Daenerys the Iron Throne after Viserys threatened her."
+        },
+        {
+          "revealChapter": 47,
+          "text": "Gravely wounded in a duel. The wound has become infected."
+        },
+        {
+          "revealChapter": 54,
+          "text": "His wound worsens as the khalasar rides south. The khalasar is beginning to fracture around him as his weakness shows."
+        },
+        {
+          "revealChapter": 64,
+          "text": "Fell from his horse — the final sign of his decline. Daenerys turned in desperation to Mirri Maz Duur's blood magic. The ritual saved his body but left him mindless. Daenerys ended his suffering."
+        }
+      ]
+    },
+    {
+      "id": "syrio",
+      "name": "Syrio Forel",
+      "house": "None",
+      "role": "Braavosi sword master",
+      "ink": "#508060",
+      "isPov": false,
+      "firstChapter": 22,
+      "deathChapter": 50,
+      "deathStatus": "missing",
+      "deathNote": "Last seen fighting Lannister guards with a broken wooden sword to allow Arya to escape. His fate is unconfirmed.",
+      "tiers": [
+        {
+          "revealChapter": 22,
+          "text": "Former First Sword of Braavos, hired by Ned to train Arya in the Water Dance style. Witty, patient, and deeply skilled."
+        },
+        {
+          "revealChapter": 50,
+          "text": "Held off Lannister guards with only a broken training sword so Arya could escape. Whether he survived is unknown."
+        }
+      ]
+    },
+    {
+      "id": "jonArryn",
+      "name": "Jon Arryn",
+      "house": "Arryn",
+      "role": "Former Hand of the King",
+      "ink": "#506080",
+      "isPov": false,
+      "firstChapter": 1,
+      "deathChapter": 1,
+      "deathStatus": "dead",
+      "deathNote": "Dead before the story begins. The cause of his death is unknown.",
+      "tiers": [
+        {
+          "revealChapter": 1,
+          "text": "The previous Hand of the King, recently deceased. His death prompted Robert to travel to Winterfell and ask Ned to replace him. The cause of his death is unknown."
+        },
+        {
+          "revealChapter": 12,
+          "text": "Ned has been told he died of a sudden illness. Ned is not sure he believes it. Jon Arryn was apparently investigating something sensitive before he died."
+        },
+        {
+          "revealChapter": 25,
+          "text": "Jon Arryn was investigating the question of royal succession — examining the children of King Robert. Whatever he found may have gotten him killed."
+        },
+        {
+          "revealChapter": 45,
+          "text": "Ned has pieced together what Jon Arryn discovered: that the royal children are not Robert's. This is what cost Jon Arryn his life — though who ordered it remains unclear to Ned."
+        }
+      ]
+    },
+    {
+      "id": "varys",
+      "name": "Varys",
+      "house": "None",
+      "role": "Master of Whisperers",
+      "ink": "#6a6a8a",
+      "isPov": false,
+      "firstChapter": 20,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "tiers": [
+        {
+          "revealChapter": 20,
+          "text": "Known as the Spider. The king's master of whisperers, a eunuch of mysterious origins. He seems to know everything that happens in the Seven Kingdoms through his network of little birds. He was present when Catelyn secretly met Littlefinger in King's Landing — he had already known she was in the city before she told anyone."
+        },
+        {
+          "revealChapter": 25,
+          "text": "Has begun privately warning Ned about the dangers around him, while remaining outwardly neutral at court. His true allegiances are genuinely impossible to read — he speaks of serving the realm, but his actions serve purposes no one else can follow."
+        },
+        {
+          "revealChapter": 46,
+          "text": "Visited Ned in his cell and advised him to confess to treason, suggesting it was the only way to protect his daughters. He claims to serve the realm."
+        }
+      ]
+    },
+    {
+      "id": "barristan",
+      "name": "Ser Barristan Selmy",
+      "house": "Selmy",
+      "role": "Lord Commander of the Kingsguard",
+      "ink": "#a0a0c0",
+      "isPov": false,
+      "firstChapter": 4,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "tiers": [
+        {
+          "revealChapter": 4,
+          "text": "The Lord Commander of Robert's Kingsguard. A legendary knight, said to be the finest in the realm. Known as Barristan the Bold."
+        },
+        {
+          "revealChapter": 35,
+          "text": "Present at all major events in King's Landing. A man of deep personal honour who struggles with the ugliness of court politics."
+        },
+        {
+          "revealChapter": 58,
+          "text": "Stripped of his position by Joffrey and the Lannisters after Robert's death. He yielded without a fight, to his own shame."
+        }
+      ]
+    },
+    {
+      "id": "sandor",
+      "name": "Sandor Clegane",
+      "house": "Clegane",
+      "role": "Joffrey's sworn shield — the Hound",
+      "ink": "#5a5050",
+      "isPov": false,
+      "firstChapter": 4,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "tiers": [
+        {
+          "revealChapter": 4,
+          "text": "Known as the Hound. Joffrey's personal bodyguard and one of the most feared fighters in the realm. His face is hideously scarred from a childhood encounter with fire."
+        },
+        {
+          "revealChapter": 15,
+          "text": "Rode down and killed Mycah the butcher's boy on Joffrey's orders after the incident at the Trident. Arya has not forgotten."
+        },
+        {
+          "revealChapter": 30,
+          "text": "A violent man who nonetheless shows occasional flashes of bitter honesty. He despises the hollow chivalry of knights and has always refused knighthood — he holds the institution in contempt."
+        }
+      ]
+    },
+    {
+      "id": "theon",
+      "name": "Theon Greyjoy",
+      "house": "Greyjoy",
+      "role": "Ward of Eddard Stark",
+      "ink": "#708060",
+      "isPov": false,
+      "firstChapter": 1,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "tiers": [
+        {
+          "revealChapter": 1,
+          "text": "Ward of Eddard Stark, taken as a hostage after the Greyjoy Rebellion to ensure his father Balon's good behaviour. He has grown up at Winterfell."
+        },
+        {
+          "revealChapter": 37,
+          "text": "Advises Robb to call the banners when Ned is arrested. He is eager to prove himself useful, though his loyalty is complicated by his Greyjoy blood."
+        },
+        {
+          "revealChapter": 53,
+          "text": "Rides south with Robb's army. He is keen for glory and a chance to make his own name beyond the shadow of the Starks."
+        }
+      ]
+    },
+    {
+      "id": "sam",
+      "name": "Samwell Tarly",
+      "house": "Tarly",
+      "role": "Night's Watch recruit",
+      "ink": "#507050",
+      "isPov": false,
+      "firstChapter": 26,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "tiers": [
+        {
+          "revealChapter": 26,
+          "text": "A gentle, overweight boy sent to the Night's Watch by his father. He is terrified of combat but possesses a sharp mind. Jon Snow befriended him and put a stop to his bullying."
+        },
+        {
+          "revealChapter": 43,
+          "text": "Has been assigned to the stewards alongside Jon. He and Jon take their vows together beyond the Wall at a haunted forest godswood."
+        }
+      ]
+    },
+    {
+      "id": "mormont",
+      "name": "Jeor Mormont",
+      "house": "Mormont",
+      "role": "Lord Commander of the Night's Watch",
+      "ink": "#405050",
+      "isPov": false,
+      "firstChapter": 19,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "tiers": [
+        {
+          "revealChapter": 19,
+          "text": "The Lord Commander of the Night's Watch, known as the Old Bear. A gruff but capable leader who takes the growing threat beyond the Wall seriously."
+        },
+        {
+          "revealChapter": 39,
+          "text": "Has assigned Jon Snow as his personal steward — not as a demotion but as a way of grooming Jon for command. He gave Jon his ancestral Valyrian steel sword, Longclaw."
+        },
+        {
+          "revealChapter": 60,
+          "text": "Leading the great ranging beyond the Wall personally. He intends to find answers about Benjen Stark's disappearance and the threat of the Others."
+        }
+      ]
+    },
+    {
+      "id": "bronn",
+      "name": "Bronn",
+      "house": "None",
+      "role": "Sellsword",
+      "ink": "#806040",
+      "isPov": false,
+      "firstChapter": 31,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "tiers": [
+        {
+          "revealChapter": 31,
+          "text": "A skilled and ruthless sellsword who attached himself to Catelyn's party on the road to the Eyrie."
+        },
+        {
+          "revealChapter": 38,
+          "text": "Volunteered to be Tyrion's champion in his trial by combat at the Eyrie."
+        },
+        {
+          "revealChapter": 40,
+          "text": "Defeated and killed Ser Vardis Egen in trial by combat, winning Tyrion's freedom. Now rides with Tyrion."
+        }
+      ]
+    },
+    {
+      "id": "rodrik",
+      "name": "Ser Rodrik Cassel",
+      "house": "Stark",
+      "role": "Master-at-arms of Winterfell",
+      "ink": "#607080",
+      "isPov": false,
+      "firstChapter": 6,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "tiers": [
+        {
+          "revealChapter": 6,
+          "text": "The master-at-arms of Winterfell and a loyal retainer of House Stark. A seasoned warrior with magnificent side-whiskers."
+        },
+        {
+          "revealChapter": 14,
+          "text": "Accompanied Catelyn on her secret voyage to King's Landing by ship."
+        },
+        {
+          "revealChapter": 55,
+          "text": "Sent back to Winterfell by Catelyn to act as castellan and assist Maester Luwin in defending the castle while Robb marches south."
+        }
+      ]
+    },
+    {
+      "id": "luwin",
+      "name": "Maester Luwin",
+      "house": "None",
+      "role": "Maester of Winterfell",
+      "ink": "#607060",
+      "isPov": false,
+      "firstChapter": 6,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "tiers": [
+        {
+          "revealChapter": 6,
+          "text": "The maester of Winterfell, advisor to the Stark family. A learned and practical man who serves as a voice of reason amid the chaos unfolding around House Stark."
+        },
+        {
+          "revealChapter": 17,
+          "text": "Helping Robb govern Winterfell in Ned's absence. Urging caution where Theon urges boldness."
+        },
+        {
+          "revealChapter": 53,
+          "text": "Remains at Winterfell with Bran and Rickon as Robb marches to war. Now the main adult voice of counsel for the young lord holding the castle."
+        }
+      ]
+    },
+    {
+      "id": "lysa",
+      "name": "Lysa Arryn",
+      "house": "Tully/Arryn",
+      "role": "Lady of the Eyrie",
+      "ink": "#806080",
+      "isPov": false,
+      "firstChapter": 6,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "tiers": [
+        {
+          "revealChapter": 6,
+          "text": "Catelyn's younger sister. Widow of Jon Arryn. She fled to the Eyrie with her sickly young son Robert after her husband's death, refusing all contact with the crown."
+        },
+        {
+          "revealChapter": 14,
+          "text": "Sent Catelyn a secret letter warning that the Lannisters murdered her husband. The letter set the book's plot in motion."
+        },
+        {
+          "revealChapter": 34,
+          "text": "Received Catelyn and Tyrion at the Eyrie. Erratic and overprotective of her son, she is eager to see Tyrion thrown from the Moon Door. She rules the Vale in fearful isolation."
+        }
+      ]
+    },
+    {
+      "id": "benjen",
+      "name": "Benjen Stark",
+      "house": "Stark",
+      "role": "First Ranger of the Night's Watch",
+      "ink": "#4a6a5a",
+      "isPov": false,
+      "firstChapter": 1,
+      "deathChapter": 43,
+      "deathStatus": "missing",
+      "deathNote": "Vanished beyond the Wall on a ranging. His horse returned riderless. No body has been found.",
+      "tiers": [
+        {
+          "revealChapter": 1,
+          "text": "Ned's younger brother and First Ranger of the Night's Watch. He attended the execution at the start of the book and spoke with Jon about joining the Watch."
+        },
+        {
+          "revealChapter": 5,
+          "text": "Rode north with Jon and Tyrion toward the Wall. He is the most experienced ranger at Castle Black."
+        },
+        {
+          "revealChapter": 26,
+          "text": "Has ridden out on a ranging beyond the Wall and not returned. Jon is deeply worried about his uncle."
+        },
+        {
+          "revealChapter": 43,
+          "text": "Still missing. His horse returned to Castle Black without him. The Lord Commander is concerned enough to lead a great ranging personally to find answers."
+        }
+      ]
+    },
+    {
+      "id": "jorah",
+      "name": "Ser Jorah Mormont",
+      "house": "Mormont",
+      "role": "Knight in exile — serves Daenerys",
+      "ink": "#705040",
+      "isPov": false,
+      "firstChapter": 3,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "tiers": [
+        {
+          "revealChapter": 3,
+          "text": "An exiled knight from Bear Island in the North, serving Viserys Targaryen in Essos. He fled Westeros to escape execution after selling men into slavery — a crime that dishonoured his family and his liege lord, Ned Stark."
+        },
+        {
+          "revealChapter": 11,
+          "text": "Has transferred his service to Daenerys, whom he recognises as the true power in the relationship with Drogo. He is teaching her to understand her new world."
+        },
+        {
+          "revealChapter": 23,
+          "text": "A loyal protector of Daenerys, increasingly devoted to her personally. He saved her life from a poisoning attempt. He is clearly more than a simple sellsword."
+        }
+      ]
+    },
+    {
+      "id": "illyrio",
+      "name": "Illyrio Mopatis",
+      "house": "None",
+      "role": "Magister of Pentos",
+      "ink": "#806050",
+      "isPov": false,
+      "firstChapter": 3,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "tiers": [
+        {
+          "revealChapter": 3,
+          "text": "A wealthy and powerful merchant prince of Pentos who has been sheltering Viserys and Daenerys in his manse. He arranged Daenerys's marriage to Khal Drogo in exchange for promises of Dothraki military support."
+        },
+        {
+          "revealChapter": 11,
+          "text": "His motives are obscure but clearly extend beyond simple friendship with the Targaryens. He has powerful contacts throughout Essos and beyond."
+        }
+      ]
+    },
+    {
+      "id": "walder",
+      "name": "Lord Walder Frey",
+      "house": "Frey",
+      "role": "Lord of the Crossing",
+      "ink": "#605040",
+      "isPov": false,
+      "firstChapter": 59,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "tiers": [
+        {
+          "revealChapter": 59,
+          "text": "The ancient and cantankerous lord of the Twins, the only crossing of the Green Fork for hundreds of miles. He controls passage across the river and plays all sides for advantage."
+        },
+        {
+          "revealChapter": 63,
+          "text": "Agreed to let Robb's army cross in exchange for Robb marrying one of his daughters and Arya marrying one of his sons. He contributed four thousand soldiers to Robb's cause — arriving, as always, after the outcome was no longer in doubt."
+        }
+      ]
+    },
+    {
+      "id": "rickon",
+      "name": "Rickon Stark",
+      "house": "Stark",
+      "role": "Youngest son of Eddard Stark",
+      "ink": "#5a6a6a",
+      "isPov": false,
+      "firstChapter": 1,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "tiers": [
+        {
+          "revealChapter": 1,
+          "text": "Ned's youngest child, only three years old. Named his direwolf Shaggydog."
+        },
+        {
+          "revealChapter": 53,
+          "text": "Left behind at Winterfell with Bran when Robb marches south. He refused to say goodbye to Robb, insisting that no one ever comes back."
+        }
+      ]
+    },
+    {
+      "id": "ilyn",
+      "name": "Ser Ilyn Payne",
+      "house": "None",
+      "role": "King's Justice — executioner",
+      "ink": "#3a3a3a",
+      "isPov": false,
+      "firstChapter": 15,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "tiers": [
+        {
+          "revealChapter": 15,
+          "text": "The king's headsman. A mute — the Mad King had his tongue torn out for an alleged boast. He carries Ice, the Stark ancestral sword, at Sansa's introduction by Joffrey."
+        },
+        {
+          "revealChapter": 63,
+          "text": "Used Ned's own sword Ice to execute him on the steps of the Great Sept of Baelor. A grim instrument of royal justice with no apparent feelings about his work."
+        }
+      ]
+    },
+    {
+      "id": "littlefinger",
+      "name": "Petyr Baelish",
+      "house": "None",
+      "role": "Master of Coin",
+      "ink": "#508050",
+      "isPov": false,
+      "firstChapter": 4,
+      "deathChapter": null,
+      "deathStatus": "alive",
+      "deathNote": null,
+      "tiers": [
+        {
+          "revealChapter": 4,
+          "text": "Known as Littlefinger. Master of Coin on the Small Council. An old acquaintance of Catelyn Stark. Witty and seemingly helpful to Ned."
+        },
+        {
+          "revealChapter": 20,
+          "text": "Has offered to help Ned navigate the dangerous politics of King's Landing. He seems useful, but something about him is hard to read."
+        },
+        {
+          "revealChapter": 46,
+          "text": "Warned Ned not to trust him — then betrayed him. He turned the City Watch against Ned at the critical moment, delivering him to the Lannisters."
+        }
+      ]
+    }
+  ],
+  "chapterPOV": {
+    "0": null,
+    "1": "bran",
+    "2": "cat",
+    "3": "dany",
+    "4": "ned",
+    "5": "jon",
+    "6": "cat",
+    "7": "arya",
+    "8": "bran",
+    "9": "tyrion",
+    "10": "jon",
+    "11": "dany",
+    "12": "ned",
+    "13": "tyrion",
+    "14": "cat",
+    "15": "sansa",
+    "16": "ned",
+    "17": "bran",
+    "18": "cat",
+    "19": "jon",
+    "20": "ned",
+    "21": "tyrion",
+    "22": "arya",
+    "23": "dany",
+    "24": "bran",
+    "25": "ned",
+    "26": "jon",
+    "27": "ned",
+    "28": "cat",
+    "29": "sansa",
+    "30": "ned",
+    "31": "tyrion",
+    "32": "arya",
+    "33": "ned",
+    "34": "cat",
+    "35": "ned",
+    "36": "dany",
+    "37": "bran",
+    "38": "tyrion",
+    "39": "ned",
+    "40": "cat",
+    "41": "jon",
+    "42": "tyrion",
+    "43": "ned",
+    "44": "sansa",
+    "45": "ned",
+    "46": "dany",
+    "47": "ned",
+    "48": "jon",
+    "49": "ned",
+    "50": "arya",
+    "51": "sansa",
+    "52": "jon",
+    "53": "bran",
+    "54": "dany",
+    "55": "cat",
+    "56": "tyrion",
+    "57": "sansa",
+    "58": "ned",
+    "59": "cat",
+    "60": "jon",
+    "61": "dany",
+    "62": "tyrion",
+    "63": "cat",
+    "64": "dany",
+    "65": "arya",
+    "66": "bran",
+    "67": "sansa",
+    "68": "dany",
+    "69": "tyrion",
+    "70": "jon",
+    "71": "cat",
+    "72": "dany",
+    "73": "jon"
+  }
+}
