@@ -925,9 +925,10 @@ function getSnapZoom(){
 }
 const markers = {};
 // Persistent location dots, one per character id but shared by reference
-// when characters occupy the same spot — see renderMarkers() and
-// runMoveBatch(). This is the "ground truth" location marker; the ribbon
-// (in `markers`) is just its label and can fan out for readability.
+// when characters occupy the same spot — see renderMarkers() and the
+// travel animation (animateLeg()/playGroup()) further down. This is the
+// "ground truth" location marker; the ribbon (in `markers`) is just its
+// label and can fan out for readability.
 const dots = {};
 
 // ─── CHAPTER NAV ─────────────────────────────────────────────────────────────
@@ -943,14 +944,8 @@ function fromIndex(idx){ return { ch: Math.floor(idx / 2), phase: (idx % 2 === 0
 const MIN_STEP = toIndex(0, 'before');
 let MAX_STEP = toIndex(0, 'after');
 
-// Every chapter's "before" phase now dims the map to the Chapter Reveal (see
-// renderChapterMap()), so there's never a marker already on screen to walk
-// from — every step, in either direction, is the same instant setChapter().
-function stepCh(dir){
-  const idx = Math.max(MIN_STEP, Math.min(MAX_STEP, toIndex(curCh, curPhase) + dir));
-  const next = fromIndex(idx);
-  setChapter(next.ch, next.phase);
-}
+// stepCh() itself is defined further down, alongside the travel animation
+// it now conditionally routes into — see "CHARACTER TRAVEL ANIMATION" below.
 // Jumping via the dropdown always lands on Before N — a deliberate refresher
 // stop, not a full skip into what N contains.
 function jumpTo(val){ if(val) setChapter(parseInt(val), 'before'); }
@@ -1013,7 +1008,18 @@ function getActiveArrival(c, ch, phase){
   if(!c.positions || c.positions.length === 0) return null;
   const arrivals = c.positions.filter(isArrival);
   if(!arrivals.length) return null;
-  for(let p of arrivals) if(isRevealed(p.from, ch, phase) && ch <= p.to) return p;
+  // AT7 (this session) — keep the LAST direct match, not the first. Two
+  // arrivals can legitimately share the same chapter window (e.g. a chapter
+  // that confirms a character stops at a waypoint and then reaches their
+  // real destination all in its own text) — chronological array order means
+  // the later, more authoritative one should win, matching how the
+  // lastKnown fallback just below already resolves ties by "keep
+  // overwriting with whatever's later." Without this, whichever of the two
+  // happened to be entered first in the array would win regardless of which
+  // one the text actually settles on.
+  let directMatch = null;
+  for(let p of arrivals) if(isRevealed(p.from, ch, phase) && ch <= p.to) directMatch = p;
+  if(directMatch) return directMatch;
   let lastKnown = null;
   for(let p of arrivals){ if(isRevealed(p.from, ch, phase)) lastKnown = p; }
   return lastKnown; // null if nothing has been revealed yet — correctly hidden
@@ -1078,6 +1084,70 @@ function getTransitChain(c, prevArrival, nextArrival){
   const endIdx = c.positions.indexOf(nextArrival);
   if(startIdx === -1 || endIdx === -1 || endIdx <= startIdx) return [];
   return c.positions.slice(startIdx + 1, endIdx).filter(isTransit);
+}
+
+// ─── TRAVEL ANIMATION (restored, reworked — see CHANGELOG) ─────────────────
+// Everything below this point re-implements the character travel tracker
+// that an earlier session removed. Unlike the old version, the map now
+// snaps to a character's LAST KNOWN position on a chapter's "before" phase
+// (see renderChapterMap()) rather than pre-jumping to where they'll end up
+// — the travel animation below is what actually carries them from the old
+// spot to the new one, once the reader reaches "finished."
+
+// Same idea as getTransitChain() above, but unfiltered — includes any
+// ARRIVAL entries strictly between the two endpoints too. An arrival that
+// falls strictly between a mover's starting point and their final
+// confirmed destination isn't itself "the" current position (getActiveArrival
+// already resolved past it to the later one), but for the animation it's a
+// real, textually-confirmed stop along the way — e.g. the Inn at the
+// Crossroads — and should pause the travel there rather than blowing
+// straight through it.
+function getJourneyChain(c, prevArrival, nextArrival){
+  if(!c.positions) return [];
+  const startIdx = c.positions.indexOf(prevArrival);
+  const endIdx = c.positions.indexOf(nextArrival);
+  if(startIdx === -1 || endIdx === -1 || endIdx <= startIdx) return [];
+  return c.positions.slice(startIdx + 1, endIdx);
+}
+
+// Rounds a [lat,lng] to a short string key so two independently-authored
+// position entries that resolve to the "same place" (e.g. two characters
+// both confirmed at Winterfell) compare equal for grouping/animation
+// purposes without needing exact floating-point equality.
+function posKey(pos){ return pos[0].toFixed(3) + ',' + pos[1].toFixed(3); }
+
+// One resolved leg between two RAW position entries (not necessarily
+// arrivals — a journey stop can be a transit entry too). Follows a named
+// road's real waypoints when both ends share one road; otherwise a
+// straight line. Factored out of buildFlightPath() below so the travel
+// animation can compute a single hop the same way the untraced-route
+// measurement does.
+function legBetween(entryA, entryB){
+  const A = resolvePos(entryA), B = resolvePos(entryB);
+  if(!A || !B) return null;
+  if(entryA.road && entryB.road && entryA.road === entryB.road){
+    const distA = roadDistanceAt(entryA.road, entryA.pct), distB = roadDistanceAt(entryB.road, entryB.pct);
+    return { kind:'road', roadId:entryA.road, distA, distB, length: Math.abs(distB - distA) };
+  }
+  const dLat = B.pos[0]-A.pos[0], dLng = B.pos[1]-A.pos[1];
+  return { kind:'straight', fromPos:A.pos, toPos:B.pos, length: Math.sqrt(dLat*dLat + dLng*dLng) };
+}
+
+// The full ordered path a single character walks between two confirmed
+// arrivals this chapter — every stop is {entry, resolved, isPause}.
+// `isPause` marks a stop that is itself a real, textually-confirmed
+// ARRIVAL (not the departure or the final destination) — a key location or
+// event along the way that should hold the travel for a beat. Plain
+// transit entries in between are path only; they never pause.
+function buildJourneyStops(c, prevArrival, nextArrival){
+  const chain = getJourneyChain(c, prevArrival, nextArrival);
+  const raw = [prevArrival, ...chain, nextArrival];
+  return raw.map((entry, i) => {
+    const resolved = resolvePos(entry);
+    if(!resolved) return null; // e.g. an untraced road — skip rather than crash
+    const isPause = i > 0 && i < raw.length - 1 && isArrival(entry);
+    return { entry, resolved, isPause };
+  }).filter(Boolean);
 }
 
 // Every arrival-to-arrival journey still relying on a straight-line
@@ -1164,11 +1234,12 @@ function makeRibbonHTML(name, ink, isDead, isMissing, textInk){
 // object keyed by character id. renderMarkers() (below) is just this plus
 // the Leaflet drawing calls; the marker-movement animation calls this twice
 // (before and after a step) to diff what actually moved.
-function computeMarkerState(ch){
+function computeMarkerState(ch, resolvePosForChar){
+  resolvePosForChar = resolvePosForChar || (c => getPos(c, ch));
   const povChars = allChars.filter(c => c.isPov);
   const groups = {};
   povChars.forEach(c => {
-    const pos = getPos(c, ch);
+    const pos = resolvePosForChar(c);
     if(!pos) return;
     const dead = isDeadAt(c, ch);
     const missing = isMissingAt(c, ch);
@@ -1194,7 +1265,17 @@ function computeMarkerState(ch){
   return state;
 }
 
-function renderMarkers(ch, glowId){
+// `resolvePosForChar`, if given, overrides where a character's position is
+// read from — used by the travel animation below to feed it a live,
+// mid-flight interpolated spot instead of the resting getPos() lookup.
+// Omit it for normal, static rendering (the vast majority of calls).
+// Known simplification: like the old marker-walking animation this
+// replaces, every call still fully clears and rebuilds all markers/dots
+// rather than moving persistent Leaflet objects via setLatLng — acceptable
+// at this app's character-count scale, but worth revisiting if it ever
+// reads as janky on real hardware (not yet verified outside jsdom/headless
+// testing).
+function renderMarkers(ch, glowId, resolvePosForChar){
   // Clear existing markers and leader lines
   Object.values(markers).forEach(m => map.removeLayer(m));
   Object.keys(markers).forEach(k => delete markers[k]);
@@ -1204,7 +1285,7 @@ function renderMarkers(ch, glowId){
   window._leaderLines = [];
   Object.keys(dots).forEach(k => delete dots[k]);
 
-  const state = computeMarkerState(ch);
+  const state = computeMarkerState(ch, resolvePosForChar);
 
   // One persistent dot per unique anchor (not per character) — the dot IS
   // the location; a ribbon is just its label, fanned out for readability
@@ -1595,10 +1676,10 @@ function hideChapterReveal(){
 function renderChapterMap(){
   if(curPhase === 'before'){
     // Nothing should be visible yet — clear every marker/dot/line off the
-    // map, then silently move the camera to where this chapter's POV
-    // character will actually turn out to be (if we can already tell),
-    // entirely behind the dimmed overlay, so the reveal never involves a
-    // visible pan once it lifts.
+    // map, then silently snap the camera to this chapter's own POV
+    // character's LAST KNOWN position (see below), entirely behind the
+    // dimmed overlay, so the reveal never involves a visible pan once it
+    // lifts.
     Object.values(markers).forEach(m => map.removeLayer(m));
     Object.keys(markers).forEach(k => delete markers[k]);
     if(window._leaderLines) window._leaderLines.forEach(l => map.removeLayer(l));
@@ -1607,12 +1688,16 @@ function renderChapterMap(){
 
     const povId = chapterPOV[curCh];
     const povChar = povId ? allChars.find(c => c.id === povId) : null;
-    // Look ahead at phase:'after' — this is exactly what the debut version
-    // did for a character's own firstChapter, generalized to any chapter:
-    // the position isn't "revealed" yet (curPhase is still 'before'), but
-    // we still need to know where to point the camera behind the curtain.
-    const upcoming = povChar ? getPos(povChar, curCh, 'after') : null;
-    if(upcoming && !freeLook) map.setView(upcoming.pos, getSnapZoom(), {animate:false});
+    // Snap silently to the character's LAST KNOWN (already-revealed)
+    // position — not where they'll end up. This used to look ahead at
+    // phase:'after' so the reveal never involved a visible pan once it
+    // lifted; that's exactly backwards for a travel tracker, since it
+    // meant the map had already jumped to the new spot before the reader
+    // even opened the chapter. The camera now rests wherever the character
+    // actually was as of "before," so the travel animation on "finished"
+    // (see below) has a real, visible starting point to move from.
+    const lastKnown = povChar ? getPos(povChar, curCh, 'before') : null;
+    if(lastKnown && !freeLook) map.setView(lastKnown.pos, getSnapZoom(), {animate:false});
 
     currentGlowId = null;
     showChapterReveal(chapterRevealText(curCh));
@@ -1625,20 +1710,274 @@ function renderChapterMap(){
   flyToCurrentPOV();
 }
 
+// Cancellation token for whatever travel animation is currently in flight
+// (if any) — a fresh navigation (Next again, Prev, dropdown jump) sets
+// `cancelled` so the old animation's in-progress frames/pauses stop
+// touching the map instead of fighting the new render.
+let travelToken = null;
+
 function setChapter(n, phase){
+  if(travelToken) travelToken.cancelled = true;
   curCh = Math.max(0, Math.min((allChapters.length - 1), n));
   curPhase = (phase === 'after') ? 'after' : 'before';
   updateChapterUI();
   renderChapterMap();
 }
 
+// ─── CHARACTER TRAVEL ANIMATION ─────────────────────────────────────────────
+// Fires only for the specific "this chapter's own before → this chapter's
+// own after" step (see stepCh() below) — the one moment where a position
+// change can be real, per-chapter travel rather than just jumping between
+// unrelated chapters. Order of operations, per the current design:
+//   1. Show the "finished" banner at each character's LAST KNOWN spot
+//      (nothing has moved yet, visually).
+//   2. Walk every character who actually moved this chapter from their old
+//      spot to their new one, in order (see below), pausing at any real
+//      confirmed stop along the way.
+//   3. Settle into the normal static "after" render/camera.
+
+// Every character whose confirmed arrival changed this chapter. Each mover
+// carries its own ordered `stops` list (see buildJourneyStops) — the full
+// path from last-known to newly-confirmed, including any real stops along
+// the way.
+function getChapterMovers(ch){
+  return allChars.filter(c => c.isPov).map(c => {
+    const prevArrival = getActiveArrival(c, ch, 'before');
+    const nextArrival = getActiveArrival(c, ch, 'after');
+    if(!prevArrival || !nextArrival || prevArrival === nextArrival) return null;
+    const stops = buildJourneyStops(c, prevArrival, nextArrival);
+    if(stops.length < 2) return null;
+    // Same place under a different entry (e.g. a status-only update) isn't
+    // a move — nothing to animate.
+    if(posKey(stops[0].resolved.pos) === posKey(stops[stops.length-1].resolved.pos)) return null;
+    return { c, stops };
+  }).filter(Boolean);
+}
+
+// Orders a set of mover-groups (each already a list of movers travelling
+// together) per the rule: explicit chronological order first, when the
+// data actually states it (an optional `travelOrder` number on the
+// destination arrival entry); otherwise the chapter's own POV character
+// goes first; otherwise alphabetical by character name. Mutates in place.
+function orderGroups(groups, ch){
+  const povId = chapterPOV[ch];
+  const explicitOrder = (group) => {
+    let val = null;
+    group.forEach(m => {
+      const eo = m.stops[m.stops.length - 1].entry.travelOrder;
+      if(eo != null) val = (val == null) ? eo : Math.min(val, eo);
+    });
+    return val;
+  };
+  const leadName = (group) => group.map(m => m.c.name).sort()[0];
+  groups.sort((ga, gb) => {
+    const ea = explicitOrder(ga), eb = explicitOrder(gb);
+    if(ea != null || eb != null){
+      if(ea == null) return 1;
+      if(eb == null) return -1;
+      if(ea !== eb) return ea - eb;
+    }
+    const aPov = ga.some(m => m.c.id === povId), bPov = gb.some(m => m.c.id === povId);
+    if(aPov !== bPov) return aPov ? -1 : 1;
+    return leadName(ga).localeCompare(leadName(gb));
+  });
+}
+
+// Groups this chapter's movers by where they're starting FROM — characters
+// who genuinely start the chapter in the same place are candidates for
+// "traveling together"; characters starting somewhere else entirely are
+// simply a separate, sequenced story. Returns an ordered array of
+// mover-group arrays, or null if nobody moved this chapter.
+function buildTravelPlan(ch){
+  const movers = getChapterMovers(ch);
+  if(!movers.length) return null;
+  const byStart = {};
+  movers.forEach(m => {
+    const key = posKey(m.stops[0].resolved.pos);
+    (byStart[key] = byStart[key] || []).push(m);
+  });
+  const clusters = Object.values(byStart);
+  orderGroups(clusters, ch);
+  return clusters;
+}
+
+function sleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
+function easeInOutQuad(t){ return t < 0.5 ? 2*t*t : -1 + (4 - 2*t) * t; }
+
+// Distance-based, not time-based, same reasoning as the camera's own
+// flyDurationSeconds() above — a short local hop and a cross-continent
+// journey shouldn't take the same amount of time, but nothing should feel
+// instant or endless either.
+const TRAVEL_SPEED_UNITS_PER_MS = 0.5;
+const TRAVEL_MIN_DURATION_MS = 900;
+const TRAVEL_MAX_DURATION_MS = 6000;
+const TRAVEL_PAUSE_MS = 900; // how long a real, confirmed stop holds the travel
+
+// Live mid-animation position per character id, in the same shape getPos()
+// returns ({from,to,pos,place,note,status,...}). Seeded from each
+// character's BEFORE-phase (last known) position the moment a chapter is
+// marked finished, then updated as their own leg of the journey plays out
+// — this is what lets renderMarkers() show "last known location" first and
+// only move a character once their own animation actually reaches them.
+let travelDisplayPos = {};
+function initTravelDisplayState(ch){
+  travelDisplayPos = {};
+  allChars.filter(c => c.isPov).forEach(c => { travelDisplayPos[c.id] = getPos(c, ch, 'before'); });
+}
+
+function posAtLegProgress(leg, t){
+  if(leg.kind === 'road') return roadPosAtDistance(leg.roadId, leg.distA + (leg.distB - leg.distA) * t);
+  return [ leg.fromPos[0] + (leg.toPos[0]-leg.fromPos[0]) * t, leg.fromPos[1] + (leg.toPos[1]-leg.fromPos[1]) * t ];
+}
+
+// Camera tracks the moving group in real time (map.setView() every frame,
+// not a competing flyTo) — same approach the original animation used.
+// Follows the chapter's own POV character if they're among this group,
+// otherwise whoever's leading it. Zoom holds steady during the walk;
+// flyToCurrentPOV() does the final settle once everything's arrived.
+function followTravelCamera(pos, group, ch){
+  if(freeLook) return;
+  map.setView(pos, map.getZoom(), { animate:false });
+}
+
+// Animates one shared leg (all of `group` moving from stops[atIndex] to
+// stops[atIndex+1] together) and leaves travelDisplayPos/the map showing
+// the arrival at the far end when it resolves.
+function animateLeg(group, atIndex, ch, token){
+  const entryA = group[0].stops[atIndex].entry, entryB = group[0].stops[atIndex+1].entry;
+  const leg = legBetween(entryA, entryB);
+  const destResolved = group[0].stops[atIndex+1].resolved;
+  if(!leg){
+    // No walkable path (e.g. a road still missing traced waypoints) —
+    // snap straight to the destination rather than leave anyone stranded.
+    group.forEach(m => { travelDisplayPos[m.c.id] = destResolved; });
+    renderMarkers(ch, currentGlowId, c => travelDisplayPos[c.id] || null);
+    return Promise.resolve();
+  }
+  return new Promise(resolve => {
+    const t0 = performance.now();
+    function frame(now){
+      if(token.cancelled) return resolve();
+      const raw = Math.min(1, (now - t0) / Math.max(1, Math.min(TRAVEL_MAX_DURATION_MS, Math.max(TRAVEL_MIN_DURATION_MS, leg.length / TRAVEL_SPEED_UNITS_PER_MS))));
+      const pos = posAtLegProgress(leg, easeInOutQuad(raw));
+      group.forEach(m => { travelDisplayPos[m.c.id] = { ...destResolved, pos }; });
+      renderMarkers(ch, currentGlowId, c => travelDisplayPos[c.id] || null);
+      followTravelCamera(pos, group, ch);
+      if(raw < 1) requestAnimationFrame(frame);
+      else resolve();
+    }
+    requestAnimationFrame(frame);
+  });
+}
+
+// Walks a group of co-located movers forward stop by stop. While every
+// remaining member's next stop is the same place, they move together as
+// one leg (Rule 3: companions travel together). The moment their next
+// stops differ, this is a real separation: order the resulting sub-groups
+// (see orderGroups) and play each one in full — snapping the camera back
+// to the shared split point before each, since that's every subsequent
+// sub-group's own true "last known location" until their own leg starts.
+async function playGroup(members, atIndex, ch, token){
+  let current = members;
+  while(true){
+    if(token.cancelled) return;
+    const withNext = current.filter(m => atIndex + 1 < m.stops.length);
+    if(!withNext.length) return;
+    const byKey = {};
+    withNext.forEach(m => {
+      const key = posKey(m.stops[atIndex+1].resolved.pos);
+      (byKey[key] = byKey[key] || []).push(m);
+    });
+    const keys = Object.keys(byKey);
+    if(keys.length === 1){
+      await animateLeg(withNext, atIndex, ch, token);
+      if(token.cancelled) return;
+      if(withNext[0].stops[atIndex+1].isPause){
+        // A real, confirmed stop mid-journey — hold here and surface its
+        // tooltip briefly so the reader can see what happened, instead of
+        // sailing straight through it.
+        withNext.forEach(m => { const mk = markers[m.c.id]; if(mk) mk.openTooltip(); });
+        await sleep(TRAVEL_PAUSE_MS);
+        if(token.cancelled) return;
+        withNext.forEach(m => { const mk = markers[m.c.id]; if(mk) mk.closeTooltip(); });
+      }
+      atIndex++;
+      current = withNext;
+      continue;
+    }
+    const subGroups = keys.map(k => byKey[k]);
+    orderGroups(subGroups, ch);
+    for(const sg of subGroups){
+      if(token.cancelled) return;
+      map.setView(members[0].stops[atIndex].resolved.pos, getSnapZoom(), { animate:false });
+      await playGroup(sg, atIndex, ch, token);
+    }
+    return;
+  }
+}
+
+async function playTravelPlan(clusters, ch, token){
+  for(const cluster of clusters){
+    if(token.cancelled) return;
+    map.setView(cluster[0].stops[0].resolved.pos, getSnapZoom(), { animate:false });
+    await playGroup(cluster, 0, ch, token);
+  }
+}
+
+// The one animated navigation path: advancing from THIS chapter's own
+// "before" into its own "after" (Next, from an opening). Every other path
+// (Prev, dropdown jump, or Next crossing into the NEXT chapter's opening)
+// stays a plain instant setChapter() — there's no single chapter's worth of
+// travel to show in those cases, just a jump to wherever the reader landed.
+async function advanceChapterAnimated(){
+  if(travelToken) travelToken.cancelled = true;
+  const token = { cancelled: false };
+  travelToken = token;
+  const ch = curCh;
+  curPhase = 'after';
+  updateChapterUI();
+  hideChapterReveal();
+  currentGlowId = chapterPOV[ch] || null;
+
+  // Step 1: show the finished banner at everyone's LAST KNOWN spot first —
+  // nothing has visibly moved yet.
+  initTravelDisplayState(ch);
+  renderMarkers(ch, currentGlowId, c => travelDisplayPos[c.id] || null);
+
+  // Step 2: walk anyone who actually moved this chapter, in order.
+  const plan = buildTravelPlan(ch);
+  if(plan && !freeLook){
+    await playTravelPlan(plan, ch, token);
+  }
+  if(token.cancelled) return; // a newer navigation has already taken over
+
+  // Step 3: settle into the normal static "after" state.
+  renderMarkers(ch, currentGlowId);
+  flyToCurrentPOV();
+}
+
+// Every other chapter's "before" now dims the map to the Chapter Reveal
+// (see renderChapterMap()), so there's never a marker already on screen to
+// walk from on THOSE steps — only the specific before→after step within
+// one chapter (handled by advanceChapterAnimated() above) has anything to
+// animate.
+function stepCh(dir){
+  if(dir > 0 && curPhase === 'before'){
+    advanceChapterAnimated();
+    return;
+  }
+  const idx = Math.max(MIN_STEP, Math.min(MAX_STEP, toIndex(curCh, curPhase) + dir));
+  const next = fromIndex(idx);
+  setChapter(next.ch, next.phase);
+}
+
 // ─── FLIGHT PATH HELPER ────────────────────────────────────────────────────
-// The marker-walking animation this used to drive was retired along with
-// the debut-only reveal — every chapter's "before" phase now dims the map
-// (see renderChapterMap()), so there's never a marker on screen to walk
-// from, and journeys resolve as an instant snap once a chapter is revealed.
-// buildFlightPath() itself is kept because the 🧭 Untraced Routes dev tool
-// still uses it to measure how long a straight-line (untraced) hop is.
+// Multi-leg version of legBetween() (see the TRAVEL ANIMATION section
+// above), used by the 🧭 Untraced Routes dev tool to measure a whole
+// arrival-to-arrival journey's straight-line hops. The travel animation
+// itself walks stop-by-stop via buildJourneyStops()/legBetween() directly,
+// since it also needs to know about pauses at in-between arrivals, which
+// this transit-only chain doesn't carry.
 //
 // Turns the chain of transit legs between two arrivals into an ordered list
 // of {kind, length, ...} segments the animation can walk at constant speed.
@@ -1667,22 +2006,10 @@ function buildFlightPath(c, prevArrival, nextArrival){
 
   const chain = getTransitChain(c, prevArrival, nextArrival);
   const rawStops = [prevArrival, ...chain, nextArrival];
-  const stops = rawStops.map(entry => {
-    const resolved = resolvePos(entry);
-    if(!resolved) return null;
-    return { pos: resolved.pos, road: entry.road || null, pct: entry.road ? entry.pct : null };
-  }).filter(Boolean);
-
   const legs = [];
-  for(let i = 0; i < stops.length - 1; i++){
-    const A = stops[i], B = stops[i+1];
-    if(A.road && B.road && A.road === B.road){
-      const distA = roadDistanceAt(A.road, A.pct), distB = roadDistanceAt(B.road, B.pct);
-      legs.push({ kind:'road', roadId:A.road, distA, distB, length: Math.abs(distB - distA) });
-    } else {
-      const dLat = B.pos[0]-A.pos[0], dLng = B.pos[1]-A.pos[1];
-      legs.push({ kind:'straight', fromPos:A.pos, toPos:B.pos, length: Math.sqrt(dLat*dLat + dLng*dLng) });
-    }
+  for(let i = 0; i < rawStops.length - 1; i++){
+    const leg = legBetween(rawStops[i], rawStops[i+1]);
+    if(leg) legs.push(leg);
   }
   return legs;
 }
