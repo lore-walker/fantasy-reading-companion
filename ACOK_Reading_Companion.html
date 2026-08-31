@@ -291,6 +291,7 @@
   <div id="devTools" style="margin-left:auto;display:none;gap:6px;">
     <button class="filter-btn" id="btnCalibrate" onclick="toggleCalibrateMode()" title="Click anywhere on map to get px() coordinates">📍 Calibrate</button>
     <button class="filter-btn" id="btnTrace" onclick="openTraceModal()" title="Trace road paths for automatic character positioning">✏️ Trace Road</button>
+    <button class="filter-btn" id="btnUntraced" onclick="openUntracedModal()" title="List character journeys still using a rough straight-line path">🧭 Untraced Routes</button>
   </div>
 </div>
 
@@ -375,8 +376,8 @@ const allChars = [
    ink:"#8B0000", textInk:"#f0c040", isPov:true, firstChapter:3,
    deathChapter:null, deathStatus:"alive", deathNote:null,
    positions:[
-     {from:0,  to:2,  pos:px(1394,2516), place:"King's Landing",  note:"Arriving to take up his role as Acting Hand of the King, sent by Lord Tywin"},
-     {from:3,  to:69, pos:px(1394,2516), place:"King's Landing",  note:"Serving as Acting Hand — navigating Cersei, Joffrey, and the war"}
+     {from:0,  to:2,  pos:px(1394,2516), place:"King's Landing", kind:"arrival",  note:"Arriving to take up his role as Acting Hand of the King, sent by Lord Tywin"},
+     {from:3,  to:69, pos:px(1394,2516), place:"King's Landing", kind:"arrival",  note:"Serving as Acting Hand — navigating Cersei, Joffrey, and the war"}
    ],
    tiers:[
      {revealChapter:3, text:"Arrived in King's Landing as Acting Hand of the King, appointed by his father Lord Tywin. He immediately asserts control over the small council."},
@@ -388,9 +389,9 @@ const allChars = [
    ink:"#5a6a6a", textInk:"#e8e8e8", isPov:true, firstChapter:1,
    deathChapter:null, deathStatus:"alive", deathNote:null,
    positions:[
-     {from:0,  to:0,  road:"kingsroad", pct:0.82, place:"Kingsroad north — leaving King's Landing", note:"Disguised as 'Arry', heading north with Yoren's Night's Watch recruits"},
-     {from:1,  to:8,  road:"kingsroad", pct:0.78, place:"Kingsroad north — Riverlands",  note:"Travelling north with Yoren's recruits, disguised as a boy called Arry"},
-     {from:9,  to:13, road:"kingsroad", pct:"riverlands", place:"Kingsroad — deep in the Riverlands", note:"Continuing north — the war has made the road dangerous"}
+     {from:0,  to:0,  road:"kingsroad", pct:0.82, place:"Kingsroad north — leaving King's Landing", kind:"arrival", note:"Disguised as 'Arry', heading north with Yoren's Night's Watch recruits"},
+     {from:1,  to:8,  road:"kingsroad", pct:0.78, place:"Kingsroad north — Riverlands", kind:"transit",  note:"Travelling north with Yoren's recruits, disguised as a boy called Arry"},
+     {from:9,  to:13, road:"kingsroad", pct:"riverlands", place:"Kingsroad — deep in the Riverlands", kind:"transit", note:"Continuing north — the war has made the road dangerous"}
    ],
    tiers:[
      {revealChapter:1, text:"Disguised as a boy called 'Arry' among Yoren's Night's Watch recruits, heading north along the Kingsroad. Yoren has promised to drop her at Winterfell."},
@@ -402,7 +403,7 @@ const allChars = [
    ink:"#5a6a6a", textInk:"#e8e8e8", isPov:true, firstChapter:2,
    deathChapter:null, deathStatus:"alive", deathNote:null,
    positions:[
-     {from:0,  to:69, pos:px(1394,2516), place:"King's Landing", status:"hostage", note:"Held hostage at court — enduring Joffrey's cruelty"}
+     {from:0,  to:69, pos:px(1394,2516), place:"King's Landing", kind:"arrival", status:"hostage", note:"Held hostage at court — enduring Joffrey's cruelty"}
    ],
    tiers:[
      {revealChapter:2, text:"A hostage in King's Landing. Joffrey forces her to attend court and punishes her for Robb's victories in the field. Ser Dontos Hollard, a drunken knight she saved from execution, has begun secretly meeting with her."}
@@ -413,7 +414,7 @@ const allChars = [
    ink:"#5a6a6a", textInk:"#e8e8e8", isPov:true, firstChapter:4,
    deathChapter:null, deathStatus:"alive", deathNote:null,
    positions:[
-     {from:0,  to:69, pos:px(1154,1220), place:"Winterfell",  note:"Acting as Lord of Winterfell in Robb's absence"}
+     {from:0,  to:69, pos:px(1154,1220), place:"Winterfell", kind:"arrival",  note:"Acting as Lord of Winterfell in Robb's absence"}
    ],
    tiers:[
      {revealChapter:4, text:"Holding Winterfell as its young lord, supported by Maester Luwin and Ser Rodrik. His wolf-dreams are growing more vivid and he struggles with the burdens of rule."}
@@ -424,10 +425,10 @@ const allChars = [
    ink:"#4a5a5a", textInk:"#cccccc", isPov:true, firstChapter:6,
    deathChapter:null, deathStatus:"alive", deathNote:null,
    positions:[
-     {from:0,  to:5,  pos:px(1304,666),  place:"Craster's Keep",            note:"With the great ranging — stopped at Craster's Keep beyond the Wall"},
-     {from:6,  to:12, pos:px(1304,666),  place:"Craster's Keep",            note:"Lord Commander Mormont's ranging has stopped at Craster's Keep — a wildling who marries his daughters and gives his sons to the cold"},
-     {from:13, to:22, pos:px(1194,573),  place:"Fist of the First Men",     note:"The ranging has arrived at the Fist of the First Men — an ancient ringfort on a hill"},
-     {from:23, to:33, pos:px(1194,573),  place:"Fist of the First Men",     note:"Camped at the Fist — Jon has been sent with Qhorin Halfhand's scouting party into the Skirling Pass"}
+     {from:0,  to:5,  pos:px(1304,666),  place:"Craster's Keep", kind:"arrival",            note:"With the great ranging — stopped at Craster's Keep beyond the Wall"},
+     {from:6,  to:12, pos:px(1304,666),  place:"Craster's Keep", kind:"arrival",            note:"Lord Commander Mormont's ranging has stopped at Craster's Keep — a wildling who marries his daughters and gives his sons to the cold"},
+     {from:13, to:22, pos:px(1194,573),  place:"Fist of the First Men", kind:"arrival",     note:"The ranging has arrived at the Fist of the First Men — an ancient ringfort on a hill"},
+     {from:23, to:33, pos:px(1194,573),  place:"Fist of the First Men", kind:"arrival",     note:"Camped at the Fist — Jon has been sent with Qhorin Halfhand's scouting party into the Skirling Pass"}
    ],
    tiers:[
      {revealChapter:6, text:"Ranging beyond the Wall with Lord Commander Mormont. They have stopped at Craster's Keep, a wildling holdfast. Jon is disturbed by what he sees there."},
@@ -439,9 +440,9 @@ const allChars = [
    ink:"#5a6a6a", textInk:"#e8e8e8", isPov:true, firstChapter:7,
    deathChapter:null, deathStatus:"alive", deathNote:null,
    positions:[
-     {from:0,  to:6,  pos:px(1055,2180), place:"Riverrun",                  note:"At Riverrun with Robb's army — her father Lord Hoster is gravely ill"},
-     {from:7,  to:21, pos:px(1055,2180), place:"Riverrun",                  note:"Acting as Robb's advisor at Riverrun — tending her dying father"},
-     {from:22, to:30, pos:px(1070,2650), place:"The Reach — treating with Renly", note:"Sent south to negotiate an alliance with Renly Baratheon at Bitterbridge"}
+     {from:0,  to:6,  pos:px(1055,2180), place:"Riverrun", kind:"arrival",                  note:"At Riverrun with Robb's army — her father Lord Hoster is gravely ill"},
+     {from:7,  to:21, pos:px(1055,2180), place:"Riverrun", kind:"arrival",                  note:"Acting as Robb's advisor at Riverrun — tending her dying father"},
+     {from:22, to:30, pos:px(1070,2650), place:"The Reach — treating with Renly", kind:"arrival", note:"Sent south to negotiate an alliance with Renly Baratheon at Bitterbridge"}
    ],
    tiers:[
      {revealChapter:7, text:"At Riverrun, where Robb holds court as King in the North. Her father Hoster Tully is dying. Catelyn grieves for Ned and fears for her missing daughters."},
@@ -453,12 +454,12 @@ const allChars = [
    ink:"#1a1a2a", textInk:"#cc2020", isPov:true, firstChapter:12,
    deathChapter:null, deathStatus:"alive", deathNote:null,
    positions:[
-     {from:0,  to:11, pos:px(4540,3130), place:"The Red Waste — east of Lhazar", note:"Leading her small khalasar east through the Red Waste — many are dying of thirst and heat"},
-     {from:12, to:26, pos:px(4540,3130), place:"The Red Waste",             note:"Struggling through the desert wasteland east of Lhazar with her three dragons and dwindling followers"},
-     {from:27, to:39, pos:px(5074,3684), place:"Qarth",                     note:"Arrived at the great trading city of Qarth — seeking ships and allies"},
-     {from:40, to:47, pos:px(5074,3684), place:"Qarth",                     note:"Navigating Qarth's politics — courted by Xaro Xhoan Daxos and the warlocks of the House of the Undying"},
-     {from:48, to:62, pos:px(5074,3684), place:"Qarth",                     note:"Seeking passage to Westeros from Qarth — refused by the Pureborn, manipulated by merchants and warlocks"},
-     {from:63, to:69, pos:px(5074,3684), place:"Qarth — preparing to depart", note:"Plans to leave Qarth — agents from Illyrio have arrived offering passage home"}
+     {from:0,  to:11, pos:px(4540,3130), place:"The Red Waste — east of Lhazar", kind:"arrival", note:"Leading her small khalasar east through the Red Waste — many are dying of thirst and heat"},
+     {from:12, to:26, pos:px(4540,3130), place:"The Red Waste", kind:"arrival",             note:"Struggling through the desert wasteland east of Lhazar with her three dragons and dwindling followers"},
+     {from:27, to:39, pos:px(5074,3684), place:"Qarth", kind:"arrival",                     note:"Arrived at the great trading city of Qarth — seeking ships and allies"},
+     {from:40, to:47, pos:px(5074,3684), place:"Qarth", kind:"arrival",                     note:"Navigating Qarth's politics — courted by Xaro Xhoan Daxos and the warlocks of the House of the Undying"},
+     {from:48, to:62, pos:px(5074,3684), place:"Qarth", kind:"arrival",                     note:"Seeking passage to Westeros from Qarth — refused by the Pureborn, manipulated by merchants and warlocks"},
+     {from:63, to:69, pos:px(5074,3684), place:"Qarth — preparing to depart", kind:"arrival", note:"Plans to leave Qarth — agents from Illyrio have arrived offering passage home"}
    ],
    tiers:[
      {revealChapter:12, text:"Leading the remnants of Drogo's khalasar through the Red Waste, a merciless desert east of Lhazar. Her three infant dragons are all that sustain her people's hope. Many are dying."},
@@ -470,9 +471,9 @@ const allChars = [
    ink:"#708060", textInk:"#e8e8e8", isPov:true, firstChapter:11,
    deathChapter:null, deathStatus:"alive", deathNote:null,
    positions:[
-     {from:0,  to:10, pos:px(1055,2180), place:"Riverrun — with Robb's army", note:"With Robb's host at Riverrun — soon to depart on an envoy mission"},
-     {from:11, to:23, pos:px(605,1770),  place:"Pyke — Iron Islands",       note:"Returned to Pyke to negotiate with his father Balon on Robb's behalf"},
-     {from:24, to:36, pos:px(605,1770),  place:"Pyke — Iron Islands",       note:"His father has rejected Robb's alliance and plans to attack the North instead. Theon faces a choice between his birth family and the Starks."}
+     {from:0,  to:10, pos:px(1055,2180), place:"Riverrun — with Robb's army", kind:"arrival", note:"With Robb's host at Riverrun — soon to depart on an envoy mission"},
+     {from:11, to:23, pos:px(605,1770),  place:"Pyke — Iron Islands", kind:"arrival",       note:"Returned to Pyke to negotiate with his father Balon on Robb's behalf"},
+     {from:24, to:36, pos:px(605,1770),  place:"Pyke — Iron Islands", kind:"arrival",       note:"His father has rejected Robb's alliance and plans to attack the North instead. Theon faces a choice between his birth family and the Starks."}
    ],
    tiers:[
      {revealChapter:11, text:"Sent by Robb Stark to the Iron Islands to propose an alliance with his father Balon Greyjoy. He arrives at Pyke hoping for a triumphant homecoming, but finds only cold suspicion."},
@@ -484,8 +485,8 @@ const allChars = [
    ink:"#607080", textInk:"#d8d8d8", isPov:true, firstChapter:10,
    deathChapter:null, deathStatus:"alive", deathNote:null,
    positions:[
-     {from:0,  to:9,  pos:px(1685,2354), place:"Dragonstone",               note:"At Dragonstone with Stannis Baratheon, who has declared himself the rightful king"},
-     {from:10, to:41, pos:px(1685,2354), place:"Dragonstone",               note:"Serving Stannis at Dragonstone — deeply uneasy about the red priestess Melisandre's growing influence"}
+     {from:0,  to:9,  pos:px(1685,2354), place:"Dragonstone", kind:"arrival",               note:"At Dragonstone with Stannis Baratheon, who has declared himself the rightful king"},
+     {from:10, to:41, pos:px(1685,2354), place:"Dragonstone", kind:"arrival",               note:"Serving Stannis at Dragonstone — deeply uneasy about the red priestess Melisandre's growing influence"}
    ],
    tiers:[
      {revealChapter:10, text:"A former smuggler knighted by Stannis for running a cargo of onions through the siege of Storm's End during Robert's Rebellion. Stannis also took several of his fingertips as punishment for his years of smuggling. Davos is deeply loyal but troubled by Melisandre's influence."}
@@ -819,6 +820,8 @@ const roads = {
 };
 
 // ─── ROAD INTERPOLATION ─────────────────────────────────────────────────────
+// Interpolate a position along a road's waypoints at a given percentage (0–1).
+// Returns a Leaflet [lat, lng] coordinate, or null if the road has no waypoints yet.
 function getRoadPos(roadId, pct) {
   const road = roads[roadId];
   if (!road || !road.waypoints || road.waypoints.length < 2) return null;
@@ -828,15 +831,47 @@ function getRoadPos(roadId, pct) {
     pct = named;
   }
   pct = Math.max(0, Math.min(1, pct));
-  const pts = road.waypoints;
+  const total = roadTotalLength(roadId);
+  return roadPosAtDistance(roadId, pct * total);
+}
+
+// See AGOT_Reading_Companion.html for full rationale — these distance-based
+// helpers let the marker-movement animation tween along a road's actual
+// waypoints instead of a straight line, and are cached per-road since the
+// animation loop calls roadPosAtDistance() every frame.
+const _roadDistCache = {};
+function roadDistances(roadId){
+  if(_roadDistCache[roadId]) return _roadDistCache[roadId];
+  const pts = roads[roadId].waypoints;
   const dists = [0];
   for (let i = 1; i < pts.length; i++) {
     const dlat = pts[i][0] - pts[i-1][0];
     const dlng = pts[i][1] - pts[i-1][1];
     dists.push(dists[i-1] + Math.sqrt(dlat*dlat + dlng*dlng));
   }
+  _roadDistCache[roadId] = dists;
+  return dists;
+}
+function roadTotalLength(roadId){
+  const dists = roadDistances(roadId);
+  return dists[dists.length - 1];
+}
+function roadDistanceAt(roadId, pct){
+  const road = roads[roadId];
+  if(!road) return 0;
+  if (typeof pct === 'string') {
+    const named = road.stops[pct.toLowerCase()];
+    if (named === undefined) return 0;
+    pct = named;
+  }
+  pct = Math.max(0, Math.min(1, pct));
+  return pct * roadTotalLength(roadId);
+}
+function roadPosAtDistance(roadId, dist){
+  const pts = roads[roadId].waypoints;
+  const dists = roadDistances(roadId);
   const total = dists[dists.length - 1];
-  const target = pct * total;
+  const target = Math.max(0, Math.min(total, dist));
   for (let i = 1; i < pts.length; i++) {
     if (dists[i] >= target) {
       const segLen = dists[i] - dists[i-1];
@@ -901,6 +936,57 @@ tracePanel.innerHTML = `
 `;
 document.body.appendChild(tracePanel);
 
+// ── Untraced Routes modal (see AGOT_Reading_Companion.html for rationale) ──
+let traceCustomTarget = null;
+const untracedModal = document.createElement('div');
+untracedModal.style.cssText = `
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  background:#0d0a04; border:1px solid #5a3e1a; color:#c8a850;
+  padding:20px 24px; border-radius:8px; font-family:Georgia,serif;
+  z-index:3000; display:none; flex-direction:column; gap:12px;
+  min-width:380px; max-width:520px; max-height:70vh; overflow-y:auto;
+  box-shadow:0 4px 24px rgba(0,0,0,0.7);
+`;
+document.body.appendChild(untracedModal);
+
+function openUntracedModal(){
+  const flights = getUntracedFlights();
+  const rows = flights.length
+    ? flights.map((f, i) => `
+        <button data-flight-idx="${i}" style="padding:7px 14px;background:#1a1208;border:1px solid #5a3e1a;color:#c8a850;border-radius:4px;cursor:pointer;font-family:Georgia,serif;font-size:12px;text-align:left;">
+          ${f.charName}: ${f.fromPlace} → ${f.toPlace}
+        </button>`).join('')
+    : `<div style="color:#8a7040;font-size:12px;">No untraced routes over the threshold.</div>`;
+
+  untracedModal.innerHTML = `
+    <div style="font-size:14px;font-variant:small-caps;letter-spacing:1px;border-bottom:1px solid #3a2a0a;padding-bottom:8px;">Untraced Routes</div>
+    <div style="color:#8a7040;font-size:12px;line-height:1.6;">These journeys currently animate as a rough straight line. Pick one, click along the actual route, then paste the output into that arrival's <code style="color:#c8a850;">route</code> field.</div>
+    <div style="display:flex;flex-direction:column;gap:6px;">${rows}</div>
+    <button onclick="untracedModal.style.display='none'" style="margin-top:4px;padding:5px 12px;background:#1a1208;border:1px solid #5a3e1a;color:#8a7040;border-radius:4px;cursor:pointer;font-family:Georgia,serif;font-size:12px;align-self:flex-end;">Close</button>
+  `;
+  untracedModal.querySelectorAll('button[data-flight-idx]').forEach(btn => {
+    const f = flights[parseInt(btn.dataset.flightIdx)];
+    btn.onclick = () => { untracedModal.style.display = 'none'; startCustomTrace(f); };
+  });
+  untracedModal.style.display = 'flex';
+}
+
+function startCustomTrace(flight){
+  traceCustomTarget = flight;
+  traceRoadId = null;
+  traceWaypoints = [flight.prevArrival ? resolvePos(flight.prevArrival).pos : null].filter(Boolean);
+  traceMarkers = [];
+  if (tracePolyline) { map.removeLayer(tracePolyline); tracePolyline = null; }
+  toolMode = 'trace';
+  modeBanner.textContent = `✏️ Tracing ${flight.charName}: ${flight.fromPlace} → ${flight.toPlace} — click along the actual route. Undo last point with ↩`;
+  modeBanner.style.display = 'block';
+  tracePanel.style.display = 'flex';
+  tracePanel.querySelector('#tracePanelTitle').textContent = `Tracing: ${flight.charName}'s route`;
+  tracePanel.querySelector('#traceCount').textContent = traceWaypoints.length + ' points (start point pre-filled)';
+  tracePanel.querySelector('#traceOutput').style.display = 'none';
+  map.getContainer().style.cursor = 'crosshair';
+}
+
 const traceModal = document.createElement('div');
 traceModal.style.cssText = `
   position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
@@ -923,12 +1009,12 @@ Object.entries(roads).forEach(([id, road]) => {
   const hasWaypoints = road.waypoints && road.waypoints.length > 1;
   btn.style.cssText = `padding:7px 14px;background:#1a1208;border:1px solid ${hasWaypoints ? '#4a7a1a' : '#5a3e1a'};color:${hasWaypoints ? '#90c840' : '#c8a850'};border-radius:4px;cursor:pointer;font-family:Georgia,serif;font-size:12px;text-align:left;`;
   btn.textContent = road.name + (hasWaypoints ? ' ✓ (re-trace to update)' : ' — not yet traced');
-  btn.onclick = () => { traceModal.style.display = 'none'; startTrace(id); };
+  btn.onclick = () => { traceModal.style.display = 'none'; traceCustomTarget = null; startTrace(id); };
   roadSelectContainer.appendChild(btn);
 });
 
 function startTrace(roadId) {
-  traceRoadId = roadId; traceWaypoints = []; traceMarkers = [];
+  traceRoadId = roadId; traceCustomTarget = null; traceWaypoints = []; traceMarkers = [];
   if (tracePolyline) { map.removeLayer(tracePolyline); tracePolyline = null; }
   toolMode = 'trace';
   modeBanner.textContent = `✏️ Tracing: ${roads[roadId].name} — click along the road.`;
@@ -955,6 +1041,26 @@ function updateTracePolyline() {
 }
 function traceFinish() {
   if (traceWaypoints.length < 2) { alert('Please click at least 2 points.'); return; }
+
+  if (traceCustomTarget) {
+    traceCustomTarget.nextArrival.route = traceWaypoints.slice();
+    const waypointStr = traceWaypoints.map(([lat,lng]) => `    [${Math.round(lat)}, ${Math.round(lng)}]`).join(',\n');
+    const output = `// Paste this "route" field onto ${traceCustomTarget.charName}'s arrival entry\n// (place: "${traceCustomTarget.toPlace}") in the code:\nroute: [\n${waypointStr}\n],`;
+    const outEl = tracePanel.querySelector('#traceOutput');
+    outEl.textContent = output; outEl.style.display = 'block';
+    navigator.clipboard.writeText(output).catch(()=>{});
+    modeBanner.textContent = `✓ ${traceCustomTarget.charName}'s route to ${traceCustomTarget.toPlace} traced (${traceWaypoints.length} points) — copied!`;
+    traceMarkers.forEach(m => map.removeLayer(m)); traceMarkers = [];
+    if (tracePolyline) { map.removeLayer(tracePolyline); tracePolyline = null; }
+    const finishedLine = L.polyline(traceCustomTarget.nextArrival.route, { color: '#f0c040', weight: 2, opacity: 0.5 }).addTo(map);
+    window._roadLines = window._roadLines || []; window._roadLines.push(finishedLine);
+    toolMode = 'off'; map.getContainer().style.cursor = '';
+    tracePanel.querySelector('#traceCount').textContent = traceWaypoints.length + ' points ✓';
+    traceCustomTarget = null;
+    renderMarkers(curCh);
+    return;
+  }
+
   roads[traceRoadId].waypoints = traceWaypoints.slice();
   const waypointStr = traceWaypoints.map(([lat,lng]) => `  [${Math.round(lat)}, ${Math.round(lng)}]`).join(',\n');
   const output = `[\n${waypointStr}\n]`;
@@ -971,7 +1077,7 @@ function traceFinish() {
   renderMarkers(curCh);
 }
 function traceCancel() {
-  toolMode = 'off'; traceRoadId = null; traceWaypoints = [];
+  toolMode = 'off'; traceRoadId = null; traceCustomTarget = null; traceWaypoints = [];
   traceMarkers.forEach(m => map.removeLayer(m)); traceMarkers = [];
   if (tracePolyline) { map.removeLayer(tracePolyline); tracePolyline = null; }
   modeBanner.style.display = 'none'; tracePanel.style.display = 'none';
@@ -1049,6 +1155,7 @@ function getSnapZoom(){
   return window.innerWidth <= 700 ? -1.0 : 0.0;
 }
 const markers = {};
+const dots = {};
 
 // ─── CHAPTER NAV ─────────────────────────────────────────────────────────────
 const menu = document.getElementById('jumpMenu');
@@ -1062,10 +1169,20 @@ function getChObj(n){ return allChapters.find(c=>c.n===n) || {n, name:"Chapter "
 // Each chapter has two stops: Before N (index 2N) and After N (index 2N+1).
 function toIndex(ch, phase){ return ch * 2 + (phase === 'after' ? 1 : 0); }
 function fromIndex(idx){ return { ch: Math.floor(idx / 2), phase: (idx % 2 === 0) ? 'before' : 'after' }; }
+let animating = false; // guards against overlapping tweens on rapid clicks
 function stepCh(dir){
+  if(animating) return;
   const idx = Math.max(MIN_STEP, Math.min(MAX_STEP, toIndex(curCh, curPhase) + dir));
   const next = fromIndex(idx);
-  setChapter(next.ch, next.phase);
+  // See AGOT_Reading_Companion.html — only the same-chapter opening->finished
+  // step animates. Crossing into the next chapter's opening, jumps, and
+  // stepping backward all stay instant.
+  const isSameChapterAdvance = dir > 0 && curPhase === 'before' && next.ch === curCh && next.phase === 'after';
+  if(isSameChapterAdvance){
+    advanceChapterAnimated(next.ch, next.phase);
+  } else {
+    setChapter(next.ch, next.phase);
+  }
 }
 function jumpTo(val){ if(val) setChapter(parseInt(val), 'before'); }
 
@@ -1076,16 +1193,71 @@ function resolvePos(entry) {
   if (!resolved) { console.warn(`Road "${entry.road}" has no waypoints yet.`); return null; }
   return { from: entry.from, to: entry.to, pos: resolved, place: entry.place, note: entry.note, status: entry.status };
 }
-function getPos(c, ch){
-  // Never show before introduction — same before/after rule as isRevealed(),
-  // so a character's debut chapter doesn't leak a chapter early on "opening."
-  if(!isRevealed(c.firstChapter, ch, curPhase)) return null;
+// ─── ARRIVAL / TRANSIT MODEL (Session 14) ──────────────────────────────────
+// See AGOT_Reading_Companion.html for full rationale.
+function isArrival(p){ return (p.kind || 'arrival') === 'arrival'; }
+function isTransit(p){ return p.kind === 'transit'; }
+
+function getActiveArrival(c, ch){
+  // Session 15: no longer gated on firstChapter — see AGOT_Reading_Companion.html.
   if(!c.positions || c.positions.length === 0) return null;
-  for(let p of c.positions) if(ch >= p.from && ch <= p.to) return resolvePos(p);
+  const arrivals = c.positions.filter(isArrival);
+  if(!arrivals.length) return null;
+  for(let p of arrivals) if(isRevealed(p.from, ch, curPhase) && ch <= p.to) return p;
   let lastKnown = null;
-  for(let p of c.positions){ if(p.from <= ch) lastKnown = p; }
-  if(lastKnown) return resolvePos(lastKnown);
-  return resolvePos(c.positions[0]);
+  for(let p of arrivals){ if(isRevealed(p.from, ch, curPhase)) lastKnown = p; }
+  return lastKnown;
+}
+
+function getActiveTransitNote(c, ch){
+  if(!c.positions) return null;
+  const activeArrival = getActiveArrival(c, ch);
+  for(let p of c.positions){
+    if(!isTransit(p)) continue;
+    if(!isRevealed(p.from, ch, curPhase) || ch > p.to) continue;
+    if(activeArrival && activeArrival.from > p.from) continue;
+    return p.note;
+  }
+  return null;
+}
+
+function getPos(c, ch){
+  const arrival = getActiveArrival(c, ch);
+  if(!arrival) return null;
+  const resolved = resolvePos(arrival);
+  if(!resolved) return null;
+  const transitNote = getActiveTransitNote(c, ch);
+  return transitNote !== null ? { ...resolved, note: transitNote } : resolved;
+}
+
+function getRawPosEntry(c, ch){
+  return getActiveArrival(c, ch);
+}
+
+function getTransitChain(c, prevArrival, nextArrival){
+  if(!c.positions) return [];
+  const startIdx = c.positions.indexOf(prevArrival);
+  const endIdx = c.positions.indexOf(nextArrival);
+  if(startIdx === -1 || endIdx === -1 || endIdx <= startIdx) return [];
+  return c.positions.slice(startIdx + 1, endIdx).filter(isTransit);
+}
+
+const UNTRACED_LENGTH_THRESHOLD = 200;
+function getUntracedFlights(){
+  const results = [];
+  allChars.filter(c => c.isPov).forEach(c => {
+    const arrivals = (c.positions || []).filter(isArrival);
+    for(let i = 1; i < arrivals.length; i++){
+      const prevArrival = arrivals[i-1], nextArrival = arrivals[i];
+      if(nextArrival.route && nextArrival.route.length > 1) continue;
+      const legs = buildFlightPath(c, prevArrival, nextArrival);
+      const hasUntracedStraight = legs.some(leg => leg.kind === 'straight' && leg.length > UNTRACED_LENGTH_THRESHOLD);
+      if(hasUntracedStraight){
+        results.push({ charId: c.id, charName: c.name, fromPlace: prevArrival.place, toPlace: nextArrival.place, prevArrival, nextArrival });
+      }
+    }
+  });
+  return results;
 }
 // One shared rule for every gate in the file: Before N is strictly-less-than,
 // After N is less-than-or-equal. See AGOT_Reading_Companion.html for the
@@ -1122,11 +1294,10 @@ function makeRibbonHTML(name, ink, isDead, isMissing, textInk){
   </svg>`;
 }
 
-function renderMarkers(ch){
-  Object.values(markers).forEach(m => map.removeLayer(m));
-  Object.keys(markers).forEach(k => delete markers[k]);
-  if(window._leaderLines){ window._leaderLines.forEach(l => map.removeLayer(l)); }
-  window._leaderLines = [];
+// See AGOT_Reading_Companion.html for full rationale. Pure state computation
+// (no DOM/Leaflet calls) so the movement animation can diff two chapters'
+// states without rendering either one.
+function computeMarkerState(ch){
   const povChars = allChars.filter(c => c.isPov);
   const groups = {};
   povChars.forEach(c => {
@@ -1135,17 +1306,40 @@ function renderMarkers(ch){
     const dead = isDeadAt(c, ch);
     const missing = isMissingAt(c, ch);
     if((dead || missing) && !showDeceased) return;
+    const rawEntry = getRawPosEntry(c, ch);
     const key = pos.pos[0] + ',' + pos.pos[1];
     if(!groups[key]) groups[key] = {anchorPos: pos.pos, chars: []};
-    groups[key].chars.push({c, pos, dead, missing});
+    groups[key].chars.push({c, pos, dead, missing, rawEntry});
   });
+  const state = {};
   Object.values(groups).forEach(group => {
     const {anchorPos, chars} = group;
-    const count = chars.length;
-    const fanOffsets = getFanOffsets(count, anchorPos);
-    chars.forEach(({c, pos, dead, missing}, i) => {
-      const ribbonPos = fanOffsets[i];
-      const needsLeader = count > 1;
+    const fanOffsets = getFanOffsets(chars.length, anchorPos);
+    chars.forEach(({c, pos, dead, missing, rawEntry}, i) => {
+      state[c.id] = { c, pos, dead, missing, rawEntry, anchorPos, ribbonPos: fanOffsets[i], needsLeader: chars.length > 1 };
+    });
+  });
+  return state;
+}
+
+function renderMarkers(ch){
+  Object.values(markers).forEach(m => map.removeLayer(m));
+  Object.keys(markers).forEach(k => delete markers[k]);
+  if(window._leaderLines){ window._leaderLines.forEach(l => map.removeLayer(l)); }
+  window._leaderLines = [];
+  Object.keys(dots).forEach(k => delete dots[k]);
+  const state = computeMarkerState(ch);
+  const dotByAnchorKey = {};
+  Object.values(state).forEach(({c, pos, dead, missing, anchorPos, ribbonPos, needsLeader}) => {
+      const anchorKey = anchorPos[0] + ',' + anchorPos[1];
+      let dot = dotByAnchorKey[anchorKey];
+      if(!dot){
+        dot = L.circleMarker(anchorPos, { radius: 3, color: '#c8a850', fillColor: '#c8a850', fillOpacity: 1, weight: 1.5, interactive: false }).addTo(map);
+        window._leaderLines.push(dot);
+        dotByAnchorKey[anchorKey] = dot;
+      }
+      dots[c.id] = dot;
+
       const html = makeRibbonHTML(c.name, c.ink, dead, missing, c.textInk);
       // Must match charW/padding used inside makeRibbonHTML() above.
       const iconW = c.name.length * 9.5 + 52;
@@ -1155,8 +1349,6 @@ function renderMarkers(ch){
         const lineColor = (dead || missing) ? '#666' : c.ink;
         const line = L.polyline([anchorPos, ribbonPos], { color: lineColor, weight: 1.5, opacity: 0.85, dashArray: '4, 3' }).addTo(map);
         window._leaderLines.push(line);
-        const dot = L.circleMarker(anchorPos, { radius: 3, color: '#c8a850', fillColor: '#c8a850', fillOpacity: 1, weight: 1.5, interactive: false }).addTo(map);
-        window._leaderLines.push(dot);
       }
       let tipHtml = `<div class="tip-name">${c.name}</div>`;
       if(dead) tipHtml += `<div class="tip-dead">&#9760; Deceased — ${c.deathNote}</div>`;
@@ -1182,7 +1374,6 @@ function renderMarkers(ch){
       });
 
       markers[c.id] = marker;
-    });
   });
 }
 
@@ -1413,9 +1604,10 @@ function buildRecapHTML(ch, phase){
   return `<span class="recap-tag">${tag} · Ch. ${ch} — ${chObj.name}</span><span class="recap-sep">|</span>${body}`;
 }
 
-function setChapter(n, phase){
-  curCh = Math.max(0, Math.min(MAX_CH, n));
-  curPhase = (phase === 'after') ? 'after' : 'before';
+// Splits the old single setChapter() into pieces so the animated advance
+// (below) can reuse the UI/camera logic while taking manual control of
+// marker rendering during the tween. See AGOT_Reading_Companion.html.
+function updateChapterUI(){
   const chObj = getChObj(curCh);
   document.getElementById('chDisplay').innerHTML = `Ch. ${curCh} — <span>${chObj.name}</span>`;
   const idx = toIndex(curCh, curPhase);
@@ -1423,23 +1615,230 @@ function setChapter(n, phase){
   document.getElementById('nextBtn').disabled = idx >= MAX_STEP;
   document.getElementById('jumpMenu').value = '';
   document.getElementById('recapPanel').innerHTML = buildRecapHTML(curCh, curPhase);
-  renderMarkers(curCh);
-  const povId = chapterPOV[curCh];
-  if(povId && !freeLook){
-    const povChar = allChars.find(c => c.id === povId);
-    if(povChar){
-      const pos = getPos(povChar, curCh);
-      if(pos){
-        map.flyTo(pos.pos, getSnapZoom(), { animate: true, duration: 2.0, easeLinearity: 0.2 });
-      }
-    }
-  }
   if(openPanelId) openPanel(openPanelId);
   const deadCount = allChars.filter(c => isRevealed(c.firstChapter, curCh, curPhase) && c.deathChapter !== null && isRevealed(c.deathChapter, curCh, curPhase)).length;
   const activeCount = allChars.filter(c => c.isPov && getPos(c, curCh)).length;
   const asOf = curPhase === 'after' ? 'through' : 'entering';
   document.getElementById('statusBar').textContent =
     `A Clash of Kings  ·  ${activeCount} POV character${activeCount !== 1 ? 's' : ''} active  ·  ${deadCount} death${deadCount !== 1 ? 's' : ''}/disappearance${deadCount !== 1 ? 's' : ''} recorded ${asOf} Chapter ${curCh}`;
+}
+
+function flyToCurrentPOV(){
+  const povId = chapterPOV[curCh];
+  if(!povId || freeLook) return;
+  const povChar = allChars.find(c => c.id === povId);
+  if(!povChar) return;
+  const pos = getPos(povChar, curCh);
+  if(!pos) return;
+  map.flyTo(pos.pos, getSnapZoom(), { animate: true, duration: 2.0, easeLinearity: 0.2 });
+}
+
+function setChapter(n, phase){
+  curCh = Math.max(0, Math.min(MAX_CH, n));
+  curPhase = (phase === 'after') ? 'after' : 'before';
+  updateChapterUI();
+  renderMarkers(curCh);
+  flyToCurrentPOV();
+}
+
+// ─── MARKER MOVEMENT ANIMATION ────────────────────────────────────────────
+// See AGOT_Reading_Companion.html for full rationale. Only used for
+// single-step forward reading (Next); jumps and Prev stay instant.
+const MOVE_SPEED_UNITS_PER_MS = 0.5;
+const MOVE_MIN_DURATION_MS = 900;
+const MOVE_MAX_DURATION_MS = 6000;
+function durationForDistance(totalLength){
+  return Math.max(MOVE_MIN_DURATION_MS, Math.min(MOVE_MAX_DURATION_MS, totalLength / MOVE_SPEED_UNITS_PER_MS));
+}
+function easeInOutQuad(t){ return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2; }
+
+function buildFlightPath(c, prevArrival, nextArrival){
+  if(nextArrival.route && nextArrival.route.length > 1){
+    const pts = nextArrival.route;
+    const dists = [0];
+    for(let i=1;i<pts.length;i++){
+      const dLat = pts[i][0]-pts[i-1][0], dLng = pts[i][1]-pts[i-1][1];
+      dists.push(dists[i-1] + Math.sqrt(dLat*dLat+dLng*dLng));
+    }
+    const legs = [];
+    for(let i=0;i<pts.length-1;i++){
+      legs.push({ kind:'straight', fromPos:pts[i], toPos:pts[i+1], length: dists[i+1]-dists[i] });
+    }
+    return legs;
+  }
+
+  const chain = getTransitChain(c, prevArrival, nextArrival);
+  const rawStops = [prevArrival, ...chain, nextArrival];
+  const stops = rawStops.map(entry => {
+    const resolved = resolvePos(entry);
+    if(!resolved) return null;
+    return { pos: resolved.pos, road: entry.road || null, pct: entry.road ? entry.pct : null };
+  }).filter(Boolean);
+
+  const legs = [];
+  for(let i = 0; i < stops.length - 1; i++){
+    const A = stops[i], B = stops[i+1];
+    if(A.road && B.road && A.road === B.road){
+      const distA = roadDistanceAt(A.road, A.pct), distB = roadDistanceAt(B.road, B.pct);
+      legs.push({ kind:'road', roadId:A.road, distA, distB, length: Math.abs(distB - distA) });
+    } else {
+      const dLat = B.pos[0]-A.pos[0], dLng = B.pos[1]-A.pos[1];
+      legs.push({ kind:'straight', fromPos:A.pos, toPos:B.pos, length: Math.sqrt(dLat*dLat + dLng*dLng) });
+    }
+  }
+  return legs;
+}
+
+function posAlongFlightPath(legs, totalLength, targetDist){
+  let acc = 0;
+  for(let i = 0; i < legs.length; i++){
+    const leg = legs[i];
+    const legLen = leg.length || 0;
+    const isLast = i === legs.length - 1;
+    if(acc + legLen >= targetDist || isLast){
+      const t = legLen > 0 ? Math.max(0, Math.min(1, (targetDist - acc) / legLen)) : 1;
+      if(leg.kind === 'road') return roadPosAtDistance(leg.roadId, leg.distA + t * (leg.distB - leg.distA));
+      return [ leg.fromPos[0] + t*(leg.toPos[0]-leg.fromPos[0]), leg.fromPos[1] + t*(leg.toPos[1]-leg.fromPos[1]) ];
+    }
+    acc += legLen;
+  }
+  return null;
+}
+
+function advanceChapterAnimated(newCh, newPhase){
+  const prevState = computeMarkerState(curCh);
+
+  curCh = Math.max(0, Math.min(MAX_CH, newCh));
+  curPhase = (newPhase === 'after') ? 'after' : 'before';
+  updateChapterUI();
+
+  const newState = computeMarkerState(curCh);
+
+  const movers = [];
+  Object.keys(newState).forEach(id => {
+    const prev = prevState[id];
+    const next = newState[id];
+    if(!prev) return;
+    if(prev.anchorPos[0] === next.anchorPos[0] && prev.anchorPos[1] === next.anchorPos[1]) return;
+    movers.push({id, prev, next});
+  });
+
+  if(movers.length === 0){
+    renderMarkers(curCh);
+    flyToCurrentPOV();
+    return;
+  }
+
+  // See AGOT_Reading_Companion.html for full rationale: deliberately do NOT
+  // renderMarkers() here. Everything on screen — including any group's
+  // shared leader line/anchor dot — stays exactly as-is until the walk
+  // finishes, so indicators don't pop into their new arrangement while a
+  // character is still visibly travelling.
+  animating = true;
+
+  // Session 14: characters heading to the SAME destination (travelling
+  // together) animate simultaneously; different destinations in the same
+  // step animate one batch after another. POV's batch goes first; other
+  // batches follow in discovery order.
+  const povId = chapterPOV[curCh];
+  const batchMap = {};
+  movers.forEach(m => {
+    const key = m.next.anchorPos[0] + ',' + m.next.anchorPos[1];
+    (batchMap[key] = batchMap[key] || []).push(m);
+  });
+  const batches = Object.values(batchMap).sort((a, b) => {
+    const aFirst = a.some(m => m.id === povId) ? 0 : 1;
+    const bFirst = b.some(m => m.id === povId) ? 0 : 1;
+    return aFirst - bFirst;
+  });
+
+  runMoveBatch(batches, 0, new Set(movers.map(m => m.id)));
+}
+
+function runMoveBatch(batches, idx, allMoverIds){
+  if(idx >= batches.length){
+    animating = false;
+    renderMarkers(curCh);
+    flyToCurrentPOV();
+    return;
+  }
+
+  const batch = batches[idx];
+  const povId = chapterPOV[curCh];
+  const primaryMoverId = (povId && batch.some(m => m.id === povId)) ? povId : batch[0].id;
+  const followCamera = !freeLook;
+  const zoomAtStart = map.getZoom();
+  const startTime = performance.now();
+  let pending = batch.length;
+
+  const advance = () => { pending--; if(pending <= 0) runMoveBatch(batches, idx + 1, allMoverIds); };
+
+  // See AGOT_Reading_Companion.html for full rationale: companions sharing
+  // a start reuse or share one travelling dot; a dot only gets left behind
+  // if someone NOT moving this step still occupies that spot.
+  const startClusters = {};
+  batch.forEach(m => {
+    const key = m.prev.anchorPos[0] + ',' + m.prev.anchorPos[1];
+    (startClusters[key] = startClusters[key] || []).push(m);
+  });
+  const travelDots = {};
+  Object.entries(startClusters).forEach(([startKey, clusterMovers]) => {
+    const anyId = clusterMovers[0].id;
+    const existingDot = dots[anyId];
+    let stayerRemains = false;
+    Object.keys(dots).forEach(otherId => {
+      if(dots[otherId] === existingDot && !allMoverIds.has(otherId)) stayerRemains = true;
+    });
+    if(existingDot && !stayerRemains){
+      travelDots[startKey] = existingDot;
+    } else {
+      const startPos = clusterMovers[0].prev.anchorPos;
+      const freshDot = L.circleMarker(startPos, {
+        radius: 3, color: '#c8a850', fillColor: '#c8a850',
+        fillOpacity: 1, weight: 1.5, interactive: false
+      }).addTo(map);
+      window._leaderLines.push(freshDot);
+      travelDots[startKey] = freshDot;
+    }
+  });
+
+  batch.forEach(({id, prev, next}) => {
+    const marker = markers[id];
+    if(!marker){ advance(); return; }
+
+    const fromRibbon = prev.ribbonPos, toRibbon = next.ribbonPos;
+    const startKey = prev.anchorPos[0] + ',' + prev.anchorPos[1];
+    const travelDot = travelDots[startKey];
+    const legs = buildFlightPath(prev.c, prev.rawEntry, next.rawEntry);
+    const totalLength = legs.reduce((sum, leg) => sum + (leg.length || 0), 0) || 1;
+    const duration = durationForDistance(totalLength);
+
+    function frame(now){
+      const t = Math.min(1, (now - startTime) / duration);
+      const e = easeInOutQuad(t);
+      const anchorNow = posAlongFlightPath(legs, totalLength, e * totalLength) || next.anchorPos;
+
+      const offFromLat = fromRibbon[0] - prev.anchorPos[0], offFromLng = fromRibbon[1] - prev.anchorPos[1];
+      const offToLat   = toRibbon[0]   - next.anchorPos[0], offToLng   = toRibbon[1]   - next.anchorPos[1];
+      const ribbonPosNow = [
+        anchorNow[0] + offFromLat + e * (offToLat - offFromLat),
+        anchorNow[1] + offFromLng + e * (offToLng - offFromLng)
+      ];
+      marker.setLatLng(ribbonPosNow);
+      if(travelDot) travelDot.setLatLng(anchorNow);
+
+      if(followCamera && id === primaryMoverId){
+        map.setView(anchorNow, zoomAtStart, {animate:false});
+      }
+
+      if(t < 1){
+        requestAnimationFrame(frame);
+      } else {
+        advance();
+      }
+    }
+    requestAnimationFrame(frame);
+  });
 }
 
 // ─── INIT ────────────────────────────────────────────────────────────────────

@@ -114,11 +114,78 @@
   #recapPanel .recap-sep { color: #4a3a18; margin: 0 8px; }
   #recapPanel strong { color: #e8dbb8; font-weight: normal; }
 
-  #map {
-    width: 100%;
+  #mapWrap {
     flex: 1 1 auto;
     min-height: 0;
+    position: relative;
+  }
+
+  #map {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    inset: 0;
     background: #1a2a3a;
+  }
+
+  /* ── First-POV Debut Reveal ──────────────────────────────────────────── */
+  /* The map itself dims/desaturates under the overlay rather than being
+     replaced by a solid block, so there's a faint sense of "the world is
+     still there, just not in focus yet" behind the reveal. */
+  #map.debut-dimmed {
+    filter: grayscale(0.9) brightness(0.32) contrast(1.05);
+    transition: filter 1.1s ease;
+  }
+  #map { transition: filter 0.6s ease; }
+
+  #debutOverlay {
+    position: absolute;
+    inset: 0;
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at center, rgba(10,7,3,0.35) 0%, rgba(6,4,2,0.72) 65%, rgba(4,3,1,0.85) 100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.9s ease;
+  }
+  #debutOverlay.visible { opacity: 1; pointer-events: auto; }
+
+  #debutName {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(2.2rem, 6vw, 4.2rem);
+    font-variant: small-caps;
+    letter-spacing: 0.28em;
+    padding-left: 0.28em; /* compensate for the trailing letter-spacing gap */
+    color: #f0d488;
+    background: linear-gradient(100deg, #b9863a 0%, #f5deA0 45%, #e8c878 55%, #b9863a 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    clip-path: inset(0 100% 0 0);
+    text-shadow: 0 0 0 rgba(240, 212, 136, 0);
+  }
+  #debutOverlay.revealing #debutName {
+    animation: debutReveal 2.3s cubic-bezier(.32,.02,.18,1) forwards;
+  }
+  @keyframes debutReveal {
+    0%   { clip-path: inset(0 100% 0 0); text-shadow: 0 0 0 rgba(240,212,136,0); }
+    55%  { text-shadow: 0 0 22px rgba(240,212,136,0.85); }
+    85%  { clip-path: inset(0 0 0 0); text-shadow: 0 0 22px rgba(240,212,136,0.7); }
+    100% { clip-path: inset(0 0 0 0); text-shadow: 0 0 8px rgba(240,212,136,0.35); }
+  }
+
+  /* One-time flourish on a debut character's own banner the moment it first
+     appears (chapter "finished") — glow in, not a position/scale change, so
+     it never fights Leaflet's own transform on the marker. */
+  .ribbon-label.debut-reveal svg {
+    animation: debutBannerReveal 1.5s ease-out;
+  }
+  @keyframes debutBannerReveal {
+    0%   { opacity: 0; filter: drop-shadow(0 0 0 rgba(240,212,136,0)); }
+    45%  { opacity: 1; filter: drop-shadow(0 0 14px rgba(240,212,136,0.9)); }
+    100% { opacity: 1; filter: drop-shadow(0 0 0 rgba(240,212,136,0)); }
   }
 
   .leaflet-control-zoom a {
@@ -340,12 +407,16 @@
   <div id="devTools" style="margin-left:auto;display:none;gap:6px;">
     <button class="filter-btn" id="btnCalibrate" onclick="toggleCalibrateMode()" title="Click anywhere on map to get px() coordinates">📍 Calibrate</button>
     <button class="filter-btn" id="btnTrace" onclick="openTraceModal()" title="Trace road paths for automatic character positioning">✏️ Trace Road</button>
+    <button class="filter-btn" id="btnUntraced" onclick="openUntracedModal()" title="List character journeys still using a rough straight-line path">🧭 Untraced Routes</button>
   </div>
 </div>
 
 <div id="recapPanel"></div>
 
-<div id="map"></div>
+<div id="mapWrap">
+  <div id="map"></div>
+  <div id="debutOverlay"><div id="debutName"></div></div>
+</div>
 
 <div id="panelOverlay">
   <div id="panelHeader">
@@ -416,14 +487,15 @@ const allChars = [
    deathChapter:65, deathStatus:"dead",
    deathNote:"Executed at the Great Sept of Baelor on King Joffrey's orders.",
    positions:[
-     {from:4,  to:11, pos:px(1154,1220),  place:"Winterfell",                       note:"Lord of Winterfell — receives King Robert and his court"},
-     {from:12, to:14, road:"kingsroad", pct:0.36,  place:"Kingsroad south — with Sansa and Arya", note:"Riding south with his daughters in the royal party"},
-     {from:15, to:15, road:"kingsroad", pct:"rubyford", place:"Ruby Ford — Kingsroad south",      note:"Camped near the Trident — the Joffrey and Nymeria incident"},
-     {from:16, to:19, road:"kingsroad", pct:0.82, place:"Kingsroad south — final stretch",  note:"Continuing south to King's Landing with Sansa and Arya"},
-     {from:20, to:34, pos:px(1394,2516), place:"King's Landing",                  note:"Serving as Hand of the King — investigating Jon Arryn's death"},
-     {from:35, to:57, pos:px(1394,2516), place:"King's Landing",                  note:"Hand of the King — now sitting on dangerous knowledge about the succession"},
-     {from:58, to:64, pos:px(1394,2516), place:"King's Landing", status:"imprisoned",     note:"Arrested and held in the black cells of the Red Keep"},
-     {from:65, to:73, pos:px(1394,2516), place:"King's Landing",                  note:"Executed at the Great Sept of Baelor"}
+     {from:4,  to:11, pos:px(1154,1220),  place:"Winterfell", kind:"arrival",                       note:"Lord of Winterfell — receives King Robert and his court"},
+     {from:12, to:12, pos:px(1250,1550), place:"The Barrowlands", kind:"arrival", note:"Woken before dawn by Robert — the two rode ahead of the column together, a rare private stretch of the journey"},
+     {from:13, to:15, road:"kingsroad", pct:0.36,  place:"Kingsroad south — with Sansa and Arya", kind:"transit", note:"Rejoined his daughters in the royal column, continuing south"},
+     {from:15, to:15, road:"kingsroad", pct:"rubyford", place:"Ruby Ford — Kingsroad south", kind:"arrival",      note:"Camped near the Trident — the Joffrey and Nymeria incident"},
+     {from:16, to:20, road:"kingsroad", pct:0.82, place:"Kingsroad south — final stretch", kind:"transit",  note:"Continuing south to King's Landing with Sansa and Arya"},
+     {from:20, to:34, pos:px(1394,2516), place:"King's Landing", kind:"arrival",                  note:"Serving as Hand of the King — investigating Jon Arryn's death"},
+     {from:35, to:57, pos:px(1394,2516), place:"King's Landing", kind:"arrival",                  note:"Hand of the King — now sitting on dangerous knowledge about the succession"},
+     {from:58, to:64, pos:px(1394,2516), place:"King's Landing", kind:"arrival", status:"imprisoned",     note:"Arrested and held in the black cells of the Red Keep"},
+     {from:65, to:73, pos:px(1394,2516), place:"King's Landing",                  kind:"arrival", note:"Executed at the Great Sept of Baelor"}
    ],
    tiers:[
      {revealChapter:4,  text:"Warden of the North and Lord of Winterfell. An old friend of King Robert, known for his strict honour. Father to Robb, Sansa, Arya, Bran, and Rickon, and guardian of Jon Snow."},
@@ -441,27 +513,27 @@ const allChars = [
    ],
    deathChapter:null, deathStatus:"alive", deathNote:null,
    positions:[
-     {from:2,  to:3,   pos:px(1154,1220),  place:"Winterfell",                note:"Lady of Winterfell — has just learned Jon Arryn is dead, and that King Robert is marching north to Winterfell"},
-     {from:4,  to:13,  pos:px(1154,1220),  place:"Winterfell",                note:"Lady of Winterfell — tending to her family as the royal party visits"},
-     {from:14, to:14,  pos:px(1154,1220),  place:"Winterfell",                note:"Preparing to sail south to King's Landing with Ser Rodrik"},
-     {from:15, to:17,  pos:px(1750,2280),  place:"At sea — sailing south",    note:"Travelling by ship to King's Landing with Ser Rodrik"},
-     {from:18, to:19,  pos:px(1394,2516), place:"King's Landing",            note:"Arrived secretly in King's Landing with Ser Rodrik"},
-     {from:20, to:20,  pos:px(1394,2516), place:"King's Landing",            note:"Met Ned in secret — shared the assassin's dagger and Lysa's warning"},
-     {from:21, to:27,  road:"kingsroad", pct:"riverlands", place:"Kingsroad north — riding back to Winterfell", note:"Riding north after secretly warning Ned — passing through the Riverlands"},
-     {from:28, to:30,  road:"kingsroad", pct:"inn", place:"Inn at the Crossroads",      note:"Arrests Tyrion Lannister — departs with him as prisoner"},
-     {from:31, to:33,  road:"highroad",  pct:0.589, place:"High Road — Mountains of the Moon", note:"Escorting Tyrion as prisoner through the mountain clans"},
-     {from:34, to:37,  pos:px(1486,2033),  place:"The Eyrie",                  note:"Keeping Tyrion prisoner — awaiting Lysa's justice"},
-     {from:38, to:40,  pos:px(1486,2033),  place:"The Eyrie",                  note:"Departing the Eyrie — Bronn won Tyrion's freedom by trial by combat"},
-     {from:41, to:54,  pos:px(1650,1850),  place:"Travelling — Vale to White Harbor", note:"Crossed the Vale to Gulltown with Ser Brynden; sailed north along the Narrow Sea to White Harbor; riding west to meet Robb's army"},
-     {from:55, to:58,  road:"kingsroad", pct:"moatcailin", place:"Moat Cailin",      note:"Joined Robb's army at Moat Cailin — a key voice in his war councils as they plan to march south"},
-     {from:59, to:62,  pos:px(1117,1923),  place:"The Twins",                        note:"Catelyn negotiates passage across the Green Fork for Robb's army"},
-     {from:63, to:70,  pos:px(1055,2180),  place:"Riverrun",                         note:"Robb lifts the siege — Catelyn reunited with Edmure and her father"},
-     {from:71, to:73,  pos:px(1055,2180),  place:"Riverrun", status:"King in the North",     note:"Northern lords proclaim Robb Stark King in the North"}
+     {from:2,  to:3,   pos:px(1154,1220),  place:"Winterfell",                kind:"arrival", note:"Lady of Winterfell — has just learned Jon Arryn is dead, and that King Robert is marching north to Winterfell"},
+     {from:4,  to:13,  pos:px(1154,1220),  place:"Winterfell",                kind:"arrival", note:"Lady of Winterfell — tending to her family as the royal party visits"},
+     {from:14, to:14,  pos:px(1154,1220),  place:"Winterfell",                kind:"arrival", note:"Preparing to sail south to King's Landing with Ser Rodrik"},
+     {from:15, to:18,  pos:px(1750,2280),  place:"At sea — sailing south",    kind:"transit", note:"Travelling by ship to King's Landing with Ser Rodrik"},
+     {from:18, to:19,  pos:px(1394,2516), place:"King's Landing",            kind:"arrival", note:"Arrived secretly in King's Landing with Ser Rodrik"},
+     {from:20, to:27,  pos:px(1394,2516), place:"King's Landing",            kind:"arrival", note:"Met Ned in secret — shared the assassin's dagger and Lysa's warning"},
+     {from:21, to:28,  road:"kingsroad", pct:"riverlands", place:"Kingsroad north — riding back to Winterfell", kind:"transit", note:"Riding north after secretly warning Ned — passing through the Riverlands"},
+     {from:28, to:30,  road:"kingsroad", pct:"inn", place:"Inn at the Crossroads",      kind:"arrival", note:"Arrests Tyrion Lannister — departs with him as prisoner"},
+     {from:31, to:33,  road:"highroad",  pct:0.589, place:"High Road — Mountains of the Moon", kind:"arrival", note:"Escorting Tyrion as prisoner through the mountain clans"},
+     {from:34, to:37,  pos:px(1486,2033),  place:"The Eyrie", kind:"arrival",                  note:"Keeping Tyrion prisoner — awaiting Lysa's justice"},
+     {from:38, to:40,  pos:px(1486,2033),  place:"The Eyrie", kind:"arrival",                  note:"Departing the Eyrie — Bronn won Tyrion's freedom by trial by combat"},
+     {from:41, to:55,  pos:px(1650,1850),  place:"Travelling — Vale to White Harbor", kind:"transit", note:"Crossed the Vale to Gulltown with Ser Brynden; sailed north along the Narrow Sea to White Harbor; riding west to meet Robb's army"},
+     {from:55, to:58,  road:"kingsroad", pct:"moatcailin", place:"Moat Cailin", kind:"arrival",      note:"Joined Robb's army at Moat Cailin — a key voice in his war councils as they plan to march south"},
+     {from:59, to:62,  pos:px(1117,1923),  place:"The Twins", kind:"arrival",                        note:"Catelyn negotiates passage across the Green Fork for Robb's army"},
+     {from:63, to:70,  pos:px(1055,2180),  place:"Riverrun", kind:"arrival",                         note:"Robb lifts the siege — Catelyn reunited with Edmure and her father"},
+     {from:71, to:73,  pos:px(1055,2180),  place:"Riverrun", kind:"arrival", status:"King in the North",     note:"Northern lords proclaim Robb Stark King in the North"}
    ],
    tiers:[
      {revealChapter:2,  text:"Wife of Eddard Stark and Lady of Winterfell. Born a Tully of Riverrun. Devoted mother of five."},
      {revealChapter:6,  text:"Received a secret warning from her sister Lysa that the Lannisters may be behind Jon Arryn's death. She has decided to travel south to warn Ned."},
-     {revealChapter:14, text:"An assassin came for the comatose Bran in the night, armed with a Valyrian steel dagger. Catelyn fought him off. She has set sail for King's Landing with Ser Rodrik, taking the dagger as evidence."},
+     {revealChapter:14, text:"An assassin came for the comatose Bran in the night, armed with a Valyrian steel dagger. Catelyn fought him off. She is planning to sail for King's Landing with Ser Rodrik, taking the dagger as evidence."},
      {revealChapter:28, text:"Has captured Tyrion Lannister at the Inn at the Crossroads and departed with him as prisoner — destination unknown to most."},
      {revealChapter:34, text:"Has brought Tyrion to the Eyrie, her sister Lysa's seat. Lysa is changed — unstable and gripped by fear — and has thrown Tyrion in a sky cell to await her justice."},
      {revealChapter:40, text:"Preparing to leave the Eyrie — Lysa refused to commit the Vale's forces to war and Ser Brynden has resigned in disgust. Plans to sail north from Gulltown to find Robb's army."},
@@ -476,15 +548,15 @@ const allChars = [
    ],
    deathChapter:null, deathStatus:"alive", deathNote:null,
    positions:[
-     {from:3,  to:10, pos:px(2113,2488),  place:"Pentos",                   note:"Living in exile in Pentos with Viserys — betrothed to Khal Drogo, awaiting the wedding"},
-     {from:11, to:11, pos:px(2113,2488),  place:"Pentos",                   note:"Wed to Khal Drogo in a day-long Dothraki ceremony outside Pentos — now his khaleesi"},
-     {from:12, to:22, road:"dothraki",  pct:0.10, place:"Riding east — Norvos and Qohor", note:"Traveling east through the Free Cities and the Forest of Qohor toward the Dothraki Sea"},
-     {from:23, to:35, road:"dothraki",  pct:0.45, place:"Dothraki Sea — western edge",   note:"Just emerged from the Forest of Qohor — Daenerys sees the vast grasslands for the first time and stands up to Viserys"},
-     {from:36, to:53, pos:px(4719,2315),  place:"Vaes Dothrak",             note:"Arrived at the sacred city of the Dothraki — staying until Drogo swears to sail west"},
-     {from:54, to:60, pos:px(4640,2620), place:"Southern Dothraki Sea — riding toward Lhazar", note:"Khalasar striking south toward the Lhazarene lands to take slaves for the planned invasion of Westeros"},
-     {from:61, to:63, pos:px(4520,3084), place:"Lhazar",                   note:"In the Lamb Men's lands — Drogo wounded at the sack of a Lhazarene town; Mirri Maz Duur brought in to heal him"},
-     {from:64, to:71, pos:px(4520,3084), place:"Lhazar — camped", status:"Drogo comatose", note:"Khalasar disintegrating as Drogo lies mindless; Daenerys prepares his funeral pyre"},
-     {from:72, to:72, pos:px(4540,3130), place:"Lhazar — Drogo's funeral pyre",      note:"Drogo's funeral pyre lit in the Lhazareen hills — Daenerys walks into the flames and the dragons are born"}
+     {from:3,  to:10, pos:px(2113,2488),  place:"Pentos", kind:"arrival",                   note:"Living in exile in Pentos with Viserys — betrothed to Khal Drogo, awaiting the wedding"},
+     {from:11, to:11, pos:px(2113,2488),  place:"Pentos", kind:"arrival",                   note:"Wed to Khal Drogo in a day-long Dothraki ceremony outside Pentos — now his khaleesi"},
+     {from:12, to:23, road:"dothraki",  pct:0.10, place:"Riding east — Norvos and Qohor", kind:"transit", note:"Traveling east through the Free Cities and the Forest of Qohor toward the Dothraki Sea"},
+     {from:23, to:35, road:"dothraki",  pct:0.45, place:"Dothraki Sea — western edge", kind:"arrival",   note:"Just emerged from the Forest of Qohor — Daenerys sees the vast grasslands for the first time and stands up to Viserys"},
+     {from:36, to:53, pos:px(4719,2315),  place:"Vaes Dothrak", kind:"arrival",             note:"Arrived at the sacred city of the Dothraki — staying until Drogo swears to sail west"},
+     {from:54, to:61, pos:px(4640,2620), place:"Southern Dothraki Sea — riding toward Lhazar", kind:"transit", note:"Khalasar striking south toward the Lhazarene lands to take slaves for the planned invasion of Westeros"},
+     {from:61, to:63, pos:px(4520,3084), place:"Lhazar", kind:"arrival",                   note:"In the Lamb Men's lands — Drogo wounded at the sack of a Lhazarene town; Mirri Maz Duur brought in to heal him"},
+     {from:64, to:71, pos:px(4520,3084), place:"Lhazar — camped", kind:"arrival", status:"Drogo comatose", note:"Khalasar disintegrating as Drogo lies mindless; Daenerys prepares his funeral pyre"},
+     {from:72, to:72, pos:px(4540,3130), place:"Lhazar — Drogo's funeral pyre", kind:"arrival",      note:"Drogo's funeral pyre lit in the Lhazareen hills — Daenerys walks into the flames and the dragons are born"}
    ],
    tiers:[
      {revealChapter:3,  text:"Last surviving daughter of the Mad King Aerys Targaryen. Living in exile in Pentos, sold in marriage to Khal Drogo by her brother Viserys."},
@@ -503,12 +575,12 @@ const allChars = [
    ],
    deathChapter:null, deathStatus:"alive", deathNote:null,
    positions:[
-     {from:5,  to:10, pos:px(1154,1220), place:"Winterfell",            note:"Preparing to join the Night's Watch"},
-     {from:11, to:18, road:"kingsroad", pct:"wolfswood", place:"Kingsroad north — Wolfswood", note:"Riding north with Tyrion Lannister and Benjen Stark toward the Wall"},
-     {from:19, to:51, pos:px(1368,746), place:"Castle Black",                  note:"Training and serving with the Night's Watch"},
-     {from:52, to:59, pos:px(1372,740), place:"Castle Black — preparing the ranging",    note:"Jon prepares to depart with Lord Commander Mormont's great ranging beyond the Wall"},
-     {from:60, to:69, pos:px(1340,620), place:"Whitetree — beyond the Wall",  note:"Passing through abandoned wildling villages"},
-     {from:70, to:73, pos:px(1304,666), place:"Craster's Keep",              note:"Deep beyond the Wall — wildlings uniting under Mance Rayder"}
+     {from:5,  to:10, pos:px(1154,1220), place:"Winterfell", kind:"arrival",            note:"Preparing to join the Night's Watch"},
+     {from:13, to:18, road:"kingsroad", pct:"wolfswood", place:"Kingsroad north — Wolfswood", kind:"arrival", note:"Riding north with Tyrion Lannister and Benjen Stark toward the Wall"},
+     {from:19, to:51, pos:px(1368,746), place:"Castle Black", kind:"arrival",                  note:"Training and serving with the Night's Watch"},
+     {from:52, to:59, pos:px(1372,740), place:"Castle Black — preparing the ranging", kind:"arrival",    note:"Jon prepares to depart with Lord Commander Mormont's great ranging beyond the Wall"},
+     {from:60, to:69, pos:px(1340,620), place:"Whitetree — beyond the Wall", kind:"arrival",  note:"Passing through abandoned wildling villages"},
+     {from:70, to:73, pos:px(1304,666), place:"Craster's Keep", kind:"arrival",              note:"Deep beyond the Wall — wildlings uniting under Mance Rayder"}
    ],
    tiers:[
      {revealChapter:5,  text:"Ned Stark's bastard son. Choosing to take the black and join the Night's Watch rather than remain at Winterfell without a true place in the family."},
@@ -527,25 +599,25 @@ const allChars = [
    ],
    deathChapter:null, deathStatus:"alive", deathNote:null,
    positions:[
-     {from:9,  to:10, pos:px(1154,1220), place:"Winterfell",               note:"Visiting with King Robert's party — speaks with Jon Snow"},
-     {from:11, to:18, road:"kingsroad", pct:"wolfswood", place:"Kingsroad north — Wolfswood", note:"Riding north with Jon Snow and Benjen Stark toward the Wall"},
-     {from:19, to:20, pos:px(1368,746), place:"Castle Black",             note:"Visiting the Wall as an honored guest of the officers"},
-     {from:21, to:27, road:"kingsroad", pct:0.028, place:"Kingsroad south — riding from the Wall",  note:"Riding south from Castle Black toward King's Landing"},
-     {from:28, to:30, road:"kingsroad", pct:"inn", place:"Inn at the Crossroads",          note:"Arrested by Catelyn Stark — travelling with her party as prisoner"},
-     {from:31, to:33, road:"highroad",  pct:0.589, place:"High Road — Mountains of the Moon", note:"Prisoner alongside Catelyn — mountain clan attacks in the passes; surviving men battered but moving"},
-     {from:34, to:34, pos:px(1468,2071), place:"Gates of the Moon",        note:"Catelyn ascends the Giant's Lance alone at night; Tyrion kept in a tower cell at the Gates of the Moon until morning"},
-     {from:35, to:39, pos:px(1486,2033), place:"The Eyrie",                note:"Imprisoned in a sky cell — has demanded a trial by combat; Bronn has volunteered to fight as his champion"},
-     {from:40, to:40, pos:px(1486,2033), place:"The Eyrie",                note:"Freed — Bronn defeated Ser Vardis Egen in trial by combat and Lysa released him"},
-     {from:41, to:42, road:"highroad",  pct:0.589, place:"High Road — Mountains of the Moon", note:"Back on the high road with Bronn — escaped the Eyrie, now recruiting Vale mountain clans with promises of steel and the Vale itself"},
-     {from:43, to:55, pos:px(1350,2100),  place:"Foothills west of the Vale — with Hill Tribes",  note:"Leading Vale mountain clans westward — descending from the Mountains of the Moon toward Lord Tywin's host"},
-     {from:56, to:61, pos:px(1220,2060),  place:"Lannister camp — Riverlands",     note:"Arrived at Lord Tywin's host near the Green Fork; placed in command of the Hill Tribes for the coming battle"},
-     {from:62, to:68, pos:px(1220,2060),  place:"Battle of the Green Fork",        note:"Fighting with Tywin's vanguard against Roose Bolton's northern host"},
-     {from:69, to:73, pos:px(1294,2252),  place:"Harrenhal",                       note:"Tywin's army camps at Harrenhal after learning of Jaime's defeat"}
+     {from:9,  to:10, pos:px(1154,1220), place:"Winterfell", kind:"arrival",               note:"Visiting with King Robert's party — speaks with Jon Snow"},
+     {from:13, to:18, road:"kingsroad", pct:"wolfswood", place:"Kingsroad north — Wolfswood", kind:"arrival", note:"Riding north with Jon Snow and Benjen Stark toward the Wall"},
+     {from:19, to:21, pos:px(1368,746), place:"Castle Black", kind:"arrival",             note:"Visiting the Wall as an honored guest of the officers — last night before departing"},
+     {from:22, to:28, road:"kingsroad", pct:0.028, place:"Kingsroad south — riding from the Wall", kind:"transit",  note:"Riding south from Castle Black toward King's Landing"},
+     {from:28, to:30, road:"kingsroad", pct:"inn", place:"Inn at the Crossroads", kind:"arrival",          note:"Arrested by Catelyn Stark — travelling with her party as prisoner"},
+     {from:31, to:33, road:"highroad",  pct:0.589, place:"High Road — Mountains of the Moon", kind:"arrival", note:"Prisoner alongside Catelyn — mountain clan attacks in the passes; surviving men battered but moving"},
+     {from:34, to:34, pos:px(1468,2071), place:"Gates of the Moon", kind:"arrival",        note:"Catelyn ascends the Giant's Lance alone at night; Tyrion kept in a tower cell at the Gates of the Moon until morning"},
+     {from:35, to:39, pos:px(1486,2033), place:"The Eyrie", kind:"arrival",                note:"Imprisoned in a sky cell — has demanded a trial by combat; Bronn has volunteered to fight as his champion"},
+     {from:40, to:40, pos:px(1486,2033), place:"The Eyrie", kind:"arrival",                note:"Freed — Bronn defeated Ser Vardis Egen in trial by combat and Lysa released him"},
+     {from:41, to:42, road:"highroad",  pct:0.589, place:"High Road — Mountains of the Moon", kind:"arrival", note:"Back on the high road with Bronn — escaped the Eyrie, now recruiting Vale mountain clans with promises of steel and the Vale itself"},
+     {from:43, to:56, pos:px(1350,2100),  place:"Foothills west of the Vale — with Hill Tribes", kind:"transit",  note:"Leading Vale mountain clans westward — descending from the Mountains of the Moon toward Lord Tywin's host"},
+     {from:56, to:61, pos:px(1220,2060),  place:"Lannister camp — Riverlands", kind:"arrival",     note:"Arrived at Lord Tywin's host near the Green Fork; placed in command of the Hill Tribes for the coming battle"},
+     {from:62, to:68, pos:px(1220,2060),  place:"Battle of the Green Fork", kind:"arrival",        note:"Fighting with Tywin's vanguard against Roose Bolton's northern host"},
+     {from:69, to:73, pos:px(1294,2252),  place:"Harrenhal", kind:"arrival",                       note:"Tywin's army camps at Harrenhal after learning of Jaime's defeat"}
    ],
    tiers:[
      {revealChapter:9,  text:"Youngest son of Lord Tywin Lannister. A dwarf, witty and sharp-minded. Travelling north with King Robert's party."},
      {revealChapter:13, text:"Riding north with Jon Snow and Benjen Stark toward the Wall. Sharp, curious company on the road."},
-     {revealChapter:21, text:"Has visited the Wall and seen its sorry state firsthand — too few men, crumbling infrastructure, and little support from the south. He left the maester at Castle Black plans for a saddle that could let Bran ride again. Now heading south."},
+     {revealChapter:21, text:"Has visited the Wall and seen its sorry state firsthand — too few men, crumbling infrastructure, and little support from the south. He left the maester at Castle Black plans for a saddle that could let Bran ride again. Spending his last night at Castle Black before heading south in the morning."},
      {revealChapter:31, text:"Taken prisoner by Catelyn Stark at the Inn at the Crossroads and brought to the Eyrie to face Lysa Tully's justice."},
      {revealChapter:38, text:"Demanded a trial by combat at the Eyrie. The sellsword Bronn has volunteered to fight as his champion."},
      {revealChapter:40, text:"Freed — his champion Bronn defeated Lysa's knight Ser Vardis Egen in trial by combat."},
@@ -558,11 +630,12 @@ const allChars = [
    ink:"#5a6a6a", textInk:"#e8e8e8", isPov:true, firstChapter:1,
    deathChapter:null, deathStatus:"alive", deathNote:null,
    positions:[
-     {from:1,  to:7,  pos:px(1154,1220), place:"Winterfell",       note:"At Winterfell with the royal party — keen to see King's Landing"},
-     {from:8,  to:11, pos:px(1154,1220), place:"Winterfell",       note:"Comatose after his fall — Catelyn keeps vigil at his bedside"},
-     {from:12, to:36, pos:px(1154,1220), place:"Winterfell",       note:"Recovering at Winterfell — Robb holds the castle in Ned's absence"},
-     {from:37, to:52, pos:px(1154,1220), place:"Winterfell",       note:"Riding again — Robb prepares to march south with the bannermen"},
-     {from:53, to:73, pos:px(1154,1220), place:"Winterfell",       note:"The Stark in Winterfell — Robb has marched south, Bran holds the castle"}
+     {from:1,  to:3,  pos:px(1154,1220), place:"Winterfell", kind:"arrival",       note:"Witnessed a deserter's execution outside Winterfell and helped find a litter of orphaned direwolf pups on the ride home"},
+     {from:4,  to:7,  pos:px(1154,1220), place:"Winterfell", kind:"arrival",       note:"At Winterfell with the royal party — keen to see King's Landing"},
+     {from:8,  to:11, pos:px(1154,1220), place:"Winterfell", kind:"arrival",       note:"Comatose after his fall — Catelyn keeps vigil at his bedside"},
+     {from:12, to:36, pos:px(1154,1220), place:"Winterfell", kind:"arrival",       note:"Recovering at Winterfell — Robb holds the castle in Ned's absence"},
+     {from:37, to:52, pos:px(1154,1220), place:"Winterfell", kind:"arrival",       note:"Riding again — Robb prepares to march south with the bannermen"},
+     {from:53, to:73, pos:px(1154,1220), place:"Winterfell", kind:"arrival",       note:"The Stark in Winterfell — Robb has marched south, Bran holds the castle"}
    ],
    tiers:[
      {revealChapter:1,  text:"Ned's second son, a keen climber and adventurer."},
@@ -579,11 +652,16 @@ const allChars = [
    ],
    deathChapter:null, deathStatus:"alive", deathNote:null,
    positions:[
-     {from:15, to:15, road:"kingsroad", pct:"rubyford", place:"Ruby Ford — Kingsroad south",      note:"Travelling south with Ned and Arya — the Joffrey and Nymeria incident"},
-     {from:16, to:19, road:"kingsroad", pct:0.82, place:"Kingsroad south — final stretch",  note:"Continuing south toward King's Landing with her father"},
-     {from:20, to:28, pos:px(1394,2516), place:"King's Landing",                  note:"Betrothed to Prince Joffrey — life at court begins"},
-     {from:29, to:44, pos:px(1394,2516), place:"King's Landing",                  note:"Trapped at court as Joffrey's cruelty becomes undeniable"},
-     {from:45, to:73, pos:px(1394,2516), place:"King's Landing", status:"hostage",        note:"Held hostage at court after her father's arrest"}
+     // No entries before ch15 (her own debut) on purpose — see the
+     // First-POV Debut Reveal rules. She isn't textually placed at Winterfell
+     // or on the road south until her own POV chapter confirms it, even
+     // though other characters' chapters (Ned's, Cersei's) describe the
+     // royal party's visit and departure in the meantime.
+     {from:15, to:15, road:"kingsroad", pct:"rubyford", place:"Ruby Ford — Kingsroad south", kind:"arrival",      note:"Travelling south with Ned and Arya — the Joffrey and Nymeria incident"},
+     {from:16, to:20, road:"kingsroad", pct:0.82, place:"Kingsroad south — final stretch", kind:"transit",  note:"Continuing south toward King's Landing with her father"},
+     {from:20, to:28, pos:px(1394,2516), place:"King's Landing", kind:"arrival",                  note:"Betrothed to Prince Joffrey — life at court begins"},
+     {from:29, to:44, pos:px(1394,2516), place:"King's Landing", kind:"arrival",                  note:"Trapped at court as Joffrey's cruelty becomes undeniable"},
+     {from:45, to:73, pos:px(1394,2516), place:"King's Landing", kind:"arrival", status:"hostage",        note:"Held hostage at court after her father's arrest"}
    ],
    tiers:[
      {revealChapter:15, text:"Ned's eldest daughter. Gentle and well-mannered. Betrothed to Prince Joffrey, which she considers a romantic dream come true."},
@@ -600,15 +678,15 @@ const allChars = [
    ],
    deathChapter:null, deathStatus:"alive", deathNote:null,
    positions:[
-     {from:7,  to:11, pos:px(1154,1220),  place:"Winterfell",                       note:"Saying goodbye before leaving south with Ned"},
-     {from:12, to:14, road:"kingsroad", pct:0.36,  place:"Kingsroad south — with Ned and Sansa", note:"Travelling south in King Robert's royal party"},
-     {from:15, to:15, road:"kingsroad", pct:"rubyford", place:"Ruby Ford — Kingsroad south",      note:"Play-fighting with Mycah near the Trident — the Joffrey incident"},
-     {from:16, to:19, road:"kingsroad", pct:0.82, place:"Kingsroad south — final stretch",  note:"Continuing south with Ned after the direwolf incident"},
-     {from:20, to:49, pos:px(1394,2516), place:"King's Landing",                  note:"Training with Syrio Forel — navigating the Red Keep"},
-     {from:50, to:64, pos:px(1394,2516), place:"King's Landing", status:"in hiding",      note:"Surviving in the city after Ned's arrest — taken under Yoren's wing"},
-     {from:65, to:65, pos:px(1394,2516), place:"King's Landing — the Sept",       note:"In the crowd for her father's confession — Yoren pulls her away before the sentence is carried out, sparing her from seeing it"},
-     {from:66, to:68, road:"kingsroad", pct:0.82, place:"Kingsroad north — leaving King's Landing", note:"Disguised as 'Arry', just north of King's Landing with Yoren's party"},
-     {from:69, to:73, road:"kingsroad", pct:"twins", place:"Kingsroad north — Riverlands",  note:"Heading north through the Riverlands with Night's Watch recruits"}
+     {from:7,  to:11, pos:px(1154,1220),  place:"Winterfell", kind:"arrival",                       note:"Saying goodbye before leaving south with Ned"},
+     {from:12, to:15, road:"kingsroad", pct:0.36,  place:"Kingsroad south — with Ned and Sansa", kind:"transit", note:"Travelling south in King Robert's royal party"},
+     {from:15, to:15, road:"kingsroad", pct:"rubyford", place:"Ruby Ford — Kingsroad south", kind:"arrival",      note:"Play-fighting with Mycah near the Trident — the Joffrey incident"},
+     {from:16, to:20, road:"kingsroad", pct:0.82, place:"Kingsroad south — final stretch", kind:"transit",  note:"Continuing south with Ned after the direwolf incident"},
+     {from:20, to:49, pos:px(1394,2516), place:"King's Landing", kind:"arrival",                  note:"Training with Syrio Forel — navigating the Red Keep"},
+     {from:50, to:64, pos:px(1394,2516), place:"King's Landing", kind:"arrival", status:"in hiding",      note:"Surviving in the city after Ned's arrest — taken under Yoren's wing"},
+     {from:65, to:65, pos:px(1394,2516), place:"King's Landing — the Sept", kind:"arrival",       note:"In the crowd for her father's confession — Yoren pulls her away before the sentence is carried out, sparing her from seeing it"},
+     {from:66, to:68, road:"kingsroad", pct:0.82, place:"Kingsroad north — leaving King's Landing", kind:"arrival", note:"Disguised as 'Arry', just north of King's Landing with Yoren's party"},
+     {from:69, to:73, road:"kingsroad", pct:"twins", place:"Kingsroad north — Riverlands", kind:"transit",  note:"Heading north through the Riverlands with Night's Watch recruits"}
    ],
    tiers:[
      {revealChapter:7,  text:"Ned's younger daughter. Headstrong and fierce, she has no interest in the ladylike life expected of her."},
@@ -1143,19 +1221,50 @@ function getRoadPos(roadId, pct) {
 
   pct = Math.max(0, Math.min(1, pct));
 
-  const pts = road.waypoints;
+  const total = roadTotalLength(roadId);
+  return roadPosAtDistance(roadId, pct * total);
+}
 
-  // Build cumulative distance array
+// Cached cumulative-distance arrays per road, so the animation loop (which
+// calls roadPosAtDistance() on every frame) doesn't rebuild this every time.
+const _roadDistCache = {};
+function roadDistances(roadId){
+  if(_roadDistCache[roadId]) return _roadDistCache[roadId];
+  const pts = roads[roadId].waypoints;
   const dists = [0];
   for (let i = 1; i < pts.length; i++) {
     const dlat = pts[i][0] - pts[i-1][0];
     const dlng = pts[i][1] - pts[i-1][1];
     dists.push(dists[i-1] + Math.sqrt(dlat*dlat + dlng*dlng));
   }
+  _roadDistCache[roadId] = dists;
+  return dists;
+}
+function roadTotalLength(roadId){
+  const dists = roadDistances(roadId);
+  return dists[dists.length - 1];
+}
+// Absolute distance (not 0–1 pct) along the road for a given pct/named stop —
+// used so the movement animation can tween in distance-space between two
+// pct values while still following the actual waypoints, not a straight line.
+function roadDistanceAt(roadId, pct){
+  const road = roads[roadId];
+  if(!road) return 0;
+  if (typeof pct === 'string') {
+    const named = road.stops[pct.toLowerCase()];
+    if (named === undefined) return 0;
+    pct = named;
+  }
+  pct = Math.max(0, Math.min(1, pct));
+  return pct * roadTotalLength(roadId);
+}
+// Find the [lat,lng] at an absolute distance along a road's waypoints.
+function roadPosAtDistance(roadId, dist){
+  const pts = roads[roadId].waypoints;
+  const dists = roadDistances(roadId);
   const total = dists[dists.length - 1];
-  const target = pct * total;
+  const target = Math.max(0, Math.min(total, dist));
 
-  // Find the segment containing our target distance
   for (let i = 1; i < pts.length; i++) {
     if (dists[i] >= target) {
       const segLen = dists[i] - dists[i-1];
@@ -1224,6 +1333,58 @@ tracePanel.innerHTML = `
 `;
 document.body.appendChild(tracePanel);
 
+// ── Untraced Routes modal (character journeys still on a straight line) ──
+let traceCustomTarget = null; // the arrival entry a custom trace writes its route onto
+const untracedModal = document.createElement('div');
+untracedModal.style.cssText = `
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  background:#0d0a04; border:1px solid #5a3e1a; color:#c8a850;
+  padding:20px 24px; border-radius:8px; font-family:Georgia,serif;
+  z-index:3000; display:none; flex-direction:column; gap:12px;
+  min-width:380px; max-width:520px; max-height:70vh; overflow-y:auto;
+  box-shadow:0 4px 24px rgba(0,0,0,0.7);
+`;
+document.body.appendChild(untracedModal);
+
+function openUntracedModal(){
+  const flights = getUntracedFlights();
+  const rows = flights.length
+    ? flights.map((f, i) => `
+        <button data-flight-idx="${i}" style="padding:7px 14px;background:#1a1208;border:1px solid #5a3e1a;color:#c8a850;border-radius:4px;cursor:pointer;font-family:Georgia,serif;font-size:12px;text-align:left;">
+          ${f.charName}: ${f.fromPlace} → ${f.toPlace}
+        </button>`).join('')
+    : `<div style="color:#8a7040;font-size:12px;">No untraced routes over the threshold — everything currently uses a named road or a short enough hop that a straight line is fine.</div>`;
+
+  untracedModal.innerHTML = `
+    <div style="font-size:14px;font-variant:small-caps;letter-spacing:1px;border-bottom:1px solid #3a2a0a;padding-bottom:8px;">Untraced Routes</div>
+    <div style="color:#8a7040;font-size:12px;line-height:1.6;">These journeys currently animate as a rough straight line — no real traced path or named road covers the whole hop. Pick one, then click along the actual route on the map (river crossings, coastlines, etc. don't need to be exact, just closer than a straight line). When done, copy the output into that arrival's <code style="color:#c8a850;">route</code> field in the code.</div>
+    <div style="display:flex;flex-direction:column;gap:6px;">${rows}</div>
+    <button onclick="untracedModal.style.display='none'" style="margin-top:4px;padding:5px 12px;background:#1a1208;border:1px solid #5a3e1a;color:#8a7040;border-radius:4px;cursor:pointer;font-family:Georgia,serif;font-size:12px;align-self:flex-end;">Close</button>
+  `;
+  untracedModal.querySelectorAll('button[data-flight-idx]').forEach(btn => {
+    const f = flights[parseInt(btn.dataset.flightIdx)];
+    btn.onclick = () => { untracedModal.style.display = 'none'; startCustomTrace(f); };
+  });
+  untracedModal.style.display = 'flex';
+}
+
+function startCustomTrace(flight){
+  traceCustomTarget = flight;
+  traceRoadId = null;
+  traceWaypoints = [flight.prevArrival ? resolvePos(flight.prevArrival).pos : null].filter(Boolean);
+  traceMarkers = [];
+  if (tracePolyline) { map.removeLayer(tracePolyline); tracePolyline = null; }
+
+  toolMode = 'trace';
+  modeBanner.textContent = `✏️ Tracing ${flight.charName}: ${flight.fromPlace} → ${flight.toPlace} — click along the actual route. Undo last point with ↩`;
+  modeBanner.style.display = 'block';
+  tracePanel.style.display = 'flex';
+  tracePanel.querySelector('#tracePanelTitle').textContent = `Tracing: ${flight.charName}'s route`;
+  tracePanel.querySelector('#traceCount').textContent = traceWaypoints.length + ' points (start point pre-filled)';
+  tracePanel.querySelector('#traceOutput').style.display = 'none';
+  map.getContainer().style.cursor = 'crosshair';
+}
+
 // ── Road Tracing modal (road selector) ──
 const traceModal = document.createElement('div');
 traceModal.style.cssText = `
@@ -1248,12 +1409,13 @@ Object.entries(roads).forEach(([id, road]) => {
   const hasWaypoints = road.waypoints && road.waypoints.length > 1;
   btn.style.cssText = `padding:7px 14px;background:#1a1208;border:1px solid ${hasWaypoints ? '#4a7a1a' : '#5a3e1a'};color:${hasWaypoints ? '#90c840' : '#c8a850'};border-radius:4px;cursor:pointer;font-family:Georgia,serif;font-size:12px;text-align:left;`;
   btn.textContent = road.name + (hasWaypoints ? ' ✓ (re-trace to update)' : ' — not yet traced');
-  btn.onclick = () => { traceModal.style.display = 'none'; startTrace(id); };
+  btn.onclick = () => { traceModal.style.display = 'none'; traceCustomTarget = null; startTrace(id); };
   roadSelectContainer.appendChild(btn);
 });
 
 function startTrace(roadId) {
   traceRoadId = roadId;
+  traceCustomTarget = null;
   traceWaypoints = [];
   traceMarkers = [];
   if (tracePolyline) { map.removeLayer(tracePolyline); tracePolyline = null; }
@@ -1288,7 +1450,44 @@ function updateTracePolyline() {
 
 function traceFinish() {
   if (traceWaypoints.length < 2) {
-    alert('Please click at least 2 points along the road before finishing.');
+    alert('Please click at least 2 points along the route before finishing.');
+    return;
+  }
+
+  if (traceCustomTarget) {
+    // Custom character route (from the 🧭 Untraced Routes tool) — write
+    // straight onto that arrival's own `route` field, live, so it's
+    // immediately usable, and also print paste-ready output for saving it
+    // back into the actual character data in the code.
+    traceCustomTarget.nextArrival.route = traceWaypoints.slice();
+
+    const waypointStr = traceWaypoints.map(([lat,lng]) =>
+      `    [${Math.round(lat)}, ${Math.round(lng)}]`
+    ).join(',\n');
+    const output = `// Paste this "route" field onto ${traceCustomTarget.charName}'s arrival entry\n// (place: "${traceCustomTarget.toPlace}") in the code:\nroute: [\n${waypointStr}\n],`;
+
+    const outEl = tracePanel.querySelector('#traceOutput');
+    outEl.textContent = output;
+    outEl.style.display = 'block';
+    navigator.clipboard.writeText(output).catch(()=>{});
+
+    modeBanner.textContent = `✓ ${traceCustomTarget.charName}'s route to ${traceCustomTarget.toPlace} traced (${traceWaypoints.length} points) — copied to clipboard! Active for this session; paste into the code to keep it.`;
+
+    traceMarkers.forEach(m => map.removeLayer(m));
+    traceMarkers = [];
+    if (tracePolyline) { map.removeLayer(tracePolyline); tracePolyline = null; }
+
+    const finishedLine = L.polyline(traceCustomTarget.nextArrival.route, {
+      color: '#f0c040', weight: 2, opacity: 0.5
+    }).addTo(map);
+    window._roadLines = window._roadLines || [];
+    window._roadLines.push(finishedLine);
+
+    toolMode = 'off';
+    map.getContainer().style.cursor = '';
+    tracePanel.querySelector('#traceCount').textContent = traceWaypoints.length + ' points ✓';
+    traceCustomTarget = null;
+    renderMarkers(curCh);
     return;
   }
 
@@ -1334,6 +1533,7 @@ function traceFinish() {
 function traceCancel() {
   toolMode = 'off';
   traceRoadId = null;
+  traceCustomTarget = null;
   traceWaypoints = [];
   traceMarkers.forEach(m => map.removeLayer(m));
   traceMarkers = [];
@@ -1436,6 +1636,11 @@ function getSnapZoom(){
   return window.innerWidth <= 700 ? -1.0 : 0.0;
 }
 const markers = {};
+// Persistent location dots, one per character id but shared by reference
+// when characters occupy the same spot — see renderMarkers() and
+// runMoveBatch(). This is the "ground truth" location marker; the ribbon
+// (in `markers`) is just its label and can fan out for readability.
+const dots = {};
 
 // ─── CHAPTER NAV ─────────────────────────────────────────────────────────────
 
@@ -1457,10 +1662,24 @@ function fromIndex(idx){ return { ch: Math.floor(idx / 2), phase: (idx % 2 === 0
 const MIN_STEP = toIndex(0, 'before');
 const MAX_STEP = toIndex(72, 'after');
 
+let animating = false; // guards against overlapping tweens on rapid clicks
+
 function stepCh(dir){
+  if(animating) return; // ignore clicks mid-animation rather than stack transitions
   const idx = Math.max(MIN_STEP, Math.min(MAX_STEP, toIndex(curCh, curPhase) + dir));
   const next = fromIndex(idx);
-  setChapter(next.ch, next.phase);
+  // Only animate the single step from a chapter's own "opening" to its own
+  // "finished" (dir>0 while curPhase is 'before' always lands on the SAME
+  // chapter's 'after' — see toIndex/fromIndex). Crossing from one chapter's
+  // "finished" into the next chapter's "opening" stays instant, and so do
+  // jumps and stepping backward — there's no single chapter's story being
+  // walked through in either of those cases.
+  const isSameChapterAdvance = dir > 0 && curPhase === 'before' && next.ch === curCh && next.phase === 'after';
+  if(isSameChapterAdvance){
+    advanceChapterAnimated(next.ch, next.phase);
+  } else {
+    setChapter(next.ch, next.phase);
+  }
 }
 // Jumping via the dropdown always lands on Before N — a deliberate refresher
 // stop, not a full skip into what N contains.
@@ -1481,27 +1700,130 @@ function resolvePos(entry) {
   return { from: entry.from, to: entry.to, pos: resolved, place: entry.place, note: entry.note, status: entry.status };
 }
 
-function getPos(c, ch){
-  // Never show before introduction — same before/after rule as isRevealed(),
-  // so a character's debut chapter doesn't leak a chapter early on "opening."
-  if(!isRevealed(c.firstChapter, ch, curPhase)) return null;
+// ─── ARRIVAL / TRANSIT MODEL (Session 14) ──────────────────────────────────
+// A position entry is one of two kinds:
+//   kind:"arrival" — a real, textually-confirmed place. Eligible to be
+//                    shown as "last known position" and to move the
+//                    resting marker. Defaults to "arrival" when omitted
+//                    (safe default for entries not yet reclassified).
+//   kind:"transit" — describes travel between two arrivals (a road/pct or
+//                    a rough px() waypoint). NEVER changes "place" or the
+//                    resting marker. Only used for (a) an optional note
+//                    override, shown while the reader is between arrivals
+//                    (e.g. "planning to set sail" without actually moving
+//                    the marker), and (b) building the animated route once
+//                    the NEXT arrival is confirmed.
+// Position Rule 1 (PROJECT_CONTEXT.md) no longer allows "departure or
+// arrival" to move the marker — only arrival. A transit entry, however
+// specific its wording, is explicitly excluded from that gate.
+function isArrival(p){ return (p.kind || 'arrival') === 'arrival'; }
+function isTransit(p){ return p.kind === 'transit'; }
+
+// The confirmed arrival active at ch/curPhase — same phase-aware search as
+// before, but restricted to arrival entries only.
+function getActiveArrival(c, ch){
+  // AT6 (Session 15) removed the firstChapter gate entirely so a character
+  // could show a position before their own POV debut (e.g. Sansa at
+  // Winterfell in ch4, ahead of her ch15 debut). That's superseded now: a
+  // POV character's own first-ever series appearance is a spoiler-sensitive
+  // moment on its own (see the First-POV Debut Reveal below), so the gate is
+  // back — UNLESS this character is marked `continuingPOV:true`, meaning
+  // they already had their own POV chapter in an earlier book. For a
+  // continuing character, THIS book's `firstChapter` isn't a debut at all —
+  // it's just where this book's own narration catches up to them — so they
+  // may still carry a position from before it (typically a `from:0` entry
+  // picking up where the previous book left off).
+  if(!c.continuingPOV && !isRevealed(c.firstChapter, ch, curPhase)) return null;
   if(!c.positions || c.positions.length === 0) return null;
-
-  // Rule 1: If the character's position data directly covers this chapter, use it.
-  //         This reflects where they ARE at the start of the chapter.
-  for(let p of c.positions) if(ch >= p.from && ch <= p.to) return resolvePos(p);
-
-  // Rule 2: No direct entry for this chapter — return the most recent known
-  //         position from any earlier chapter. Characters persist at their
-  //         last confirmed location rather than disappearing.
+  const arrivals = c.positions.filter(isArrival);
+  if(!arrivals.length) return null;
+  for(let p of arrivals) if(isRevealed(p.from, ch, curPhase) && ch <= p.to) return p;
   let lastKnown = null;
-  for(let p of c.positions){
-    if(p.from <= ch) lastKnown = p;
-  }
-  if(lastKnown) return resolvePos(lastKnown);
+  for(let p of arrivals){ if(isRevealed(p.from, ch, curPhase)) lastKnown = p; }
+  return lastKnown; // null if nothing has been revealed yet — correctly hidden
+}
 
-  // Rule 3: Edge case — chapter is before any position entry, use first.
-  return resolvePos(c.positions[0]);
+// A transit entry's note can surface WITHOUT moving the marker — e.g.
+// "planning to set sail for King's Landing" at the chapter that actually
+// says so, while "place" stays frozen at the last real arrival.
+function getActiveTransitNote(c, ch){
+  if(!c.positions) return null;
+  // Same debut gate as getActiveArrival() above — without this, a transit
+  // note could leak a not-yet-revealed character's travel status even
+  // though getActiveArrival() itself correctly returns null for them.
+  if(!c.continuingPOV && !isRevealed(c.firstChapter, ch, curPhase)) return null;
+  // A transit's note only applies while the reader hasn't yet reached the
+  // arrival it leads into — once that arrival is itself active (its own
+  // "from" is later than this transit's), the transit is in the past and
+  // must not keep overriding the new arrival's own note. This matters
+  // because transit ranges are deliberately extended through the arrival
+  // chapter's own "opening" (see Session 14 CHANGELOG) so the note doesn't
+  // revert oddly right before arrival — but that means the transit and the
+  // next arrival briefly share the same chapter number, and only phase
+  // (via the active-arrival comparison below) can tell them apart.
+  const activeArrival = getActiveArrival(c, ch);
+  for(let p of c.positions){
+    if(!isTransit(p)) continue;
+    if(!isRevealed(p.from, ch, curPhase) || ch > p.to) continue;
+    if(activeArrival && activeArrival.from > p.from) continue;
+    return p.note;
+  }
+  return null;
+}
+
+function getPos(c, ch){
+  const arrival = getActiveArrival(c, ch);
+  if(!arrival) return null;
+  const resolved = resolvePos(arrival);
+  if(!resolved) return null;
+  const transitNote = getActiveTransitNote(c, ch);
+  return transitNote !== null ? { ...resolved, note: transitNote } : resolved;
+}
+
+// Kept for callers that still want the raw (unresolved) ARRIVAL entry —
+// e.g. anything checking a character's current road/pct outside of an
+// animation. Multi-leg animation (below) uses getTransitChain() instead,
+// since it needs every leg between two arrivals, not just one.
+function getRawPosEntry(c, ch){
+  return getActiveArrival(c, ch);
+}
+
+// Every transit entry strictly between two arrivals, in the order they
+// appear in c.positions (the array is expected to stay chronological).
+// This is what the animation walks as one continuous multi-stop flight,
+// however many now-finished chapters those legs were originally attached
+// to — e.g. Catelyn's Winterfell -> White Harbor -> at sea -> King's
+// Landing, all animated in the single step where King's Landing (the next
+// arrival) is confirmed, per Session 14's reveal model.
+function getTransitChain(c, prevArrival, nextArrival){
+  if(!c.positions) return [];
+  const startIdx = c.positions.indexOf(prevArrival);
+  const endIdx = c.positions.indexOf(nextArrival);
+  if(startIdx === -1 || endIdx === -1 || endIdx <= startIdx) return [];
+  return c.positions.slice(startIdx + 1, endIdx).filter(isTransit);
+}
+
+// Every arrival-to-arrival journey still relying on a straight-line
+// approximation (no real traced route, and no single named road covers the
+// whole hop) — surfaced in the 🧭 Untraced Routes dev tool so someone can
+// walk the actual path and send back real waypoints, the same workflow as
+// ✏️ Trace Road for the shared named roads.
+const UNTRACED_LENGTH_THRESHOLD = 200; // map units — skip trivial local hops
+function getUntracedFlights(){
+  const results = [];
+  allChars.filter(c => c.isPov).forEach(c => {
+    const arrivals = (c.positions || []).filter(isArrival);
+    for(let i = 1; i < arrivals.length; i++){
+      const prevArrival = arrivals[i-1], nextArrival = arrivals[i];
+      if(nextArrival.route && nextArrival.route.length > 1) continue; // already traced
+      const legs = buildFlightPath(c, prevArrival, nextArrival);
+      const hasUntracedStraight = legs.some(leg => leg.kind === 'straight' && leg.length > UNTRACED_LENGTH_THRESHOLD);
+      if(hasUntracedStraight){
+        results.push({ charId: c.id, charName: c.name, fromPlace: prevArrival.place, toPlace: nextArrival.place, prevArrival, nextArrival });
+      }
+    }
+  });
+  return results;
 }
 
 // ─── READING MODEL ──────────────────────────────────────────────────────────
@@ -1558,18 +1880,15 @@ function makeRibbonHTML(name, ink, isDead, isMissing, textInk){
   </svg>`;
 }
 
-function renderMarkers(ch){
-  // Clear existing markers and leader lines
-  Object.values(markers).forEach(m => map.removeLayer(m));
-  Object.keys(markers).forEach(k => delete markers[k]);
-  if(window._leaderLines){
-    window._leaderLines.forEach(l => map.removeLayer(l));
-  }
-  window._leaderLines = [];
-
+// Pure state computation — no DOM/Leaflet calls. Figures out, for a given
+// chapter, which POV characters are visible, what their true location
+// (anchorPos) and fanned-out label position (ribbonPos) are, and the raw
+// position entry behind it (for road-following animation). Returns an
+// object keyed by character id. renderMarkers() (below) is just this plus
+// the Leaflet drawing calls; the marker-movement animation calls this twice
+// (before and after a step) to diff what actually moved.
+function computeMarkerState(ch){
   const povChars = allChars.filter(c => c.isPov);
-
-  // Group characters by location coordinate key
   const groups = {};
   povChars.forEach(c => {
     const pos = getPos(c, ch);
@@ -1577,37 +1896,77 @@ function renderMarkers(ch){
     const dead = isDeadAt(c, ch);
     const missing = isMissingAt(c, ch);
     if((dead || missing) && !showDeceased) return;
+    const rawEntry = getRawPosEntry(c, ch);
     const key = pos.pos[0] + ',' + pos.pos[1];
     if(!groups[key]) groups[key] = {anchorPos: pos.pos, chars: []};
-    groups[key].chars.push({c, pos, dead, missing});
+    groups[key].chars.push({c, pos, dead, missing, rawEntry});
   });
 
-  // For each group, fan ribbons out around the anchor point
+  const state = {};
   Object.values(groups).forEach(group => {
     const {anchorPos, chars} = group;
-    const count = chars.length;
+    const fanOffsets = getFanOffsets(chars.length, anchorPos);
+    chars.forEach(({c, pos, dead, missing, rawEntry}, i) => {
+      state[c.id] = {
+        c, pos, dead, missing, rawEntry, anchorPos,
+        ribbonPos: fanOffsets[i],
+        needsLeader: chars.length > 1
+      };
+    });
+  });
+  return state;
+}
 
-    // Fan offsets in map units — spread ribbons around anchor
-    // Single char: no offset, no leader line
-    // Multiple chars: fan outward with leader lines back to anchor
-    const fanOffsets = getFanOffsets(count, anchorPos);
+function renderMarkers(ch, debutRevealId){
+  // Clear existing markers and leader lines
+  Object.values(markers).forEach(m => map.removeLayer(m));
+  Object.keys(markers).forEach(k => delete markers[k]);
+  if(window._leaderLines){
+    window._leaderLines.forEach(l => map.removeLayer(l));
+  }
+  window._leaderLines = [];
+  Object.keys(dots).forEach(k => delete dots[k]);
 
-    chars.forEach(({c, pos, dead, missing}, i) => {
-      const ribbonPos = fanOffsets[i];
-      const needsLeader = count > 1;
+  const state = computeMarkerState(ch);
+
+  // One persistent dot per unique anchor (not per character) — the dot IS
+  // the location; a ribbon is just its label, fanned out for readability
+  // when several characters share a spot. Every character's id maps into
+  // `dots`, but characters sharing a location point at the SAME dot object.
+  const dotByAnchorKey = {};
+
+  Object.values(state).forEach(({c, pos, dead, missing, anchorPos, ribbonPos, needsLeader}) => {
+      const anchorKey = anchorPos[0] + ',' + anchorPos[1];
+      let dot = dotByAnchorKey[anchorKey];
+      if(!dot){
+        dot = L.circleMarker(anchorPos, {
+          radius: 3,
+          color: '#c8a850',
+          fillColor: '#c8a850',
+          fillOpacity: 1,
+          weight: 1.5,
+          interactive: false
+        }).addTo(map);
+        window._leaderLines.push(dot);
+        dotByAnchorKey[anchorKey] = dot;
+      }
+      dots[c.id] = dot;
 
       const html = makeRibbonHTML(c.name, c.ink, dead, missing, c.textInk);
       // Must match charW/padding used inside makeRibbonHTML() above.
       const iconW = c.name.length * 9.5 + 52;
       const icon = L.divIcon({
         html,
-        className: 'ribbon-label',
+        className: 'ribbon-label' + (c.id === debutRevealId ? ' debut-reveal' : ''),
         iconAnchor: [iconW / 2, 29]
       });
 
       const marker = L.marker(ribbonPos, {icon, interactive:true}).addTo(map);
 
-      // Draw leader line from ribbon anchor dot to location coordinate
+      // Leader line from ribbon to the shared dot — only needed when the
+      // ribbon is actually fanned out away from it (more than one
+      // character at this location). A solo character's ribbon sits right
+      // on top of its dot, so no line is needed.
       if(needsLeader){
         const lineColor = (dead || missing) ? '#666' : c.ink;
         const line = L.polyline([anchorPos, ribbonPos], {
@@ -1617,17 +1976,6 @@ function renderMarkers(ch){
           dashArray: '4, 3'
         }).addTo(map);
         window._leaderLines.push(line);
-
-        // Small dot at the true location anchor
-        const dot = L.circleMarker(anchorPos, {
-          radius: 3,
-          color: '#c8a850',
-          fillColor: '#c8a850',
-          fillOpacity: 1,
-          weight: 1.5,
-          interactive: false
-        }).addTo(map);
-        window._leaderLines.push(dot);
       }
 
       // Tooltip
@@ -1666,7 +2014,6 @@ function renderMarkers(ch){
       });
 
       markers[c.id] = marker;
-    });
   });
 }
 
@@ -1934,11 +2281,14 @@ function buildRecapHTML(ch, phase){
   return `<span class="recap-tag">${tag} · Ch. ${ch} — ${chObj.name}</span><span class="recap-sep">|</span>${body}`;
 }
 
-function setChapter(n, phase){
-  curCh = Math.max(0, Math.min(72, n));
-  curPhase = (phase === 'after') ? 'after' : 'before';
+// Splits what used to be one setChapter() into three pieces so the animated
+// advance (below) can reuse the UI/camera logic while taking manual control
+// of marker rendering during the tween:
+//   updateChapterUI() — text, buttons, recap panel, status bar (no map)
+//   flyToCurrentPOV() — camera pan/zoom to the chapter's POV character
+//   setChapter()      — the original instant path: UI + markers + camera
+function updateChapterUI(){
   const chObj = getChObj(curCh);
-
   document.getElementById('chDisplay').innerHTML = `Ch. ${curCh} — <span>${chObj.name}</span>`;
   const idx = toIndex(curCh, curPhase);
   document.getElementById('prevBtn').disabled = idx <= MIN_STEP;
@@ -1946,27 +2296,6 @@ function setChapter(n, phase){
   document.getElementById('jumpMenu').value = '';
   document.getElementById('recapPanel').innerHTML = buildRecapHTML(curCh, curPhase);
 
-  renderMarkers(curCh);
-
-  // Zoom to the POV character for this chapter (unless Free Look is on)
-  const povId = chapterPOV[curCh];
-  if(povId && !freeLook){
-    const povChar = allChars.find(c => c.id === povId);
-    if(povChar){
-      const pos = getPos(povChar, curCh);
-      if(pos){
-        // Use the anchor position (not the ribbon offset)
-        // Smooth pan/zoom to the character
-        map.flyTo(pos.pos, getSnapZoom(), {
-          animate: true,
-          duration: 2.0,
-          easeLinearity: 0.2
-        });
-      }
-    }
-  }
-
-  // Refresh open panel
   if(openPanelId) openPanel(openPanelId);
 
   const deadCount = allChars.filter(c => isRevealed(c.firstChapter, curCh, curPhase) && c.deathChapter && isRevealed(c.deathChapter, curCh, curPhase)).length;
@@ -1975,6 +2304,368 @@ function setChapter(n, phase){
   document.getElementById('statusBar').textContent =
     `A Game of Thrones  ·  ${activeCount} POV character${activeCount !== 1 ? 's' : ''} active  ·  ${deadCount} death${deadCount !== 1 ? 's' : ''}/disappearance${deadCount !== 1 ? 's' : ''} recorded ${asOf} Chapter ${curCh}`;
 }
+
+function flyToCurrentPOV(){
+  // Zoom to the POV character for this chapter (unless Free Look is on)
+  const povId = chapterPOV[curCh];
+  if(!povId || freeLook) return;
+  const povChar = allChars.find(c => c.id === povId);
+  if(!povChar) return;
+  const pos = getPos(povChar, curCh);
+  if(!pos) return;
+  // Use the anchor position (not the ribbon offset)
+  // Smooth pan/zoom to the character
+  map.flyTo(pos.pos, getSnapZoom(), {
+    animate: true,
+    duration: 2.0,
+    easeLinearity: 0.2
+  });
+}
+
+// ─── First-POV Debut Reveal ────────────────────────────────────────────────
+// A POV character's own first-ever chapter is treated as a spoiler-sensitive
+// moment in its own right: on the OPENING of that chapter the map dims out
+// and only their name appears — no marker, no location, nothing. On
+// FINISHED, the map reappears already framed on their (now-confirmed)
+// location and their banner reveals itself with a matching glow.
+//
+// `continuingPOV:true` on a character means they already had their own POV
+// chapter in an earlier book — for them, this book's own `firstChapter` is
+// just where the narration catches back up to them, not a series debut, so
+// this treatment never applies and they render normally throughout.
+function isDebutChar(c){ return !!c && c.isPov && c.continuingPOV !== true; }
+
+// The character's very own debut position — the one entry whose "from"
+// equals their firstChapter. Looked up directly rather than through
+// getActiveArrival()/isRevealed(), since during the "opening" grey-out the
+// normal reveal gate correctly returns null (nothing to show yet) — but we
+// still need to know WHERE they'll turn out to be, purely to move the
+// camera into place silently behind the dimmed map.
+function getDebutArrival(c){
+  if(!c || !c.positions) return null;
+  return c.positions.find(p => isArrival(p) && p.from === c.firstChapter) || null;
+}
+
+// If `ch` is some character's own debut chapter, returns that character
+// (regardless of phase — callers check curPhase separately). Otherwise null.
+function debutCharForChapter(ch){
+  const povId = chapterPOV[ch];
+  if(!povId) return null;
+  const c = allChars.find(x => x.id === povId);
+  if(!c || !isDebutChar(c) || ch !== c.firstChapter) return null;
+  return c;
+}
+
+function showDebutOverlay(name){
+  const overlay = document.getElementById('debutOverlay');
+  document.getElementById('debutName').textContent = name;
+  document.getElementById('map').classList.add('debut-dimmed');
+  overlay.classList.remove('revealing');
+  overlay.classList.add('visible');
+  void overlay.offsetWidth; // force reflow so the reveal animation restarts every time
+  overlay.classList.add('revealing');
+}
+
+function hideDebutOverlay(){
+  const overlay = document.getElementById('debutOverlay');
+  overlay.classList.remove('visible', 'revealing');
+  document.getElementById('map').classList.remove('debut-dimmed');
+}
+
+// Every chapter-navigation path (Next, Prev, dropdown jump, and the end of
+// any marker-movement tween) ends up here once curCh/curPhase are already
+// set — this used to just be "renderMarkers(curCh); flyToCurrentPOV();"
+// inline at each call site; centralizing it is what lets the debut-reveal
+// check live in exactly one place instead of three.
+function renderChapterMap(){
+  const debutChar = debutCharForChapter(curCh);
+
+  if(debutChar && curPhase === 'before'){
+    // Nothing should be visible yet — clear every marker/dot/line off the
+    // map, then silently move the camera to where the character will
+    // actually turn out to be, entirely behind the dimmed overlay, so the
+    // reveal doesn't also involve a visible pan once it lifts.
+    Object.values(markers).forEach(m => map.removeLayer(m));
+    Object.keys(markers).forEach(k => delete markers[k]);
+    if(window._leaderLines) window._leaderLines.forEach(l => map.removeLayer(l));
+    window._leaderLines = [];
+    Object.keys(dots).forEach(k => delete dots[k]);
+
+    const resolved = resolvePos(getDebutArrival(debutChar));
+    if(resolved && !freeLook) map.setView(resolved.pos, getSnapZoom(), {animate:false});
+
+    showDebutOverlay(debutChar.name);
+    return;
+  }
+
+  hideDebutOverlay();
+  renderMarkers(curCh, (debutChar && curPhase === 'after') ? debutChar.id : null);
+  flyToCurrentPOV();
+}
+
+function setChapter(n, phase){
+  curCh = Math.max(0, Math.min(72, n));
+  curPhase = (phase === 'after') ? 'after' : 'before';
+  updateChapterUI();
+  renderChapterMap();
+}
+
+// ─── MARKER MOVEMENT ANIMATION ────────────────────────────────────────────
+// Only used for single-step forward reading (the Next button). Jumps via
+// the chapter dropdown and stepping backward (Prev) stay instant — walking
+// a character backward through the story reads oddly, and an arbitrary
+// jump has no continuous "story" to animate through.
+//
+// Same duration/easing family as flyToCurrentPOV()'s map pan, so the camera
+// and the character arrive together.
+// Session 15 fix: duration is now paced by distance, not a flat value — a
+// character crossing the whole map takes noticeably longer than one moving
+// to an adjacent location. Clamped so short hops don't feel instant and
+// very long journeys (Winterfell to the Dothraki Sea) don't drag forever.
+const MOVE_SPEED_UNITS_PER_MS = 0.5;   // ~500 map units/second
+const MOVE_MIN_DURATION_MS = 900;
+const MOVE_MAX_DURATION_MS = 6000;
+function durationForDistance(totalLength){
+  return Math.max(MOVE_MIN_DURATION_MS, Math.min(MOVE_MAX_DURATION_MS, totalLength / MOVE_SPEED_UNITS_PER_MS));
+}
+function easeInOutQuad(t){ return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2; }
+
+// Turns the chain of transit legs between two arrivals into an ordered list
+// of {kind, length, ...} segments the animation can walk at constant speed.
+// Each segment is either "road" (follows a named road's real waypoints
+// between two pct values) or "straight" (a fallback line between two
+// points — used across different roads, fixed points, or an UNTRACED
+// custom route that hasn't been walked with the Route Tracer yet).
+function buildFlightPath(c, prevArrival, nextArrival){
+  // If this arrival has a real traced route (from the 🧭 Untraced Routes
+  // dev tool), use it verbatim as one continuous path instead of the
+  // straight-line/transit-chain approximation below — same idea as a named
+  // road, but a one-off path specific to this character's journey.
+  if(nextArrival.route && nextArrival.route.length > 1){
+    const pts = nextArrival.route;
+    const dists = [0];
+    for(let i=1;i<pts.length;i++){
+      const dLat = pts[i][0]-pts[i-1][0], dLng = pts[i][1]-pts[i-1][1];
+      dists.push(dists[i-1] + Math.sqrt(dLat*dLat+dLng*dLng));
+    }
+    const legs = [];
+    for(let i=0;i<pts.length-1;i++){
+      legs.push({ kind:'straight', fromPos:pts[i], toPos:pts[i+1], length: dists[i+1]-dists[i] });
+    }
+    return legs;
+  }
+
+  const chain = getTransitChain(c, prevArrival, nextArrival);
+  const rawStops = [prevArrival, ...chain, nextArrival];
+  const stops = rawStops.map(entry => {
+    const resolved = resolvePos(entry);
+    if(!resolved) return null;
+    return { pos: resolved.pos, road: entry.road || null, pct: entry.road ? entry.pct : null };
+  }).filter(Boolean);
+
+  const legs = [];
+  for(let i = 0; i < stops.length - 1; i++){
+    const A = stops[i], B = stops[i+1];
+    if(A.road && B.road && A.road === B.road){
+      const distA = roadDistanceAt(A.road, A.pct), distB = roadDistanceAt(B.road, B.pct);
+      legs.push({ kind:'road', roadId:A.road, distA, distB, length: Math.abs(distB - distA) });
+    } else {
+      const dLat = B.pos[0]-A.pos[0], dLng = B.pos[1]-A.pos[1];
+      legs.push({ kind:'straight', fromPos:A.pos, toPos:B.pos, length: Math.sqrt(dLat*dLat + dLng*dLng) });
+    }
+  }
+  return legs;
+}
+
+// Position along a multi-leg path at a given cumulative distance (0..total).
+function posAlongFlightPath(legs, totalLength, targetDist){
+  let acc = 0;
+  for(let i = 0; i < legs.length; i++){
+    const leg = legs[i];
+    const legLen = leg.length || 0;
+    const isLast = i === legs.length - 1;
+    if(acc + legLen >= targetDist || isLast){
+      const t = legLen > 0 ? Math.max(0, Math.min(1, (targetDist - acc) / legLen)) : 1;
+      if(leg.kind === 'road') return roadPosAtDistance(leg.roadId, leg.distA + t * (leg.distB - leg.distA));
+      return [ leg.fromPos[0] + t*(leg.toPos[0]-leg.fromPos[0]), leg.fromPos[1] + t*(leg.toPos[1]-leg.fromPos[1]) ];
+    }
+    acc += legLen;
+  }
+  return null;
+}
+
+function advanceChapterAnimated(newCh, newPhase){
+  // Snapshot the OLD state before touching curCh/curPhase — computeMarkerState()
+  // reads both globally, same as getPos()/isRevealed() do everywhere else.
+  const prevState = computeMarkerState(curCh);
+
+  curCh = newCh;
+  curPhase = (newPhase === 'after') ? 'after' : 'before';
+  updateChapterUI();
+
+  const newState = computeMarkerState(curCh);
+
+  // A "mover" is a character present both before and after this step whose
+  // true location (anchorPos) actually changed — not just their fanned-out
+  // ribbon offset, which can shift slightly if someone else joins or leaves
+  // their location without them moving at all.
+  const movers = [];
+  Object.keys(newState).forEach(id => {
+    const prev = prevState[id];
+    const next = newState[id];
+    if(!prev) return; // wasn't on the map before (first appearance) — no walk-in, just render normally
+    if(prev.anchorPos[0] === next.anchorPos[0] && prev.anchorPos[1] === next.anchorPos[1]) return;
+    movers.push({id, prev, next});
+  });
+
+  if(movers.length === 0){
+    // Nothing is actually walking this step — render and pan exactly as
+    // the plain instant path does (including the debut-reveal check).
+    renderChapterMap();
+    return;
+  }
+
+  // Something IS walking. Deliberately do NOT call renderMarkers() yet —
+  // every marker, leader line, and anchor dot currently on screen is left
+  // exactly as-is for the duration of the tween(s). Only the movers' own
+  // markers are touched, right up until the final batch finishes.
+  animating = true;
+
+  // Session 14: characters heading to the SAME destination (travelling
+  // together) animate simultaneously; characters heading to DIFFERENT
+  // destinations in the same step animate one batch after another, not
+  // all at once. Batches are ordered book-order where determinable —
+  // in practice that means the chapter's own POV character's batch goes
+  // first, since that's the one thing we can always tell from the data;
+  // any remaining batches follow in the order they were found.
+  const povId = chapterPOV[curCh];
+  const batchMap = {};
+  movers.forEach(m => {
+    const key = m.next.anchorPos[0] + ',' + m.next.anchorPos[1];
+    (batchMap[key] = batchMap[key] || []).push(m);
+  });
+  const batches = Object.values(batchMap).sort((a, b) => {
+    const aFirst = a.some(m => m.id === povId) ? 0 : 1;
+    const bFirst = b.some(m => m.id === povId) ? 0 : 1;
+    return aFirst - bFirst;
+  });
+
+  const allMoverIds = new Set(movers.map(m => m.id));
+  runMoveBatch(batches, 0, allMoverIds);
+}
+
+function runMoveBatch(batches, idx, allMoverIds){
+  if(idx >= batches.length){
+    animating = false;
+    // Final reconciliation pass — this is the ONE moment everything (fan
+    // positions, leader lines, dots, tooltips, any newly revealed or
+    // departed characters) snaps to its exact correct state, now that
+    // every batch has actually arrived. Also where the debut-reveal check
+    // runs, same as the plain instant path.
+    renderChapterMap();
+    return;
+  }
+
+  const batch = batches[idx];
+  const povId = chapterPOV[curCh];
+  const primaryMoverId = (povId && batch.some(m => m.id === povId)) ? povId : batch[0].id;
+  const followCamera = !freeLook;
+  const zoomAtStart = map.getZoom();
+  const startTime = performance.now();
+  let pending = batch.length;
+
+  const advance = () => { pending--; if(pending <= 0) runMoveBatch(batches, idx + 1, allMoverIds); };
+
+  // Companions travelling together share one location dot, animated once
+  // per starting point rather than once per character. If someone who
+  // ISN'T moving this step remains behind at that same spot, the existing
+  // dot stays put for them and a fresh one is created for the travellers;
+  // otherwise (nobody left behind) the existing dot is reused directly and
+  // simply moves — no duplicate ever appears.
+  const startClusters = {};
+  batch.forEach(m => {
+    const key = m.prev.anchorPos[0] + ',' + m.prev.anchorPos[1];
+    (startClusters[key] = startClusters[key] || []).push(m);
+  });
+  const travelDots = {};
+  Object.entries(startClusters).forEach(([startKey, clusterMovers]) => {
+    const anyId = clusterMovers[0].id;
+    const existingDot = dots[anyId];
+    let stayerRemains = false;
+    Object.keys(dots).forEach(otherId => {
+      if(dots[otherId] === existingDot && !allMoverIds.has(otherId)) stayerRemains = true;
+    });
+    if(existingDot && !stayerRemains){
+      travelDots[startKey] = existingDot; // reuse in place, nothing left behind to keep it there
+    } else {
+      const startPos = clusterMovers[0].prev.anchorPos;
+      const freshDot = L.circleMarker(startPos, {
+        radius: 3, color: '#c8a850', fillColor: '#c8a850',
+        fillOpacity: 1, weight: 1.5, interactive: false
+      }).addTo(map);
+      window._leaderLines.push(freshDot);
+      travelDots[startKey] = freshDot;
+    }
+  });
+
+  batch.forEach(({id, prev, next}) => {
+    const marker = markers[id];
+    if(!marker){ advance(); return; }
+
+    // No snap-back needed — this marker is already sitting at its old
+    // ribbon position, since nothing above touched it.
+    const fromRibbon = prev.ribbonPos, toRibbon = next.ribbonPos;
+    const startKey = prev.anchorPos[0] + ',' + prev.anchorPos[1];
+    const travelDot = travelDots[startKey];
+
+    // The full route since the last arrival, however many now-finished
+    // chapters it was spread across — walked here as one continuous
+    // flight, following any named roads it passes through along the way.
+    const legs = buildFlightPath(prev.c, prev.rawEntry, next.rawEntry);
+    const totalLength = legs.reduce((sum, leg) => sum + (leg.length || 0), 0) || 1;
+    // Session 15 fix: duration now scales with the real distance travelled
+    // instead of a flat 2s for every hop, long or short.
+    const duration = durationForDistance(totalLength);
+
+    function frame(now){
+      const t = Math.min(1, (now - startTime) / duration);
+      const e = easeInOutQuad(t);
+      const anchorNow = posAlongFlightPath(legs, totalLength, e * totalLength) || next.anchorPos;
+
+      // Carry the fan-offset interpolation on top of the anchor's position
+      // along the route, same as before, so grouped characters still land
+      // in their correct fanned spot at the end.
+      const offFromLat = fromRibbon[0] - prev.anchorPos[0], offFromLng = fromRibbon[1] - prev.anchorPos[1];
+      const offToLat   = toRibbon[0]   - next.anchorPos[0], offToLng   = toRibbon[1]   - next.anchorPos[1];
+      const ribbonPosNow = [
+        anchorNow[0] + offFromLat + e * (offToLat - offFromLat),
+        anchorNow[1] + offFromLng + e * (offToLng - offFromLng)
+      ];
+      marker.setLatLng(ribbonPosNow);
+      // The dot IS the character's true location — it moves in lockstep
+      // with the anchor (never removed/recreated mid-flight), while the
+      // ribbon is just its label and can lag/fan for readability.
+      if(travelDot) travelDot.setLatLng(anchorNow);
+
+      // Camera tracks the true anchor position (not the cosmetic fan
+      // offset) of whichever mover is "primary" for THIS batch, every
+      // frame — a real follow along the whole route, not a separate flyTo
+      // racing the marker to the endpoint.
+      if(followCamera && id === primaryMoverId){
+        map.setView(anchorNow, zoomAtStart, {animate:false});
+      }
+
+      if(t < 1){
+        requestAnimationFrame(frame);
+      } else {
+        advance();
+      }
+    }
+    requestAnimationFrame(frame);
+  });
+}
+
+
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 // Re-render on zoom so leader line offsets stay proportional
