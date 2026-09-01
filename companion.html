@@ -187,6 +187,17 @@
   .ribbon-label.banner-glow svg {
     animation: bannerGlowIn 1.3s ease-out forwards;
   }
+  /* Settled end-state of bannerGlowIn (its 100% keyframe), applied directly
+     with no animation. Used for every re-render of an already-revealed
+     glow banner (travel-animation frames, zoom, redundant "settle" renders)
+     so the banner just stays lit instead of restarting the fade-in from
+     0% opacity each time — renderMarkers() rebuilds marker DOM from scratch
+     on every call, so re-adding the animated class every time would replay
+     the flash-then-glow every single call, not just the first. */
+  .ribbon-label.banner-glow-static svg {
+    opacity: 1;
+    filter: drop-shadow(0 0 7px rgba(240,212,136,0.6));
+  }
   @keyframes bannerGlowIn {
     0%   { opacity: 0; filter: drop-shadow(0 0 0 rgba(240,212,136,0)); }
     50%  { opacity: 1; filter: drop-shadow(0 0 14px rgba(240,212,136,0.9)); }
@@ -1313,9 +1324,17 @@ function renderMarkers(ch, glowId, resolvePosForChar){
       const html = makeRibbonHTML(c.name, c.ink, dead, missing, c.textInk);
       // Must match charW/padding used inside makeRibbonHTML() above.
       const iconW = c.name.length * 9.5 + 52;
+      let glowClass = '';
+      if(c.id === glowId){
+        // First time this glowId is rendered → play the fade-in. Every
+        // later render for the same glowId (travel frames, zoom, redundant
+        // settle calls) → hold the static, already-settled glow instead.
+        glowClass = (glowRevealPlayedFor === glowId) ? ' banner-glow-static' : ' banner-glow';
+        glowRevealPlayedFor = glowId;
+      }
       const icon = L.divIcon({
         html,
-        className: 'ribbon-label' + (c.id === glowId ? ' banner-glow' : ''),
+        className: 'ribbon-label' + glowClass,
         iconAnchor: [iconW / 2, 29]
       });
 
@@ -1596,22 +1615,36 @@ function updateChapterUI(){
 // travel for real. Duration scales with the actual distance so a short
 // local hop and a trip across the whole continent don't move at different
 // apparent speeds — one consistent, unhurried pace throughout.
-const CAMERA_SPEED_UNITS_PER_MS = 0.5 / 3; // ~a third of the old marker-walk pace
-const CAMERA_MIN_DURATION_S = 0.6;
+const CAMERA_SPEED_UNITS_PER_MS = 0.5; // 3x quicker than the previous 0.5/3 pace
+const CAMERA_MIN_DURATION_S = 0.3;
 function flyDurationSeconds(fromLatLng, toLatLng){
   const dLat = toLatLng[0] - fromLatLng.lat, dLng = toLatLng[1] - fromLatLng.lng;
   const dist = Math.sqrt(dLat*dLat + dLng*dLng);
   return Math.max(CAMERA_MIN_DURATION_S, (dist / CAMERA_SPEED_UNITS_PER_MS) / 1000);
 }
 
-function flyToCurrentPOV(){
+// `onSettle`, if given, fires once the camera has actually finished moving
+// (Leaflet's 'moveend', which also fires immediately if flyTo has nothing
+// to animate) rather than the instant this function is called — used so a
+// caller can hold the POV banner glow back until the pan is done, instead
+// of lighting it up while the map is still visibly sliding to the new spot.
+// Guards against a newer navigation firing this callback late: captures
+// curCh/curPhase at call time and only runs onSettle if they still match
+// when 'moveend' arrives.
+function flyToCurrentPOV(onSettle){
   // Zoom to the POV character for this chapter (unless Free Look is on)
   const povId = chapterPOV[curCh];
-  if(!povId || freeLook) return;
+  if(!povId || freeLook){ if(onSettle) onSettle(); return; }
   const povChar = allChars.find(c => c.id === povId);
-  if(!povChar) return;
+  if(!povChar){ if(onSettle) onSettle(); return; }
   const pos = getPos(povChar, curCh);
-  if(!pos) return;
+  if(!pos){ if(onSettle) onSettle(); return; }
+  if(onSettle){
+    const ch = curCh, phase = curPhase;
+    map.once('moveend', function(){
+      if(curCh === ch && curPhase === phase) onSettle();
+    });
+  }
   // Use the anchor position (not the ribbon offset)
   // Smooth pan/zoom to the character
   map.flyTo(pos.pos, getSnapZoom(), {
@@ -1639,6 +1672,20 @@ function flyToCurrentPOV(){
 // call so a zoom, a filter toggle, or any other incidental re-render doesn't
 // drop the glow while the reader is still on this chapter.
 let currentGlowId = null;
+
+// Tracks which character's glow-in animation has already actually played
+// during the reader's current stay on this chapter/state. renderMarkers()
+// tears down and rebuilds every marker's DOM from scratch on every single
+// call — every travel-animation frame, every zoom, the redundant "settle"
+// render right after a pan or a travel walk finishes — so re-adding the
+// animated `banner-glow` class each time would restart its CSS keyframe
+// from 0% opacity every call: a visible flash-to-invisible-and-back on
+// every one of those re-renders, not just the first. Once a character's
+// glow-in has actually played, renderMarkers() switches later calls for
+// that same glowId to the static, already-settled `banner-glow-static`
+// class instead, so the banner just stays lit. Reset to null everywhere
+// `currentGlowId` is reset to null, so the next real reveal plays fresh.
+let glowRevealPlayedFor = null;
 
 // Chapter titles look like "Eddard IV" (see allChapters) — the reveal only
 // ever shows the POV's own first name, exactly the way the books head each
@@ -1700,14 +1747,26 @@ function renderChapterMap(){
     if(lastKnown && !freeLook) map.setView(lastKnown.pos, getSnapZoom(), {animate:false});
 
     currentGlowId = null;
+    glowRevealPlayedFor = null;
     showChapterReveal(chapterRevealText(curCh));
     return;
   }
 
   hideChapterReveal();
-  currentGlowId = chapterPOV[curCh] || null;
-  renderMarkers(curCh, currentGlowId);
-  flyToCurrentPOV();
+  // Nothing renders at all until the camera has actually finished panning
+  // to the new POV — no interim, non-glowing render either, since that
+  // still left every banner visibly sliding across the map while it
+  // moved. The reveal now happens as a single event: flyToCurrentPOV()'s
+  // onSettle fires only once the pan is fully done (Leaflet's 'moveend',
+  // or immediately if there's nothing to animate), and that's the first
+  // and only renderMarkers() call for this transition.
+  currentGlowId = null;
+  glowRevealPlayedFor = null;
+  const povId = chapterPOV[curCh] || null;
+  flyToCurrentPOV(() => {
+    currentGlowId = povId;
+    renderMarkers(curCh, currentGlowId);
+  });
 }
 
 // Cancellation token for whatever travel animation is currently in flight
@@ -1808,9 +1867,13 @@ function easeInOutQuad(t){ return t < 0.5 ? 2*t*t : -1 + (4 - 2*t) * t; }
 // flyDurationSeconds() above — a short local hop and a cross-continent
 // journey shouldn't take the same amount of time, but nothing should feel
 // instant or endless either.
-const TRAVEL_SPEED_UNITS_PER_MS = 0.5;
-const TRAVEL_MIN_DURATION_MS = 900;
-const TRAVEL_MAX_DURATION_MS = 6000;
+// Slowed 3x across the board (speed + both duration bounds scaled together,
+// per explicit request — "start with 3x slower") so a short local hop and a
+// cross-continent journey are both proportionally slower, not just legs
+// that were already hitting the old ceiling.
+const TRAVEL_SPEED_UNITS_PER_MS = 0.5 / 3;
+const TRAVEL_MIN_DURATION_MS = 900 * 3;
+const TRAVEL_MAX_DURATION_MS = 6000 * 3;
 const TRAVEL_PAUSE_MS = 900; // how long a real, confirmed stop holds the travel
 
 // Live mid-animation position per character id, in the same shape getPos()
@@ -1937,23 +2000,53 @@ async function advanceChapterAnimated(){
   curPhase = 'after';
   updateChapterUI();
   hideChapterReveal();
-  currentGlowId = chapterPOV[ch] || null;
 
-  // Step 1: show the finished banner at everyone's LAST KNOWN spot first —
-  // nothing has visibly moved yet.
-  initTravelDisplayState(ch);
-  renderMarkers(ch, currentGlowId, c => travelDisplayPos[c.id] || null);
-
-  // Step 2: walk anyone who actually moved this chapter, in order.
+  const povId = chapterPOV[ch] || null;
   const plan = buildTravelPlan(ch);
-  if(plan && !freeLook){
-    await playTravelPlan(plan, ch, token);
-  }
-  if(token.cancelled) return; // a newer navigation has already taken over
 
-  // Step 3: settle into the normal static "after" state.
-  renderMarkers(ch, currentGlowId);
-  flyToCurrentPOV();
+  if(plan && !freeLook){
+    // A real walk to show. The camera is already correctly sitting at the
+    // mover's own last-known spot — pre-positioned silently behind the dim
+    // during "before" (see renderChapterMap()) — so revealing the banner
+    // right away is safe here: marker and camera move together for the
+    // rest of this step (see followTravelCamera()), so the banner is never
+    // ahead of where the camera actually is.
+    currentGlowId = povId;
+    initTravelDisplayState(ch);
+    renderMarkers(ch, currentGlowId, c => travelDisplayPos[c.id] || null);
+
+    await playTravelPlan(plan, ch, token);
+    if(token.cancelled) return; // a newer navigation has already taken over
+
+    // Settle into the normal static "after" state. Same currentGlowId as
+    // above, so renderMarkers() applies the static (non-restarting) glow
+    // class here instead of replaying the fade-in — see
+    // `glowRevealPlayedFor`. flyToCurrentPOV() is a no-op here in
+    // practice, since the walk's own camera-follow already left the view
+    // exactly where this would fly to.
+    renderMarkers(ch, currentGlowId);
+    flyToCurrentPOV();
+  } else {
+    // Nothing to walk — either genuinely no movement this chapter, or (as
+    // with a character's own debut chapter) there's no prior position to
+    // walk FROM at all. In the debut case specifically, "before" had
+    // nothing to silently pre-position the camera to (see
+    // renderChapterMap()), so the camera is still wherever the PREVIOUS
+    // chapter left it — a real pan may still be needed to reach the true
+    // location, even though no marker is walking. Hold the banner back
+    // exactly like the Prev/dropdown-jump reveal path: render nothing
+    // until that pan is fully settled, then reveal once, already at the
+    // right spot. If no pan is actually needed (the common case — nothing
+    // moved and the camera was already there), flyToCurrentPOV()'s
+    // onSettle fires immediately and this is visually indistinguishable
+    // from an instant reveal.
+    currentGlowId = null;
+    glowRevealPlayedFor = null;
+    flyToCurrentPOV(() => {
+      currentGlowId = povId;
+      renderMarkers(ch, currentGlowId);
+    });
+  }
 }
 
 // Every other chapter's "before" now dims the map to the Chapter Reveal
