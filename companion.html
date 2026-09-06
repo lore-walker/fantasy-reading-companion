@@ -1207,34 +1207,111 @@ function buildTierText(c, ch){
 
 // ─── RIBBON MARKERS ──────────────────────────────────────────────────────────
 
+// Builds the fold-shading overlay used by makeRibbonHTML(). This is a
+// left-to-right gradient of translucent white and black bands painted ON
+// TOP of the character's flat ink colour, which is what makes the flat
+// shape read as rippling cloth: the white bands are where a fold catches
+// the light, the black bands are where it turns away.
+//
+// The two END stops are the important ones. They're the darkest in the
+// gradient, so the cloth fades into shadow as it approaches each pointed
+// tail. That's what removes the hard seam the old design had, where the
+// tails were separate flat-coloured polygons stuck onto the body.
+//
+// `k` scales only those end stops. Live banners use 1 (full depth); dead
+// and missing ones use a much lower value, because heavy shading on top
+// of the grey `#666` fill turns the banner muddy and swallows the
+// strikethrough on the name.
+function silkFoldGradient(id, k){
+  return `<linearGradient id="${id}" x1="0" x2="1">
+      <stop offset="0"    stop-color="#000" stop-opacity="${(0.42 * k).toFixed(3)}"/>
+      <stop offset="0.10" stop-color="#000" stop-opacity="${(0.26 * k).toFixed(3)}"/>
+      <stop offset="0.22" stop-color="#fff" stop-opacity="0.20"/>
+      <stop offset="0.36" stop-color="#000" stop-opacity="0.19"/>
+      <stop offset="0.5"  stop-color="#fff" stop-opacity="0.22"/>
+      <stop offset="0.64" stop-color="#000" stop-opacity="0.19"/>
+      <stop offset="0.78" stop-color="#fff" stop-opacity="0.20"/>
+      <stop offset="0.90" stop-color="#000" stop-opacity="${(0.26 * k).toFixed(3)}"/>
+      <stop offset="1"    stop-color="#000" stop-opacity="${(0.42 * k).toFixed(3)}"/>
+    </linearGradient>`;
+}
+
 function makeRibbonHTML(name, ink, isDead, isMissing, textInk){
   const displayInk = (isDead || isMissing) ? '#666' : ink;
   const textColor = (isDead || isMissing) ? '#aaa' : (textInk || '#f5ecd0');
   const opacity = (isDead || isMissing) ? 0.55 : 1;
   const strike = (isDead || isMissing) ? 'text-decoration:line-through;' : '';
-  // Banner size — bumped up from the original 7.5/20 so names read
-  // clearly on the map. Keep charW, w, and totalW in sync with the
-  // iconW calc in renderMarkers() below, or the ribbon will be
-  // mis-centered on its marker position.
-  const charW = 9.5;
-  const w = name.length * charW + 26;
-  const h = 26;
-  const totalW = w + 26; // include tails
-  const cx = totalW / 2;
 
-  return `<svg width="${totalW}" height="${h+8}" xmlns="http://www.w3.org/2000/svg" style="opacity:${opacity}">
-    <!-- left tail -->
-    <polygon points="${13},${h*0.25} 0,${h*0.5} ${13},${h*0.75}" fill="${displayInk}" opacity="0.8"/>
-    <!-- right tail -->
-    <polygon points="${totalW-13},${h*0.25} ${totalW},${h*0.5} ${totalW-13},${h*0.75}" fill="${displayInk}" opacity="0.8"/>
-    <!-- body -->
-    <path d="M13,2 Q${cx},0 ${totalW-13},2 L${totalW-13},${h-2} Q${cx},${h} 13,${h-2} Z" fill="${displayInk}" opacity="0.92"/>
-    <!-- highlight -->
-    <path d="M17,6 Q${cx},3 ${totalW-17},6" stroke="#fff" stroke-width="1" fill="none" opacity="0.25"/>
-    <!-- text -->
-    <text x="${cx}" y="${h*0.65}" text-anchor="middle" font-family="Georgia,serif" font-size="12" font-style="italic" fill="${textColor}" style="${strike}" letter-spacing="0.4">${name}</text>
+  // Two fixed gradient ids rather than one unique id per banner. Every
+  // live banner's gradient is byte-for-byte identical (the shading is
+  // pure black/white overlay and doesn't depend on the character's ink),
+  // so all of them can safely point at the same id — the browser resolves
+  // a duplicate id to the first match in the document, which is an
+  // identical gradient. renderMarkers() rebuilds every marker's DOM on
+  // each call, so generating unique ids here would churn out a fresh
+  // gradient definition per character per render for no visual gain.
+  const gradId = (isDead || isMissing) ? 'silkFoldMuted' : 'silkFold';
+  const gradK  = (isDead || isMissing) ? 0.45 : 1;
+
+  // ── Banner geometry ──
+  // charW drives the width, exactly as before. NOTE the tails are now
+  // part of the banner's single outline rather than separate shapes
+  // bolted onto a box, so `totalW` is the whole thing in one number.
+  // It works out to the same value the old box-plus-tails maths gave
+  // (name.length * charW + 26, + 26 for tails), which is why the iconW
+  // calc in renderMarkers() below is unchanged.
+  const charW  = 9.5;
+  const totalW = name.length * charW + 52;
+  const cx     = totalW / 2;
+  const top    = 4;    // y of the top hem at rest
+  const bot    = 24;   // y of the bottom hem at rest
+  const midY   = (top + bot) / 2;
+  const notch  = 10;   // how far the swallowtail V bites into each end
+  const a      = 1;    // ripple amplitude — raise for a windier flag
+
+  // The top hem, drawn left to right as four quadratic curves. Each `Q`
+  // is "curve toward this control point, and end up here"; alternating
+  // the control point above and below the hem line is what produces the
+  // wave. The bottom hem is the same wave offset down by (bot - top),
+  // drawn right to left, so the cloth keeps a constant thickness through
+  // every fold instead of pinching.
+  const topEdge =
+    `M0,${top} ` +
+    `Q${totalW*0.125},${top + 5*a} ${totalW*0.25},${top + a} ` +
+    `Q${totalW*0.375},${top - 2.5*a} ${totalW*0.5},${top} ` +
+    `Q${totalW*0.625},${top + 2.5*a} ${totalW*0.75},${top + a} ` +
+    `Q${totalW*0.875},${top - 2.5*a} ${totalW},${top}`;
+  const botEdge =
+    `Q${totalW*0.875},${bot - 2.5*a} ${totalW*0.75},${bot + a} ` +
+    `Q${totalW*0.625},${bot + 2.5*a} ${totalW*0.5},${bot} ` +
+    `Q${totalW*0.375},${bot - 2.5*a} ${totalW*0.25},${bot + a} ` +
+    `Q${totalW*0.125},${bot + 5*a} 0,${bot}`;
+
+  // One continuous outline: across the top, into the right-hand
+  // swallowtail notch and back out, along the bottom, then into the
+  // left-hand notch and closed. Every layer below reuses this same path.
+  const d =
+    `${topEdge} L${totalW - notch},${midY} L${totalW},${bot} ` +
+    `${botEdge} L${notch},${midY} Z`;
+
+  return `<svg width="${totalW}" height="38" xmlns="http://www.w3.org/2000/svg" style="opacity:${opacity}">
+    <defs>${silkFoldGradient(gradId, gradK)}</defs>
+    <!-- cast shadow: the same silhouette, nudged down-right, so the
+         banner sits above the map rather than printed flat on it -->
+    <g transform="translate(2,3)" opacity="0.38"><path d="${d}" fill="#000"/></g>
+    <!-- flat house colour -->
+    <path d="${d}" fill="${displayInk}"/>
+    <!-- fold shading painted over it -->
+    <path d="${d}" fill="url(#${gradId})"/>
+    <!-- hairline edge, just enough to keep the cloth from bleeding into
+         a similarly-coloured patch of map -->
+    <path d="${d}" fill="none" stroke="#000" stroke-opacity="0.28" stroke-width="0.6" stroke-linejoin="round"/>
+    <!-- text, drawn twice: a dark copy 1px lower reads as the name being
+         embroidered into the cloth rather than floating above it -->
+    <text x="${cx}" y="19" text-anchor="middle" font-family="Georgia,serif" font-size="12" font-style="italic" fill="#000" opacity="0.45" style="${strike}" letter-spacing="0.4">${name}</text>
+    <text x="${cx}" y="18" text-anchor="middle" font-family="Georgia,serif" font-size="12" font-style="italic" fill="${textColor}" style="${strike}" letter-spacing="0.4">${name}</text>
     <!-- anchor dot -->
-    <circle cx="${cx}" cy="${h+4}" r="2.5" fill="${displayInk}" opacity="0.7"/>
+    <circle cx="${cx}" cy="32" r="2.5" fill="${displayInk}" opacity="0.75"/>
   </svg>`;
 }
 
@@ -1322,7 +1399,7 @@ function renderMarkers(ch, glowId, resolvePosForChar){
       dots[c.id] = dot;
 
       const html = makeRibbonHTML(c.name, c.ink, dead, missing, c.textInk);
-      // Must match charW/padding used inside makeRibbonHTML() above.
+      // Must match the totalW calc inside makeRibbonHTML() above.
       const iconW = c.name.length * 9.5 + 52;
       let glowClass = '';
       if(c.id === glowId){
@@ -1335,7 +1412,10 @@ function renderMarkers(ch, glowId, resolvePosForChar){
       const icon = L.divIcon({
         html,
         className: 'ribbon-label' + glowClass,
-        iconAnchor: [iconW / 2, 29]
+        // y must sit on the anchor dot drawn at the bottom of the banner
+        // SVG (cy="32"), or the ribbon floats off its true map position.
+        // Was 29 when the banner was 34px tall; the silk banner is 38.
+        iconAnchor: [iconW / 2, 32]
       });
 
       const marker = L.marker(ribbonPos, {icon, interactive:true}).addTo(map);
@@ -1374,7 +1454,10 @@ function renderMarkers(ch, glowId, resolvePosForChar){
       marker.bindTooltip(tipHtml, {
         className: 'ribbon-tip',
         direction: 'top',
-        offset: [0, -20],
+        // -23 rather than -20: the silk banner reaches 3px higher above
+        // its anchor than the old ribbon did, so the tooltip moves up by
+        // the same 3px to keep the gap between them looking unchanged.
+        offset: [0, -23],
         sticky: false
       });
 
@@ -1406,11 +1489,15 @@ function getFanOffsets(count, anchorPos){
 
   // Desired screen distances — clamped so they never get too far or too close
   const rawOffsetX = 160;          // ideal left offset in screen px
-  const rawStepY   = 34;           // ideal vertical step in screen px (bumped up for larger banners)
+  // Vertical step widened again for the silk banner. The cloth itself is
+  // about the same height as the old ribbon, but its cast shadow hangs
+  // ~3px below the hem, so a stack of banners needs a little more room
+  // before the shadow of one starts touching the next.
+  const rawStepY   = 38;           // ideal vertical step in screen px
   const minOffsetX = 60;           // never closer than this (px)
   const maxOffsetX = 120;          // never further than this (px)
-  const minStepY   = 24;
-  const maxStepY   = 36;
+  const minStepY   = 30;
+  const maxStepY   = 40;
 
   const clamp = (val, mn, mx) => Math.min(mx, Math.max(mn, val));
   const screenOffsetX = clamp(rawOffsetX, minOffsetX, maxOffsetX);
